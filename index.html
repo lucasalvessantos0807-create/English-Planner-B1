@@ -1287,6 +1287,63 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+window.googleLogin = async function () {
+  try {
+
+    const result = await signInWithPopup(
+      auth,
+      provider
+    );
+
+    console.log(
+      "Usuário logado:",
+      result.user.displayName
+    );
+
+  } catch (error) {
+
+    console.error(error);
+    alert(error.message);
+
+  }
+};
+
+onAuthStateChanged(auth, async (user) => {
+
+  if (user) {
+
+    console.log(
+      "Logado:",
+      user.displayName
+    );
+
+    currentUser = user.uid;
+
+    document.getElementById("topbarName").textContent =
+      user.displayName;
+
+    document.getElementById("login-screen").style.display =
+      "none";
+
+    document.getElementById("planner").style.display =
+      "block";
+
+  } else {
+
+    document.getElementById("planner").style.display =
+      "none";
+
+    document.getElementById("login-screen").style.display =
+      "flex";
+
+  }
+
+});
+
+document
+  .getElementById("googleLoginBtn")
+  .addEventListener("click", googleLogin);
+
 console.log("Firebase conectado!");
 </script>
   
