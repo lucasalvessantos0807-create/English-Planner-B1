@@ -1293,24 +1293,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.googleLogin = async function () {
-  try {
-    const result = await signInWithPopup(auth, provider);
-
-    console.log("Usuário logado:", result.user.displayName);
-
-  } catch (error) {
-    console.error(error);
-    alert(error.message);
-  }
-};
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 window.logout = async function () {
   await signOut(auth);
 };
-
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
 
 window.googleLogin = async function () {
   try {
@@ -1341,8 +1329,8 @@ onAuthStateChanged(auth, async (user) => {
 
     currentUser = user.uid;
 
-    document.getElementById("topbarName").textContent =
-      user.displayName;
+  const topbar = document.getElementById("topbarName");
+if (topbar) topbar.textContent = user.displayName;
 
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("planner").style.display = "block";
@@ -1364,10 +1352,13 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
-document
-  .getElementById("googleLoginBtn")
-  .addEventListener("click", googleLogin);
-
+window.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("googleLoginBtn");
+  if (btn) {
+    btn.addEventListener("click", googleLogin);
+  }
+});
+    
 console.log("Firebase conectado!");
 </script>
   
