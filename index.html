@@ -150,6 +150,10 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     <input class="login-input" id="nameInput" type="text" placeholder="e.g. Alvez" maxlength="30" autocomplete="off"/>
     <button class="login-btn" onclick="doLogin()">Enter my planner</button>
 
+<button class="login-btn" id="googleLoginBtn">
+  Continue with Google
+</button>
+
     <div class="login-profiles" id="profilesSection" style="display:none">
       <div class="login-profiles-label">Saved profiles</div>
       <div id="profilesList"></div>
@@ -161,6 +165,11 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 
 <!-- ── PLANNER ── -->
 <div id="planner">
+
+<button class="login-btn" onclick="logout()">
+  Sair
+</button>
+  
   <div class="topbar">
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <button class="topbar-logout" onclick="doLogout()">Switch profile</button>
@@ -999,7 +1008,7 @@ function doLogin() {
 }
 
 function enterAs(name) {
-  currentUser = name;
+  currentUser = user.uid;
   addProfile(name);
   loadAll();
   document.getElementById("topbarName").textContent = name;
@@ -1283,6 +1292,22 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+window.googleLogin = async function () {
+  try {
+    const result = await signInWithPopup(auth, provider);
+
+    console.log("Usuário logado:", result.user.displayName);
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+};
+
+window.logout = async function () {
+  await signOut(auth);
+};
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
