@@ -146,18 +146,9 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     <div class="login-title">Study Planner</div>
     <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your personal progress</div>
 
-    <label class="login-label" for="nameInput">Your name</label>
-    <input class="login-input" id="nameInput" type="text" placeholder="e.g. Alvez" maxlength="30" autocomplete="off"/>
-    <button class="login-btn" onclick="doLogin()">Enter my planner</button>
-
 <button class="login-btn" id="googleLoginBtn">
   Continue with Google
 </button>
-
-    <div class="login-profiles" id="profilesSection" style="display:none">
-      <div class="login-profiles-label">Saved profiles</div>
-      <div id="profilesList"></div>
-    </div>
 
     <div class="login-note">Your progress is saved in this browser. Next time you open this file and type the same name, everything will be exactly where you left it.</div>
   </div>
@@ -969,90 +960,10 @@ function removeProfile(name) {
 }
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
-function renderProfiles() {
-  var list = getProfiles();
-  var section = document.getElementById("profilesSection");
-  var container = document.getElementById("profilesList");
-  container.innerHTML = "";
-  if (list.length === 0) { section.style.display = "none"; return; }
-  section.style.display = "block";
-  for (var i = 0; i < list.length; i++) {
-    (function(name) {
-      var pill = document.createElement("span");
-      pill.className = "profile-pill";
-      var nameSpan = document.createElement("span");
-      nameSpan.textContent = name;
-      nameSpan.onclick = function() { enterAs(name); };
-      var del = document.createElement("span");
-      del.className = "del";
-      del.textContent = "✕";
-      del.title = "Delete this profile";
-      del.onclick = function(e) {
-        e.stopPropagation();
-        if (confirm("Delete profile for " + name + "? All progress will be lost.")) {
-          removeProfile(name);
-          renderProfiles();
-        }
-      };
-      pill.appendChild(nameSpan);
-      pill.appendChild(del);
-      container.appendChild(pill);
-    })(list[i]);
-  }
-}
-
-function doLogin() {
-  var name = document.getElementById("nameInput").value.trim();
-  if (!name) { alert("Please enter your name first!"); return; }
-  enterAs(name);
-}
-
-function enterAs(name) {
-  currentUser = user.uid;
-  addProfile(name);
-  loadAll();
-  document.getElementById("topbarName").textContent = name;
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("planner").style.display = "block";
-  built = {};
-  buildWeek(1, 1);
-  updateProgress();
-  renderBuiltState();
-}
-
-function doLogout() {
-  saveAll();
-  currentUser = null;
-  state = {};
-  built = {};
-  // clear all rendered week panels so they rebuild fresh on next login
-  var panels = document.querySelectorAll(".wpanel");
-  for (var i = 0; i < panels.length; i++) panels[i].innerHTML = "";
-  // reset navigation state
-  document.getElementById("planner").style.display = "none";
-  document.getElementById("login-screen").style.display = "flex";
-  document.getElementById("nameInput").value = "";
-  renderProfiles();
-}
 
 // After login, restore checkboxes & notes on already-built weeks
-function renderBuiltState() {
-  for (var dk in state) {
-    var n = dk.replace("d", "");
-    var chkEl = document.getElementById("cl" + n);
-    var ntEl = document.getElementById("nt" + n);
-    if (chkEl) {
-      var chkInput = chkEl.querySelector("input");
-      if (chkInput) chkInput.checked = state[dk].done;
-      if (state[dk].done) chkEl.classList.add("done");
-      else chkEl.classList.remove("done");
-    }
-    if (ntEl) ntEl.value = state[dk].notes || "";
-  }
-  updateProgress();
-}
 
-// ── BUILD WEEKS ──────────────────────────────────────────────────────
+UILD WEEKS ──────────────────────────────────────────────────────
 function buildWeek(m, w) {
   var key = m + "-" + w;
   if (built[key]) return;
@@ -1248,12 +1159,8 @@ function showWeek(m, w) {
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────
-renderProfiles();
 
-// Enter key on login input
-document.getElementById("nameInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") doLogin();
-});
+  // Enter key on login input
 
 // Auto-save notes when user types (with debounce)
 var saveTimer = null;
