@@ -917,20 +917,56 @@ function storageKey() {
   return "esp_" + currentUser;
 }
 
-function saveAll() {
+async function saveAll() {
+
   if (!currentUser) return;
+
   try {
-    localStorage.setItem(storageKey(), JSON.stringify(state));
-  } catch(e) {}
+
+    await setDoc(
+      doc(db, "users", currentUser),
+      {
+        state: state
+      }
+    );
+
+    console.log("✔ Progresso salvo na nuvem");
+
+  } catch (e) {
+
+    console.error("Erro ao salvar:", e);
+
+  }
+
 }
 
-function loadAll() {
+async function loadAll() {
+
   if (!currentUser) return;
+
   try {
-    var raw = localStorage.getItem(storageKey());
-    if (raw) state = JSON.parse(raw);
-    else state = {};
-  } catch(e) { state = {}; }
+
+    const snap = await getDoc(
+      doc(db, "users", currentUser)
+    );
+
+    if (snap.exists()) {
+
+      state = snap.data().state || {};
+
+    } else {
+
+      state = {};
+
+    }
+
+  } catch (e) {
+
+    console.error("Erro ao carregar:", e);
+    state = {};
+
+  }
+
 }
 
 function getProfiles() {
@@ -1181,7 +1217,12 @@ document.addEventListener("input", function(e) {
 
   <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 import {
   getAuth,
