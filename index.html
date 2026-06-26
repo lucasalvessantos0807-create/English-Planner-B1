@@ -923,8 +923,8 @@ async function saveAll() {
 
   try {
 
-    await setDoc(
-      doc(db, "users", currentUser),
+    await window.firestore.setDoc(
+      window.firestore.doc(window.db, "users", currentUser),
       {
         state: state
       }
