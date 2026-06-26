@@ -962,9 +962,13 @@ function removeProfile(name) {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
 
+  function doLogout() {
+  logout();
+}
+
 // After login, restore checkboxes & notes on already-built weeks
 
-UILD WEEKS ──────────────────────────────────────────────────────
+// ── BUILD WEEKS ──────────────────────────────────────────────────────
 function buildWeek(m, w) {
   var key = m + "-" + w;
   if (built[key]) return;
