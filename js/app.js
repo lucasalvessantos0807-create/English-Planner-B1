@@ -1,7 +1,7 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth } from './planner.js';
-import { setupNavigation, updateProgressBar } from './ui.js';
+import { renderStructure, updateProgressBar } from './ui.js';
 
 let currentUser = null;
 
@@ -15,9 +15,11 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("planner").style.display = "block";
         
-        await loadUserData(currentUser);
+        const userData = await loadUserData(currentUser);
         
-        // Ativa botões de edição e novo mês
+        // Renderiza a estrutura de botões e painéis dinamicamente
+        renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
+        
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('addMonthBtn').onclick = () => {
             if(confirm("Deseja criar um novo mês (4 semanas) no seu cronograma?")) {
@@ -25,8 +27,12 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        setupNavigation((m, w) => buildWeek(m, w, currentUser));
-        buildWeek(1, 1, currentUser);
+        // Carrega automaticamente a primeira semana disponível
+        const firstKey = Object.keys(userData.plannerConfig).sort()[0];
+        if (firstKey) {
+            const [m, w] = firstKey.split('-');
+            buildWeek(m, w, currentUser);
+        }
         updateProgressBar();
     } else {
         document.getElementById("planner").style.display = "none";
