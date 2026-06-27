@@ -47,8 +47,21 @@ export function renderStructure(plannerConfig, onWeekChange) {
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
-        mPanel.innerHTML = `<div class="mheader"><h2>Month ${m}</h2><p>English Study Plan — Continuous Progress</p></div>`;
-
+        mPanel.innerHTML = `
+            <div class="mheader">
+                <h2>Month ${m}</h2>
+                <p>English Study Plan — Continuous Progress</p>
+                <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month ${m}</button>
+            </div>`;
+        
+        // Lógica para o botão de reestruturar
+        mPanel.querySelector('.edit-m-btn').onclick = (e) => {
+            const uid = window.auth.currentUser.uid; // Garante que temos o ID do usuário
+            import('./planner.js').then(mModule => {
+                mModule.editMonthStructure(e.target.dataset.month, uid);
+            });
+        };
+        
         // Criar Navegação de Semanas dentro deste mês
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
