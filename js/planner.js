@@ -4,17 +4,18 @@ import { renderStructure, updateProgressBar } from './ui.js';
 let isEditMode = false;
 const builtWeeks = new Set();
 let activeWeekKey = null; 
-const openDays = new Set(); // Guarda quais dias estão abertos
+const openDays = new Set(); 
 
-const ICON_MAP = {
-    vocab: "📚",
-    reading: "📖",
-    shadowing: "🎙️",
-    listening: "🎧",
-    grammar: "📐",
-    writing: "✍️",
-    speaking: "🗣️",
-    review: "🔁"
+// Mapa de moldes: Vincula o ícone ao Tipo (cor) e ao Título Padrão
+const DATA_MAP = {
+    "📚": { type: "vocab", title: "Vocabulary" },
+    "📖": { type: "reading", title: "Reading" },
+    "🎙️": { type: "shadowing", title: "Shadowing" },
+    "🎧": { type: "listening", title: "Listening + Dictation" },
+    "📐": { type: "grammar", title: "Grammar" },
+    "✍️": { type: "writing", title: "Writing" },
+    "🗣️": { type: "speaking", title: "Speaking" },
+    "🔁": { type: "review", title: "Review" }
 };
 
 export function toggleEditMode(uid) {
@@ -114,17 +115,24 @@ export function buildWeek(m, w, uid) {
         // Adicionar Atividade
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
+            const addBtn = card.querySelector('.add-act-btn');
+        if (addBtn) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
-                const defaultType = "grammar";
+                
+                // Padrão ao criar: Grammar
+                const defaultEmoji = "📐";
+                const mold = DATA_MAP[defaultEmoji];
+
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: defaultType, 
-                    i: ICON_MAP[defaultType], 
-                    title: "New Activity", 
+                    t: mold.type, 
+                    i: defaultEmoji, 
+                    title: mold.title, 
                     desc: "Edit description", 
                     time: "20 min"
                 });
+                
                 builtWeeks.delete(wkKey);
                 buildWeek(m, w, uid);
                 saveUserData(uid);
@@ -146,6 +154,7 @@ export function buildWeek(m, w, uid) {
         });
 
         // Seletor de Emojis + Mudança de Cor Automática
+       // 4. Seletor de Emojis com Vínculo de Título e Cor
         card.querySelectorAll('.aico').forEach(iconEl => {
             if (!isEditMode) return;
             iconEl.onclick = (e) => {
@@ -155,6 +164,7 @@ export function buildWeek(m, w, uid) {
 
                 const picker = document.createElement('div');
                 picker.className = 'emoji-picker';
+                // Lista de emojis disponíveis no seletor
                 const emojis = ['📚','📖','🎙️','🎧','📐','✍️','🗣️','🔁','✅','📝','🎬','📻','💡','🔥','🌟'];
                 
                 emojis.forEach(emoji => {
@@ -167,15 +177,26 @@ export function buildWeek(m, w, uid) {
                             const [wkK, dI, aI] = path.split('.');
                             const act = window.plannerConfig[wkK].days[dI].activities[aI];
                             
-                            act.i = emoji; // Atualiza o ícone
+                            // 1. Atualiza o ícone no dado e na tela
+                            act.i = emoji;
                             iconEl.textContent = emoji;
-                            
-                            // Procura se o emoji escolhido pertence a algum tipo (cor)
-                            const foundType = Object.keys(ICON_MAP).find(type => ICON_MAP[type] === emoji);
-                            if (foundType) {
-                                act.t = foundType;
-                                iconEl.className = `aico ${foundType}`; // Muda a cor no CSS
+
+                            // 2. Se o emoji estiver no mapa, aplica o "molde" (Tipo e Título)
+                            if (DATA_MAP[emoji]) {
+                                const mold = DATA_MAP[emoji];
+                                
+                                // Atualiza o tipo (cor)
+                                act.t = mold.type;
+                                iconEl.className = `aico ${mold.type}`;
+
+                                // Atualiza o título padrão no dado
+                                act.title = mold.title;
+
+                                // Atualiza o título na tela (DOM)
+                                const titleEl = iconEl.parentElement.querySelector('.atitle');
+                                if (titleEl) titleEl.innerText = mold.title;
                             }
+                            
                             saveUserData(uid);
                         }
                         picker.remove();
