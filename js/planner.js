@@ -22,8 +22,7 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    // Limpa o cache para redesenhar a semana com/sem ferramentas de edição
-    builtWeeks.clear();
+    builtWeeks.clear(); // Limpa cache para redesenhar a interface
 
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
@@ -41,14 +40,13 @@ export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
     activeWeekKey = key; 
 
-    // Só usa o cache se NÃO estiver em modo edição
     if (!isEditMode && builtWeeks.has(key)) return;
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
-    container.innerHTML = ""; // Limpa o painel antes de desenhar
+    container.innerHTML = ""; 
     
     const wkBar = document.createElement("div");
     wkBar.className = `wkbar ${wk.review ? 'rv' : ''}`;
@@ -61,8 +59,7 @@ export function buildWeek(m, w, uid) {
         const card = document.createElement("div");
         card.className = "daycard";
         
-        // Verifica se o dia deve estar aberto (on)
-        const isOpen = openDays.has(day.n) ? 'on' : '';
+        const isOpenClass = openDays.has(day.n) ? 'on' : '';
 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">
@@ -70,7 +67,7 @@ export function buildWeek(m, w, uid) {
                 <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody ${isOpen}" id="db${day.n}">
+            <div class="daybody ${isOpenClass}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -93,9 +90,9 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // --- LISTENERS DE EVENTOS ---
+        // --- EVENTOS DO DIA ---
 
-        // Edição de Textos (onblur)
+        // 1. Salvar textos manuais
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
@@ -112,34 +109,28 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // Adicionar Atividade
+        // 2. Adicionar Atividade (Usa o Molde Padrão Grammar)
         const addBtn = card.querySelector('.add-act-btn');
-        if (addBtn) {
-            const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
-                
-                // Padrão ao criar: Grammar
-                const defaultEmoji = "📐";
-                const mold = DATA_MAP[defaultEmoji];
+                const mold = DATA_MAP["📐"]; 
 
                 window.plannerConfig[wkKey].days[dI].activities.push({
                     t: mold.type, 
-                    i: defaultEmoji, 
+                    i: "📐", 
                     title: mold.title, 
                     desc: "Edit description", 
                     time: "20 min"
                 });
-                
                 builtWeeks.delete(wkKey);
                 buildWeek(m, w, uid);
                 saveUserData(uid);
             };
         }
 
-        // Deletar Atividade
+        // 3. Deletar Atividade
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -153,18 +144,15 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // Seletor de Emojis + Mudança de Cor Automática
-       // 4. Seletor de Emojis com Vínculo de Título e Cor
+        // 4. Seletor de Emojis com Vínculo Automático
         card.querySelectorAll('.aico').forEach(iconEl => {
             if (!isEditMode) return;
             iconEl.onclick = (e) => {
                 e.stopPropagation();
                 const oldPicker = document.querySelector('.emoji-picker');
                 if (oldPicker) oldPicker.remove();
-
                 const picker = document.createElement('div');
                 picker.className = 'emoji-picker';
-                // Lista de emojis disponíveis no seletor
                 const emojis = ['📚','📖','🎙️','🎧','📐','✍️','🗣️','🔁','✅','📝','🎬','📻','💡','🔥','🌟'];
                 
                 emojis.forEach(emoji => {
@@ -177,26 +165,17 @@ export function buildWeek(m, w, uid) {
                             const [wkK, dI, aI] = path.split('.');
                             const act = window.plannerConfig[wkK].days[dI].activities[aI];
                             
-                            // 1. Atualiza o ícone no dado e na tela
                             act.i = emoji;
                             iconEl.textContent = emoji;
 
-                            // 2. Se o emoji estiver no mapa, aplica o "molde" (Tipo e Título)
                             if (DATA_MAP[emoji]) {
                                 const mold = DATA_MAP[emoji];
-                                
-                                // Atualiza o tipo (cor)
                                 act.t = mold.type;
                                 iconEl.className = `aico ${mold.type}`;
-
-                                // Atualiza o título padrão no dado
-                                act.title = mold.title;
-
-                                // Atualiza o título na tela (DOM)
+                                act.title = mold.title; 
                                 const titleEl = iconEl.parentElement.querySelector('.atitle');
                                 if (titleEl) titleEl.innerText = mold.title;
                             }
-                            
                             saveUserData(uid);
                         }
                         picker.remove();
@@ -207,7 +186,7 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // Expandir/Recolher Dia (Mantém o estado aberto)
+        // 5. Expandir/Recolher Dia
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
             const body = card.querySelector('.daybody');
@@ -216,7 +195,7 @@ export function buildWeek(m, w, uid) {
             else openDays.delete(day.n);
         };
 
-        // Notas e Checkbox
+        // 6. Notas e Checklist
         const textarea = card.querySelector('textarea');
         textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
         const chk = card.querySelector('input[type="checkbox"]');
@@ -233,7 +212,7 @@ export function buildWeek(m, w, uid) {
     if (!isEditMode) builtWeeks.add(key);
 }
 
-// --- FUNÇÕES DE GERENCIAMENTO DE MESES ---
+// --- FUNÇÕES DE ESTRUTURA ---
 
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days should this month have?", "30"));
@@ -247,7 +226,6 @@ export function addNewMonth(uid) {
     let currentDayCounter = parseInt(startDayInput);
     const totalWeeksInMonth = Math.ceil(dayCount / 7);
     const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
-
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${nextMonth}-${w}`;
         const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
@@ -260,7 +238,7 @@ export function addNewMonth(uid) {
                     n: dayNum,
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
                     tag: "Activity",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
+                    activities: [{t:"grammar", i:"📐", title:"Grammar", desc:"Edit description", time: "20 min"}]
                 };
             })
         };
@@ -273,8 +251,8 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    const newDayCount = parseInt(prompt("Total days for this month?", "30"));
-    const newStartDay = parseInt(prompt("First day number?", "1"));
+    const newDayCount = parseInt(prompt("Total days?", "30"));
+    const newStartDay = parseInt(prompt("Start day number?", "1"));
     if (isNaN(newDayCount) || isNaN(newStartDay)) return;
     Object.keys(window.plannerConfig).forEach(key => { if (key.startsWith(`${m}-`)) delete window.plannerConfig[key]; });
     let currentDayCounter = newStartDay;
@@ -291,7 +269,7 @@ export function editMonthStructure(m, uid) {
                     n: dayNum,
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
                     tag: "Activity",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
+                    activities: [{t:"grammar", i:"📐", title:"Grammar", desc:"Edit description", time: "20 min"}]
                 };
             })
         };
