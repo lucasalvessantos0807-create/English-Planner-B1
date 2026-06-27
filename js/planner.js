@@ -8,35 +8,38 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    // Atualiza o visual do botão
+    // Atualiza o texto e estilo do botão
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
     
+    // Se saiu do modo edição, salva os dados
     if (!isEditMode) {
         saveUserData(uid);
     }
     
-    // 1. Limpa o cache para permitir que a semana seja reconstruída do zero
-    builtWeeks.clear();
-
-    // 2. Localiza qual PAINEL de semana está visível (tem a classe .on)
+    // 1. Localiza o painel da semana que está VISÍVEL agora na tela
     const activePanel = document.querySelector('.wpanel.on');
     
     if (activePanel) {
-        // O ID do painel é algo como "wp1-1". Vamos extrair o mês e a semana dele.
-        // Remove o "wp" e separa pelo "-"
+        // O ID do painel é algo como "wp1-1". Vamos extrair o mês e a semana.
         const idParts = activePanel.id.replace('wp', '').split('-');
         const m = idParts[0];
         const w = idParts[1];
         
-        // 3. Força o redesenho imediato da semana que está na tela
+        console.log(`Modo Edição ${isEditMode ? 'Ativado' : 'Desativado'} para Mês ${m}, Semana ${w}`);
+        
+        // 2. Limpa o cache dessa semana específica e força o redesenho imediato
+        builtWeeks.delete(`${m}-${w}`);
         buildWeek(m, w, uid);
+    } else {
+        console.error("Não foi possível localizar o painel ativo (.wpanel.on)");
     }
 }
-
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
+    // Força a remoção do cache para que o HTML seja reescrito na hora
+    builtWeeks.delete(key);;
     // Força a remoção do cache para que a tela mude no exato momento do clique
     builtWeeks.delete(key);
     // Remove do cache para forçar a atualização imediata da tela
