@@ -9,6 +9,9 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
+    // Limpa o cache de todas as semanas para permitir que o buildWeek gere o novo HTML
+    builtWeeks.clear();
+
     // Atualiza o texto e estilo do botão
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
@@ -19,8 +22,7 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // REDESENHO IMEDIATO:
-    // Se existe uma semana aberta na tela, força a reconstrução dela agora
+    // Redesenha imediatamente a semana visível
     if (activeWeekKey) {
         const [m, w] = activeWeekKey.split('-');
         buildWeek(m, w, uid);
@@ -28,18 +30,17 @@ export function toggleEditMode(uid) {
 }
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
-    activeWeekKey = key; // Salva esta como a semana que o usuário está vendo agora
+    activeWeekKey = key; 
 
-    // Se estiver em modo edição, limpamos o cache desta semana para forçar o redesenho
-    if (isEditMode) {
-        builtWeeks.delete(key);
-    } else if (builtWeeks.has(key)) {
-        return; // Se não for edição e já estiver construída, não faz nada (performance)
-    }
+    // Se já foi construída e não estamos em modo edição (que limpa o cache), não faz nada
+    if (builtWeeks.has(key)) return;
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
+
+    // Limpa o HTML antigo para remover botões de edição ou estados anteriores
+    container.innerHTML = "";
 
     container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
 
