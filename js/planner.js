@@ -106,6 +106,38 @@ export function buildWeek(m, w, uid) {
             };
         });
 
+        // Parte C: Seletor de Emojis ao clicar no ícone
+        card.querySelectorAll('.aico').forEach(iconEl => {
+            if (!isEditMode) return;
+            iconEl.onclick = (e) => {
+                e.stopPropagation();
+                const oldPicker = document.querySelector('.emoji-picker');
+                if (oldPicker) oldPicker.remove();
+
+                const picker = document.createElement('div');
+                picker.className = 'emoji-picker';
+                const emojis = ['📚','📖','🎙️','🎧','📐','✍️','🗣️','🔁','✅','📝','🎬','📻','💡','🔥','🌟'];
+                
+                emojis.forEach(emoji => {
+                    const btn = document.createElement('button');
+                    btn.className = 'emoji-btn';
+                    btn.textContent = emoji;
+                    btn.onclick = () => {
+                        const path = iconEl.dataset.path;
+                        if (path) {
+                            const [wkK, dI, aI, field] = path.split('.');
+                            window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                            iconEl.textContent = emoji;
+                            saveUserData(uid);
+                        }
+                        picker.remove();
+                    };
+                    picker.appendChild(btn);
+                });
+                iconEl.parentElement.appendChild(picker);
+            };
+        });
+
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
             card.querySelector('.daybody').classList.toggle('on');
@@ -206,6 +238,19 @@ export function addNewMonth(uid) {
 
     saveUserData(uid).then(() => {
         alert("Month " + m + " restructured!");
+        location.reload();
+    });
+}
+
+export function deleteMonth(m, uid) {
+    if(!confirm("Are you sure you want to delete Month " + m + "? This will remove all weeks from this month.")) return;
+    Object.keys(window.plannerConfig).forEach(key => {
+        if (key.startsWith(`${m}-`)) {
+            delete window.plannerConfig[key];
+        }
+    });
+    saveUserData(uid).then(() => {
+        alert("Month " + m + " deleted.");
         location.reload();
     });
 }
