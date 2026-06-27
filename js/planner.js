@@ -15,14 +15,23 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // Limpa o cache visual para redesenhar com ou sem campos de edição
+    // Limpa o cache para permitir a reconstrução imediata
     builtWeeks.clear();
-    const activeBtn = document.querySelector('.wbtn.on');
-    if (activeBtn) activeBtn.click();
+
+    // Localiza qual semana e mês estão ativos para atualizar a tela na hora
+    const activeWBtn = document.querySelector('.wbtn.on');
+    if (activeWBtn) {
+        const activeMonth = activeWBtn.closest('.week-nav').dataset.month;
+        const activeWeek = activeWBtn.dataset.week;
+        buildWeek(activeMonth, activeWeek, uid);
+    }
 }
 
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
+    // Se estiver em modo edição, ignora o cache para garantir resposta imediata
+    if (isEditMode) builtWeeks.delete(key);
+    
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
@@ -90,7 +99,10 @@ export function buildWeek(m, w, uid) {
                 window.plannerConfig[wkKey].days[dI].activities.push({
                     t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
                 });
-                saveUserData(uid).then(() => buildWeek(m, w, uid));
+                // Atualiza a tela imediatamente
+                buildWeek(m, w, uid);
+                // Salva no banco de dados em segundo plano
+                saveUserData(uid);
             };
         }
 
@@ -101,7 +113,10 @@ export function buildWeek(m, w, uid) {
                 if(confirm("Delete this activity?")) {
                     const { week, dayidx, actidx } = btn.dataset;
                     window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
-                    saveUserData(uid).then(() => buildWeek(m, w, uid));
+                    // Atualiza a tela imediatamente
+                    buildWeek(m, w, uid);
+                    // Salva no banco de dados em segundo plano
+                    saveUserData(uid);
                 }
             };
         });
