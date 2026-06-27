@@ -153,6 +153,14 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 .dayhead{display:flex;align-items:center;gap:10px;padding:.65rem 1rem;background:#f9f7f3;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
 .dayhead.rv{background:var(--green-light)}
 
+/* Layout para Domingos / Review */
+.dayhead.sunday { background: var(--blue-light) !important; }
+.daynum.sunday { color: var(--blue) !important; font-weight: bold; }
+.daytag.sunday { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+
+/* Garantir que o nome mude de cor no domingo */
+.dayhead.sunday .dayname { color: var(--blue); }
+
 /* Tom azulado para domingos/Review */
 .dayhead.sunday { background: var(--blue-light); }
 .daynum.sunday { color: var(--blue); font-weight: bold; }
