@@ -1,5 +1,5 @@
 import { updateState, saveUserData, state, plannerConfig } from './storage.js';
-import { updateProgressBar } from './ui.js';
+import { renderStructure, updateProgressBar } from './ui.js';
 
 let isEditMode = false;
 const builtWeeks = new Set();
@@ -199,9 +199,10 @@ export function addNewMonth(uid) {
         };
     }
 
-    saveUserData(uid).then(() => {
-        alert("Novo mês criado com " + dayCount + " dias!");
-        location.reload(); 
+  saveUserData(uid).then(() => {
+        renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        updateProgressBar();
+        alert("Novo mês criado!");
     });
 }
 export function editMonthStructure(m, uid) {
@@ -223,7 +224,7 @@ export function editMonthStructure(m, uid) {
         const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
         
         window.plannerConfig[key] = {
-            label: `Week ${w} (M${m})`,
+           label: `Week ${w}`,
             theme: "Adjusted Month",
             days: Array.from({length: daysInThisWeek}, (_, i) => {
                 const dayNum = currentDayCounter++;
@@ -238,8 +239,9 @@ export function editMonthStructure(m, uid) {
     }
 
     saveUserData(uid).then(() => {
+        renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        updateProgressBar();
         alert("Month " + m + " restructured!");
-        location.reload();
     });
 }
 
@@ -250,8 +252,9 @@ export function deleteMonth(m, uid) {
             delete window.plannerConfig[key];
         }
     });
-    saveUserData(uid).then(() => {
+   saveUserData(uid).then(() => {
+        renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        updateProgressBar();
         alert("Month " + m + " deleted.");
-        location.reload();
     });
 }
