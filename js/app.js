@@ -1,3 +1,4 @@
+alert("O Javascript carregou!");
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserProgress } from './storage.js';
 import { buildWeek } from './planner.js';
