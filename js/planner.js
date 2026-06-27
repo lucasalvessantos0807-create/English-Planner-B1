@@ -3,7 +3,19 @@ import { renderStructure, updateProgressBar } from './ui.js';
 
 let isEditMode = false;
 const builtWeeks = new Set();
-let activeWeekKey = null; // Rastreia qual semana está visível para o usuário
+let activeWeekKey = null; 
+const openDays = new Set(); // NOVO: Guarda quais dias (pelo número n) estão abertos
+
+const ICON_MAP = {
+    vocabulary: "📚",
+    reading: "📖",
+    shadowing: "🎙️",
+    listening: "🎧",
+    grammar: "📐",
+    writing: "✍️",
+    speaking: "🗣️",
+    review: "🔁"
+}; // Rastreia qual semana está visível para o usuário
 
 export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
@@ -66,7 +78,7 @@ export function buildWeek(m, w, uid) {
                 <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody" id="db${day.n}">
+           <div class="daybody ${openDays.has(day.n) ? 'on' : ''}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -113,11 +125,25 @@ export function buildWeek(m, w, uid) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
+                const addBtn = card.querySelector('.add-act-btn');
+        if (addBtn) {
+            addBtn.onclick = () => {
+                const wkKey = addBtn.dataset.week;
+                const dI = addBtn.dataset.dayidx;
+                
+                // Define o tipo (pode ser baseado na lógica da semana ou padrão grammar)
+                const type = "grammar"; 
+                
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: "grammar", i: "📝", title: "New Activity", desc: "Edit me", time: "20 min"
+                    t: type, 
+                    i: ICON_MAP[type] || "📝", // Usa o mapa de ícones automático
+                    title: "New Activity", 
+                    desc: "Edit me", 
+                    time: "20 min"
                 });
-                builtWeeks.delete(wkKey); // Limpa o cache para permitir o redesenho
-                buildWeek(m, w, uid); // Redesenha na hora
+                
+                builtWeeks.delete(wkKey);
+                buildWeek(m, w, uid);
                 saveUserData(uid);
             };
         }
@@ -157,6 +183,14 @@ export function buildWeek(m, w, uid) {
                         if (path) {
                             const [wkK, dI, aI, field] = path.split('.');
                             window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                            window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                            
+                            // Tenta encontrar o tipo correspondente ao emoji escolhido
+                            const newType = Object.keys(ICON_MAP).find(key => ICON_MAP[key] === emoji);
+                            if (newType) {
+                                window.plannerConfig[wkK].days[dI].activities[aI].t = newType;
+                                iconEl.className = `aico ${newType}`; // Muda a cor de fundo na hora
+                            }
                             iconEl.textContent = emoji;
                             saveUserData(uid);
                         }
@@ -170,7 +204,16 @@ export function buildWeek(m, w, uid) {
 
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
-            card.querySelector('.daybody').classList.toggle('on');
+            
+            const body = card.querySelector('.daybody');
+            body.classList.toggle('on');
+            
+            // Se abriu, adiciona ao Set. Se fechou, remove.
+            if (body.classList.contains('on')) {
+                openDays.add(day.n);
+            } else {
+                openDays.delete(day.n);
+            }
         };
 
         const textarea = card.querySelector('textarea');
