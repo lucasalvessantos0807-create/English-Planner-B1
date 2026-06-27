@@ -32,13 +32,17 @@ export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
     activeWeekKey = key; 
 
-    // Se já foi construída e não estamos em modo edição (que limpa o cache), não faz nada
-    if (builtWeeks.has(key)) return;
+    // Se NÃO estamos em modo edição e a semana já existe no cache, não faz nada (performance)
+    // Se estivermos em modo edição (isEditMode = true), ele SEMPRE passará por aqui e redesenhará
+    if (!isEditMode && builtWeeks.has(key)) return;
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
+    // Limpa o HTML antigo para refletir as mudanças (inclusões/exclusões) imediatamente
+    container.innerHTML = "";
+    
     // Limpa o HTML antigo para remover botões de edição ou estados anteriores
     container.innerHTML = "";
 
@@ -180,7 +184,12 @@ export function buildWeek(m, w, uid) {
 
         container.appendChild(card);
     });
-    builtWeeks.add(key);
+
+    // Só salvamos no cache se o modo edição estiver DESATIVADO.
+    // Isso permite que, durante a edição, a função rode múltiplas vezes para atualizar a tela.
+    if (!isEditMode) {
+        builtWeeks.add(key);
+    }
 }
 
 export function addNewMonth(uid) {
