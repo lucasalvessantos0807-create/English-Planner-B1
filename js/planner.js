@@ -3,6 +3,7 @@ import { renderStructure, updateProgressBar } from './ui.js';
 
 let isEditMode = false;
 const builtWeeks = new Set();
+let activeWeekKey = null; // Rastreia qual semana está visível para o usuário
 
 export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
@@ -18,34 +19,23 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // 1. Localiza o painel da semana que está VISÍVEL agora na tela
-    const activePanel = document.querySelector('.wpanel.on');
-    
-    if (activePanel) {
-        // O ID do painel é algo como "wp1-1". Vamos extrair o mês e a semana.
-        const idParts = activePanel.id.replace('wp', '').split('-');
-        const m = idParts[0];
-        const w = idParts[1];
-        
-        console.log(`Modo Edição ${isEditMode ? 'Ativado' : 'Desativado'} para Mês ${m}, Semana ${w}`);
-        
-        // 2. Limpa o cache dessa semana específica e força o redesenho imediato
-        builtWeeks.delete(`${m}-${w}`);
+    // REDESENHO IMEDIATO:
+    // Se existe uma semana aberta na tela, força a reconstrução dela agora
+    if (activeWeekKey) {
+        const [m, w] = activeWeekKey.split('-');
         buildWeek(m, w, uid);
-    } else {
-        console.error("Não foi possível localizar o painel ativo (.wpanel.on)");
     }
 }
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
-    // Força a remoção do cache para que o HTML seja reescrito na hora
-    builtWeeks.delete(key);;
-    // Força a remoção do cache para que a tela mude no exato momento do clique
-    builtWeeks.delete(key);
-    // Remove do cache para forçar a atualização imediata da tela
-    builtWeeks.delete(key);
-    // Se estiver em modo edição, ignora o cache para garantir resposta imediata
-    if (isEditMode) builtWeeks.delete(key);
+    activeWeekKey = key; // Salva esta como a semana que o usuário está vendo agora
+
+    // Se estiver em modo edição, limpamos o cache desta semana para forçar o redesenho
+    if (isEditMode) {
+        builtWeeks.delete(key);
+    } else if (builtWeeks.has(key)) {
+        return; // Se não for edição e já estiver construída, não faz nada (performance)
+    }
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
