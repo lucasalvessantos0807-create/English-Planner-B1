@@ -44,12 +44,13 @@ export function buildWeek(m, w, uid) {
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
-                            <div class="aico ${act.t}">${act.i}</div>
+                            <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
                             <div class="acont">
                                 <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
                                 <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
                             </div>
                             <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                            ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -92,6 +93,18 @@ export function buildWeek(m, w, uid) {
                 saveUserData(uid).then(() => buildWeek(m, w, uid));
             };
         }
+
+        // Botão de Deletar Atividade
+        card.querySelectorAll('.del-act').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                if(confirm("Delete this activity?")) {
+                    const { week, dayidx, actidx } = btn.dataset;
+                    window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
+                    saveUserData(uid).then(() => buildWeek(m, w, uid));
+                }
+            };
+        });
 
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
@@ -157,5 +170,81 @@ export function addNewMonth(uid) {
     saveUserData(uid).then(() => {
         alert("Novo mês criado com " + dayCount + " dias!");
         location.reload(); 
+    });
+}export function editMonthStructure(m, uid) {
+    const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
+    const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
+    
+    if (isNaN(newDayCount) || isNaN(newStartDay)) return;
+
+    // Remove as semanas antigas deste mês do config
+    Object.keys(window.plannerConfig).forEach(key => {
+        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
+    });
+
+    let currentDayCounter = newStartDay;
+    const totalWeeksInMonth = Math.ceil(newDayCount / 7);
+
+    for (let w = 1; w <= totalWeeksInMonth; w++) {
+        const key = `${m}-${w}`;
+        const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
+        
+        window.plannerConfig[key] = {
+            label: `Week ${w} (M${m})`,
+            theme: "Adjusted Month",
+            days: Array.from({length: daysInThisWeek}, (_, i) => {
+                const dayNum = currentDayCounter++;
+                return {
+                    n: dayNum,
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
+                    tag: "Activity",
+                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
+                };
+            })
+        };
+    }
+
+    saveUserData(uid).then(() => {
+        alert("Month " + m + " restructured!");
+        location.reload();
+    });
+}
+
+export function editMonthStructure(m, uid) {
+    const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
+    const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
+    
+    if (isNaN(newDayCount) || isNaN(newStartDay)) return;
+
+    // Remove as semanas antigas deste mês do config
+    Object.keys(window.plannerConfig).forEach(key => {
+        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
+    });
+
+    let currentDayCounter = newStartDay;
+    const totalWeeksInMonth = Math.ceil(newDayCount / 7);
+
+    for (let w = 1; w <= totalWeeksInMonth; w++) {
+        const key = `${m}-${w}`;
+        const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
+        
+        window.plannerConfig[key] = {
+            label: `Week ${w} (M${m})`,
+            theme: "Adjusted Month",
+            days: Array.from({length: daysInThisWeek}, (_, i) => {
+                const dayNum = currentDayCounter++;
+                return {
+                    n: dayNum,
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
+                    tag: "Activity",
+                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
+                };
+            })
+        };
+    }
+
+    saveUserData(uid).then(() => {
+        alert("Month " + m + " restructured!");
+        location.reload();
     });
 }
