@@ -35,9 +35,9 @@ export function buildWeek(m, w, uid) {
         const card = document.createElement("div");
         card.className = "daycard";
         card.innerHTML = `
-            <div class="dayhead ${day.review ? 'rv' : ''}">
-                <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
-                <div class="dayname">${day.name}</div>
+            <div class="dayhead ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">
+                <div class="daynum ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">${day.n}</div>
+                <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
             <div class="daybody" id="db${day.n}">
