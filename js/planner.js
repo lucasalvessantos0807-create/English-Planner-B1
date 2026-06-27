@@ -27,7 +27,7 @@ export function buildWeek(m, w, uid) {
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
-    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p>${wk.theme}</p></div>`;
+    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
@@ -38,19 +38,22 @@ export function buildWeek(m, w, uid) {
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${day.name}</div>
-                <div class="daytag" contenteditable="${isEditMode}">${day.tag}</div>
+                <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
             <div class="daybody" id="db${day.n}">
-                ${day.activities.map((act, aIdx) => `
-                    <div class="act">
-                        <div class="aico ${act.t}">${act.i}</div>
-                        <div class="acont">
-                            <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
-                            <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                <div class="activities-container">
+                    ${day.activities.map((act, aIdx) => `
+                        <div class="act">
+                            <div class="aico ${act.t}">${act.i}</div>
+                            <div class="acont">
+                                <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                                <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                            </div>
+                            <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
                         </div>
-                        <div class="atime">${act.time}</div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
+                ${isEditMode ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
                 <textarea class="ntxt" id="nt${day.n}" placeholder="Notes...">${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}">
                     <input type="checkbox" ${dayData.done ? 'checked' : ''}>
@@ -59,18 +62,36 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // Salva edições de texto
+        // Salvar edições de texto e tempo
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
+                const type = e.target.dataset.type;
+                
                 if (path) {
                     const [wkK, dI, aI, field] = path.split('.');
                     window.plannerConfig[wkK].days[dI].activities[aI][field] = e.target.innerText;
-                } else if (e.target.classList.contains('daytag')) {
-                    wk.days[dIdx].tag = e.target.innerText;
+                } else if (type === 'tag') {
+                    window.plannerConfig[e.target.dataset.week].days[e.target.dataset.dayidx].tag = e.target.innerText;
+                } else if (type === 'theme') {
+                    window.plannerConfig[e.target.dataset.week].theme = e.target.innerText;
                 }
+                saveUserData(uid);
             };
         });
+
+        // Botão de Adicionar Atividade
+        const addBtn = card.querySelector('.add-act-btn');
+        if (addBtn) {
+            addBtn.onclick = () => {
+                const wkKey = addBtn.dataset.week;
+                const dI = addBtn.dataset.dayidx;
+                window.plannerConfig[wkKey].days[dI].activities.push({
+                    t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
+                });
+                saveUserData(uid).then(() => buildWeek(m, w, uid));
+            };
+        }
 
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
@@ -97,34 +118,44 @@ export function buildWeek(m, w, uid) {
 }
 
 export function addNewMonth(uid) {
-    // Descobre o próximo número de mês baseando-se nos dados existentes
+    const dayCount = parseInt(prompt("How many days should this month have? (Ex: 30 or 31)", "30"));
+    if (isNaN(dayCount) || dayCount <= 0) return;
+
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
-    // Descobre o número da última semana e do último dia para continuar a sequência
-    const totalWeeks = Object.keys(window.plannerConfig).length;
-    const lastDay = Object.values(window.plannerConfig).reduce((acc, curr) => {
-        const lastInWeek = curr.days[curr.days.length - 1].n;
-        return lastInWeek > acc ? lastInWeek : acc;
-    }, 0);
+    // Pergunta se quer continuar a contagem dos dias ou resetar para 1
+    const startDayInput = prompt("What is the number of the first day of this month?", 
+        (Object.values(window.plannerConfig).reduce((acc, curr) => {
+            const last = curr.days[curr.days.length - 1].n;
+            return last > acc ? last : acc;
+        }, 0) + 1));
+    
+    let currentDayCounter = parseInt(startDayInput);
+    const totalWeeksInMonth = Math.ceil(dayCount / 7);
+    const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
 
-    for (let w = 1; w <= 4; w++) {
+    for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${nextMonth}-${w}`;
-        const startDay = lastDay + ((w - 1) * 7) + 1;
+        const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
+        
         window.plannerConfig[key] = {
-            label: `Week ${totalWeeks + w}`,
-            theme: "New Month - Edit theme and activities",
-            days: Array.from({length: 7}, (_, i) => ({
-                n: startDay + i,
-                name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][i],
-                tag: "Activity",
-                activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Click Edit Mode to change this content", time: "20 min"}]
-            }))
+            label: `Week ${totalWeeksSoFar + w}`,
+            theme: "New Month - Edit theme",
+            days: Array.from({length: daysInThisWeek}, (_, i) => {
+                const dayNum = currentDayCounter++;
+                return {
+                    n: dayNum,
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
+                    tag: "Activity",
+                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
+                };
+            })
         };
     }
 
     saveUserData(uid).then(() => {
-        alert("Novo mês adicionado com sucesso! O Planner será atualizado.");
+        alert("Novo mês criado com " + dayCount + " dias!");
         location.reload(); 
     });
 }
