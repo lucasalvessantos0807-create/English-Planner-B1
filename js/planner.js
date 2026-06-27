@@ -22,7 +22,7 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    builtWeeks.clear(); // Limpa cache para redesenhar a interface
+    builtWeeks.clear();
 
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
@@ -59,7 +59,7 @@ export function buildWeek(m, w, uid) {
         const card = document.createElement("div");
         card.className = "daycard";
         
-        const isOpenClass = openDays.has(day.n) ? 'on' : '';
+        const isOpen = openDays.has(day.n) ? 'on' : '';
 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">
@@ -67,7 +67,7 @@ export function buildWeek(m, w, uid) {
                 <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody ${isOpenClass}" id="db${day.n}">
+            <div class="daybody ${isOpen}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -90,9 +90,9 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // --- EVENTOS DO DIA ---
+        // --- LISTENERS ---
 
-        // 1. Salvar textos manuais
+        // Edição manual de textos
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
@@ -109,20 +109,15 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 2. Adicionar Atividade (Usa o Molde Padrão Grammar)
+        // Botão Adicionar (Usa Grammar como padrão)
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
                 const mold = DATA_MAP["📐"]; 
-
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: mold.type, 
-                    i: "📐", 
-                    title: mold.title, 
-                    desc: "Edit description", 
-                    time: "20 min"
+                    t: mold.type, i: "📐", title: mold.title, desc: "Edit description", time: "20 min"
                 });
                 builtWeeks.delete(wkKey);
                 buildWeek(m, w, uid);
@@ -130,7 +125,7 @@ export function buildWeek(m, w, uid) {
             };
         }
 
-        // 3. Deletar Atividade
+        // Botão Deletar
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -144,7 +139,7 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 4. Seletor de Emojis com Vínculo Automático
+        // Seletor de Emoji com Preenchimento Automático
         card.querySelectorAll('.aico').forEach(iconEl => {
             if (!isEditMode) return;
             iconEl.onclick = (e) => {
@@ -186,7 +181,7 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 5. Expandir/Recolher Dia
+        // Toggle Dia (Persistente)
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
             const body = card.querySelector('.daybody');
@@ -195,7 +190,7 @@ export function buildWeek(m, w, uid) {
             else openDays.delete(day.n);
         };
 
-        // 6. Notas e Checklist
+        // Notas e Checkbox
         const textarea = card.querySelector('textarea');
         textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
         const chk = card.querySelector('input[type="checkbox"]');
@@ -212,7 +207,7 @@ export function buildWeek(m, w, uid) {
     if (!isEditMode) builtWeeks.add(key);
 }
 
-// --- FUNÇÕES DE ESTRUTURA ---
+// --- GESTÃO DE MESES ---
 
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days should this month have?", "30"));
@@ -246,13 +241,12 @@ export function addNewMonth(uid) {
     saveUserData(uid).then(() => {
         renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
         updateProgressBar();
-        alert("Novo mês criado!");
     });
 }
 
 export function editMonthStructure(m, uid) {
-    const newDayCount = parseInt(prompt("Total days?", "30"));
-    const newStartDay = parseInt(prompt("Start day number?", "1"));
+    const newDayCount = parseInt(prompt("Total days for this month?", "30"));
+    const newStartDay = parseInt(prompt("First day number?", "1"));
     if (isNaN(newDayCount) || isNaN(newStartDay)) return;
     Object.keys(window.plannerConfig).forEach(key => { if (key.startsWith(`${m}-`)) delete window.plannerConfig[key]; });
     let currentDayCounter = newStartDay;
