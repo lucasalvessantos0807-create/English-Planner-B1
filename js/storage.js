@@ -32,9 +32,7 @@ export async function saveUserData(uid) {
         await setDoc(doc(db, "users", uid), { 
             state: state,
             plannerConfig: plannerConfig 
-        }, { merge: true });
-    } catch (e) {
-        console.error("Erro ao salvar:", e);
+        });
     }
 }
 
