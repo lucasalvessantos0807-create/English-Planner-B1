@@ -43,7 +43,7 @@ export function renderStructure(plannerConfig, onWeekChange) {
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-        // Criar Painel de Conteúdo do Mês
+     // Criar Painel de Conteúdo do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
@@ -51,38 +51,29 @@ export function renderStructure(plannerConfig, onWeekChange) {
             <div class="mheader">
                 <h2>Month ${m}</h2>
                 <p>English Study Plan — Continuous Progress</p>
-               <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure</button>
-                <button class="del-m-btn" data-month="${m}">🗑️ Delete Month</button>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="edit-m-btn" data-month="${m}" style="font-size:10px; opacity:0.6; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding: 4px 8px;">⚙️ Restructure</button>
+                    <button class="del-m-btn" data-month="${m}" style="font-size:10px; opacity:0.6; background:none; border:1px solid #ffcccc; color:#cc0000; border-radius:4px; cursor:pointer; padding: 4px 8px;">🗑️ Delete Month</button>
+                </div>
             </div>`;
         
-        // Lógica para o botão de reestruturar
-        mPanel.querySelector('.edit-m-btn').onclick = (e) => {
-            const user = window.auth.currentUser;
-            import('./planner.js').then(mModule => mModule.editMonthStructure(e.target.dataset.month, user.uid));
-        };
+        // Lógica para os botões do cabeçalho do mês
+        const user = window.auth ? window.auth.currentUser : null;
 
-        // Lógica para o botão de excluir mês
-        mPanel.querySelector('.del-m-btn').onclick = (e) => {
-            if(confirm("DANGER: This will delete ALL weeks in Month " + e.target.dataset.month + ". Continue?")) {
-                const user = window.auth.currentUser;
-                import('./planner.js').then(mModule => mModule.deleteMonth(e.target.dataset.month, user.uid));
-            }
-        };
-    </div>`;
-        
-     // Lógica para o botão de reestruturar
         mPanel.querySelector('.edit-m-btn').onclick = (e) => {
-            const user = window.auth ? window.auth.currentUser : null;
-            if (!user) {
-                alert("Please log in first.");
-                return;
-            }
+            if (!user) { alert("Please login first"); return; }
             import('./planner.js').then(mModule => {
                 mModule.editMonthStructure(e.target.dataset.month, user.uid);
             });
         };
-        
-        
+
+        mPanel.querySelector('.del-m-btn').onclick = (e) => {
+            if (!user) { alert("Please login first"); return; }
+            import('./planner.js').then(mModule => {
+                mModule.deleteMonth(e.target.dataset.month, user.uid);
+            });
+        };
+
         // Criar Navegação de Semanas dentro deste mês
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
