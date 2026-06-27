@@ -33,6 +33,8 @@ export async function saveUserData(uid) {
             state: state,
             plannerConfig: plannerConfig 
         });
+    } catch (e) {
+        console.error("Erro ao salvar:", e);
     }
 }
 
