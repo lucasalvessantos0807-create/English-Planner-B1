@@ -97,35 +97,34 @@ export function buildWeek(m, w, uid) {
 }
 
 export function addNewMonth(uid) {
-    const monthPanels = document.getElementById('monthPanels');
-    const monthNav = document.getElementById('monthNav');
-    const addBtn = document.getElementById('addMonthBtn');
+    // Descobre o próximo número de mês baseando-se nos dados existentes
+    const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
+    const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
-    const nextMonth = document.querySelectorAll('.mpanel').length + 1;
+    // Descobre o número da última semana e do último dia para continuar a sequência
+    const totalWeeks = Object.keys(window.plannerConfig).length;
     const lastDay = Object.values(window.plannerConfig).reduce((acc, curr) => {
         const lastInWeek = curr.days[curr.days.length - 1].n;
         return lastInWeek > acc ? lastInWeek : acc;
     }, 0);
 
-    // 1. Criar dados para as 4 novas semanas no config
     for (let w = 1; w <= 4; w++) {
         const key = `${nextMonth}-${w}`;
         const startDay = lastDay + ((w - 1) * 7) + 1;
         window.plannerConfig[key] = {
-            label: `Week ${((nextMonth - 1) * 4) + w}`,
-            theme: "New Month - Click 'Edit Mode' to change theme and activities",
+            label: `Week ${totalWeeks + w}`,
+            theme: "New Month - Edit theme and activities",
             days: Array.from({length: 7}, (_, i) => ({
                 n: startDay + i,
                 name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][i],
                 tag: "Activity",
-                activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Description of your study"}]
+                activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Click Edit Mode to change this content", time: "20 min"}]
             }))
         };
     }
 
-    // 2. Salva no Firebase
     saveUserData(uid).then(() => {
-        alert("Novo mês adicionado com sucesso! A página irá recarregar.");
-        location.reload();
+        alert("Novo mês adicionado com sucesso! O Planner será atualizado.");
+        location.reload(); 
     });
 }
