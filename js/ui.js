@@ -62,6 +62,7 @@ export function renderStructure(plannerConfig, onWeekChange) {
             });
         };
         
+        
         // Criar Navegação de Semanas dentro deste mês
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
