@@ -56,9 +56,7 @@ export function renderStructure(plannerConfig, onWeekChange) {
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
             .sort((a, b) => {
-                const wA = parseInt(a.split('-')[1]);
-                const wB = parseInt(b.split('-')[1]);
-                return wA - wB;
+                return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]);
             });
 
         weeks.forEach((wkKey, wIdx) => {
