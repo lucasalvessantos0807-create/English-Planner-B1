@@ -30,6 +30,10 @@ export function renderStructure(plannerConfig, onWeekChange) {
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
+    // Garante que o planner continue visível e o login escondido
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("planner").style.display = "block";
+
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
