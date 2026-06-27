@@ -49,6 +49,26 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 .profile-pill:hover{border-color:var(--accent);background:var(--accent-light)}
 .profile-pill .del{color:var(--muted);font-size:.75rem;margin-left:2px;opacity:.6}
 .profile-pill .del:hover{opacity:1;color:var(--accent)}
+
+.add-act-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-act-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .add-act-btn {
   width: 100%;
   margin-top: 10px;
