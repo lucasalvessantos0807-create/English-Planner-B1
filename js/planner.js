@@ -8,7 +8,7 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    // Ajuste visual do botão
+    // Atualiza o visual do botão
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
@@ -17,24 +17,28 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // 1. Limpa o cache para permitir que a semana seja reconstruída
+    // 1. Limpa o cache para permitir que a semana seja reconstruída do zero
     builtWeeks.clear();
 
-    // 2. Localiza com precisão o MÊS e a SEMANA que você está vendo agora
-    const activeMonthBtn = document.querySelector('.mbtn.on');
-    const activeWeekBtn = document.querySelector('.mpanel.on .wbtn.on');
-
-    if (activeMonthBtn && activeWeekBtn) {
-        const m = activeMonthBtn.dataset.month;
-        const w = activeWeekBtn.dataset.week || activeWeekBtn.textContent.split(' ')[1]; 
+    // 2. Localiza qual PAINEL de semana está visível (tem a classe .on)
+    const activePanel = document.querySelector('.wpanel.on');
+    
+    if (activePanel) {
+        // O ID do painel é algo como "wp1-1". Vamos extrair o mês e a semana dele.
+        // Remove o "wp" e separa pelo "-"
+        const idParts = activePanel.id.replace('wp', '').split('-');
+        const m = idParts[0];
+        const w = idParts[1];
         
-        // 3. Força o redesenho instantâneo da semana atual
+        // 3. Força o redesenho imediato da semana que está na tela
         buildWeek(m, w, uid);
     }
 }
 
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
+    // Força a remoção do cache para que a tela mude no exato momento do clique
+    builtWeeks.delete(key);
     // Remove do cache para forçar a atualização imediata da tela
     builtWeeks.delete(key);
     // Se estiver em modo edição, ignora o cache para garantir resposta imediata
