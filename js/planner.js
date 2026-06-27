@@ -7,6 +7,8 @@ const builtWeeks = new Set();
 export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
+    
+    // Ajuste visual do botão
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
@@ -15,20 +17,26 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // Limpa o cache para permitir a reconstrução imediata
+    // 1. Limpa o cache para permitir que a semana seja reconstruída
     builtWeeks.clear();
 
-    // Localiza qual semana e mês estão ativos para atualizar a tela na hora
-    const activeWBtn = document.querySelector('.wbtn.on');
-    if (activeWBtn) {
-        const activeMonth = activeWBtn.closest('.week-nav').dataset.month;
-        const activeWeek = activeWBtn.dataset.week;
-        buildWeek(activeMonth, activeWeek, uid);
+    // 2. Localiza com precisão o MÊS e a SEMANA que você está vendo agora
+    const activeMonthBtn = document.querySelector('.mbtn.on');
+    const activeWeekBtn = document.querySelector('.mpanel.on .wbtn.on');
+
+    if (activeMonthBtn && activeWeekBtn) {
+        const m = activeMonthBtn.dataset.month;
+        const w = activeWeekBtn.dataset.week || activeWeekBtn.textContent.split(' ')[1]; 
+        
+        // 3. Força o redesenho instantâneo da semana atual
+        buildWeek(m, w, uid);
     }
 }
 
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
+    // Remove do cache para forçar a atualização imediata da tela
+    builtWeeks.delete(key);
     // Se estiver em modo edição, ignora o cache para garantir resposta imediata
     if (isEditMode) builtWeeks.delete(key);
     
