@@ -21,7 +21,7 @@ export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    // Limpa o cache para que o redesenho aplique/remova os campos de edição
+    // Limpa o cache para redesenhar a semana com/sem ferramentas de edição
     builtWeeks.clear();
 
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
@@ -40,13 +40,14 @@ export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
     activeWeekKey = key; 
 
+    // Só usa o cache se NÃO estiver em modo edição
     if (!isEditMode && builtWeeks.has(key)) return;
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
-    container.innerHTML = ""; // Limpa a tela antes de desenhar
+    container.innerHTML = ""; // Limpa o painel antes de desenhar
     
     const wkBar = document.createElement("div");
     wkBar.className = `wkbar ${wk.review ? 'rv' : ''}`;
@@ -59,8 +60,8 @@ export function buildWeek(m, w, uid) {
         const card = document.createElement("div");
         card.className = "daycard";
         
-        // Verifica se o dia deve começar aberto (on) ou fechado
-        const isOpenClass = openDays.has(day.n) ? 'on' : '';
+        // Verifica se o dia deve estar aberto (on)
+        const isOpen = openDays.has(day.n) ? 'on' : '';
 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">
@@ -68,7 +69,7 @@ export function buildWeek(m, w, uid) {
                 <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody ${isOpenClass}" id="db${day.n}">
+            <div class="daybody ${isOpen}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -91,7 +92,9 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // 1. Salvar edições de texto
+        // --- LISTENERS DE EVENTOS ---
+
+        // Edição de Textos (onblur)
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
@@ -108,15 +111,19 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 2. Adicionar Atividade
+        // Adicionar Atividade
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
-                const type = "grammar"; 
+                const defaultType = "grammar";
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: type, i: ICON_MAP[type] || "📝", title: "New Activity", desc: "Edit me", time: "20 min"
+                    t: defaultType, 
+                    i: ICON_MAP[defaultType], 
+                    title: "New Activity", 
+                    desc: "Edit description", 
+                    time: "20 min"
                 });
                 builtWeeks.delete(wkKey);
                 buildWeek(m, w, uid);
@@ -124,11 +131,11 @@ export function buildWeek(m, w, uid) {
             };
         }
 
-        // 3. Deletar Atividade
+        // Deletar Atividade
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
-                if(confirm("Delete this activity?")) {
+                if (confirm("Delete this activity?")) {
                     const { week, dayidx, actidx } = btn.dataset;
                     window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
                     builtWeeks.delete(week);
@@ -138,7 +145,7 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 4. Seletor de Emojis e Vínculo de Cor (Tipo)
+        // Seletor de Emojis + Mudança de Cor Automática
         card.querySelectorAll('.aico').forEach(iconEl => {
             if (!isEditMode) return;
             iconEl.onclick = (e) => {
@@ -157,16 +164,17 @@ export function buildWeek(m, w, uid) {
                     b.onclick = () => {
                         const path = iconEl.dataset.path;
                         if (path) {
-                            const [wkK, dI, aI, field] = path.split('.');
+                            const [wkK, dI, aI] = path.split('.');
                             const act = window.plannerConfig[wkK].days[dI].activities[aI];
-                            act.i = emoji;
+                            
+                            act.i = emoji; // Atualiza o ícone
                             iconEl.textContent = emoji;
                             
-                            // Atualiza a cor de fundo com base no mapa de ícones
-                            const newType = Object.keys(ICON_MAP).find(k => ICON_MAP[k] === emoji);
-                            if (newType) {
-                                act.t = newType;
-                                iconEl.className = `aico ${newType}`;
+                            // Procura se o emoji escolhido pertence a algum tipo (cor)
+                            const foundType = Object.keys(ICON_MAP).find(type => ICON_MAP[type] === emoji);
+                            if (foundType) {
+                                act.t = foundType;
+                                iconEl.className = `aico ${foundType}`; // Muda a cor no CSS
                             }
                             saveUserData(uid);
                         }
@@ -178,7 +186,7 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // 5. Expandir/Recolher Dia (Persistente ao redesenhar)
+        // Expandir/Recolher Dia (Mantém o estado aberto)
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
             const body = card.querySelector('.daybody');
@@ -187,7 +195,7 @@ export function buildWeek(m, w, uid) {
             else openDays.delete(day.n);
         };
 
-        // 6. Notas e Checklist
+        // Notas e Checkbox
         const textarea = card.querySelector('textarea');
         textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
         const chk = card.querySelector('input[type="checkbox"]');
@@ -204,7 +212,7 @@ export function buildWeek(m, w, uid) {
     if (!isEditMode) builtWeeks.add(key);
 }
 
-// --- FUNÇÕES DE ESTRUTURA DO MES ---
+// --- FUNÇÕES DE GERENCIAMENTO DE MESES ---
 
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days should this month have?", "30"));
@@ -218,6 +226,7 @@ export function addNewMonth(uid) {
     let currentDayCounter = parseInt(startDayInput);
     const totalWeeksInMonth = Math.ceil(dayCount / 7);
     const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
+
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${nextMonth}-${w}`;
         const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
