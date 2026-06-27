@@ -203,7 +203,8 @@ export function addNewMonth(uid) {
         alert("Novo mês criado com " + dayCount + " dias!");
         location.reload(); 
     });
-}export function editMonthStructure(m, uid) {
+}
+export function editMonthStructure(m, uid) {
     const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
     const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
     
