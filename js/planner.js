@@ -32,13 +32,20 @@ export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
     activeWeekKey = key; 
 
-    // Se NÃO estamos em modo edição e a semana já existe no cache, não faz nada (performance)
-    // Se estivermos em modo edição (isEditMode = true), ele SEMPRE passará por aqui e redesenhará
-    if (!isEditMode && builtWeeks.has(key)) return;
+    // Se estivermos editando, limpamos o cache desta semana para forçar o redesenho total
+    if (isEditMode) {
+        builtWeeks.delete(key);
+    } else if (builtWeeks.has(key)) {
+        // Se não for edição e já estiver no cache, não faz nada (performance)
+        return;
+    }
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
+
+    // Limpa o HTML atual para garantir que as novas atividades apareçam imediatamente
+    container.innerHTML = "";
 
     // Limpa o HTML antigo para refletir as mudanças (inclusões/exclusões) imediatamente
     container.innerHTML = "";
@@ -107,25 +114,23 @@ export function buildWeek(m, w, uid) {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
+                    t: "grammar", i: "📝", title: "New Activity", desc: "Edit me", time: "20 min"
                 });
-                // Atualiza a tela imediatamente
-                buildWeek(m, w, uid);
-                // Salva no banco de dados em segundo plano
+                builtWeeks.delete(wkKey); // Limpa o cache para permitir o redesenho
+                buildWeek(m, w, uid); // Redesenha na hora
                 saveUserData(uid);
             };
         }
 
         // Botão de Deletar Atividade
-        card.querySelectorAll('.del-act').forEach(btn => {
+       card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 if(confirm("Delete this activity?")) {
                     const { week, dayidx, actidx } = btn.dataset;
                     window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
-                    // Atualiza a tela imediatamente
-                    buildWeek(m, w, uid);
-                    // Salva no banco de dados em segundo plano
+                    builtWeeks.delete(week); // Limpa o cache
+                    buildWeek(m, w, uid); // Redesenha na hora
                     saveUserData(uid);
                 }
             };
@@ -185,8 +190,8 @@ export function buildWeek(m, w, uid) {
         container.appendChild(card);
     });
 
-    // Só salvamos no cache se o modo edição estiver DESATIVADO.
-    // Isso permite que, durante a edição, a função rode múltiplas vezes para atualizar a tela.
+    // Só adiciona ao cache se o modo edição estiver desativado.
+    // Isso garante que enquanto você edita, o buildWeek tenha permissão para atualizar a tela.
     if (!isEditMode) {
         builtWeeks.add(key);
     }
