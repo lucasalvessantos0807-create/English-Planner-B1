@@ -152,6 +152,31 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 .daycard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden}
 .dayhead{display:flex;align-items:center;gap:10px;padding:.65rem 1rem;background:#f9f7f3;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
 .dayhead.rv{background:var(--green-light)}
+
+/* Tom azulado para domingos/Review */
+.dayhead.sunday { background: var(--blue-light); }
+.daynum.sunday { color: var(--blue); font-weight: bold; }
+.daytag.sunday { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+
+/* Botão de Excluir Mês */
+.del-m-btn {
+  margin-top: 10px; margin-left: 8px; font-size: 10px; opacity: 0.5; 
+  background: none; border: 1px solid #ffcccc; color: #cc0000;
+  border-radius: 4px; cursor: pointer; transition: all 0.2s;
+}
+.del-m-btn:hover { opacity: 1; background: #ffeeee; }
+
+/* Menu de Sugestão de Emojis */
+.emoji-picker {
+  position: absolute; background: white; border: 1px solid var(--border);
+  border-radius: 8px; display: flex; gap: 5px; padding: 5px;
+  box-shadow: var(--shadow); z-index: 1000;
+}
+.emoji-btn {
+  border: none; background: none; cursor: pointer; font-size: 1.2rem;
+  padding: 5px; border-radius: 4px; transition: background 0.2s;
+}
+.emoji-btn:hover { background: var(--bg); }
 .daynum{font-size:1.2rem;font-weight:400;color:var(--accent);min-width:26px;font-family:Georgia,serif}
 .daynum.rv{color:var(--green)}
 .dayname{font-size:.82rem;font-weight:600;font-family:system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
