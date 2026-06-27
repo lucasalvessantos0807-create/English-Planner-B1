@@ -3,20 +3,31 @@ export function updateProgressBar() {
     const config = window.plannerConfig || {};
     
     let totalDays = 0;
-    Object.values(config).forEach(w => totalDays += w.days.length);
+    // Conta os dias baseando-se no plannerConfig atual (dinâmico)
+    Object.values(config).forEach(w => {
+        if (w.days) totalDays += w.days.length;
+    });
     
     let done = 0;
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) done++;
     });
 
-    const pct = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
+    const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
+    // Atualiza a barra visual
     const pbar = document.getElementById("pbar");
-    if(pbar) pbar.style.width = pct + "%";
+    if (pbar) pbar.style.width = pctValue + "%";
     
-    document.getElementById("dcnt").textContent = done;
-    document.getElementById("pct").textContent = pct + "%";
+    // Atualiza o texto de progresso (Recriando o strong com o ID para não perdê-lo)
+    const statsContainer = document.querySelector('.prog-stats span:first-child');
+    if (statsContainer) {
+        statsContainer.innerHTML = `<strong id="dcnt">${done}</strong> / ${totalDays} days`;
+    }
+
+    // Atualiza a porcentagem
+    const pctEl = document.getElementById("pct");
+    if (pctEl) pctEl.textContent = pctValue + "%";
     
     const totalLabel = document.querySelector('.prog-stats span:first-child');
     if (totalLabel) totalLabel.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
