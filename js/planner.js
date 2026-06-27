@@ -195,8 +195,14 @@ export function buildWeek(m, w, uid) {
         textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
         const chk = card.querySelector('input[type="checkbox"]');
         chk.onchange = (e) => {
-            updateState(dayKey, { done: e.target.checked });
-            card.querySelector('.chk').classList.toggle('done', e.target.checked);
+            const isDone = e.target.checked;
+            // Atualiza o estado no objeto global
+            updateState(dayKey, { done: isDone });
+            
+            // Feedback visual na lista
+            card.querySelector('.chk').classList.toggle('done', isDone);
+            
+            // Salva e força a atualização da barra de progresso
             saveUserData(uid);
             updateProgressBar();
         };
