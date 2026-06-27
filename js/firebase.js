@@ -15,6 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+window.auth = auth; // Isso permite que o ui.js veja o login
 export const provider = new GoogleAuthProvider();
 
 export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
