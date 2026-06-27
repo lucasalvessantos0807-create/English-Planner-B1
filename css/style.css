@@ -87,6 +87,18 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
   color: var(--accent);
   border-color: var(--accent);
 }
+
+.del-act {
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.3;
+  transition: opacity 0.2s;
+  padding: 5px;
+}
+.del-act:hover { opacity: 1; color: var(--accent); }
+.aico[contenteditable="true"] { outline: none; border: 1px dashed var(--border); border-radius: 4px; }
+
 .login-note{font-size:.75rem;font-family:system-ui,sans-serif;color:var(--muted);margin-top:1.5rem;line-height:1.5}
 
 /* ── PLANNER ── */
