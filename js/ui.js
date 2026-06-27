@@ -1,20 +1,29 @@
 export function updateProgressBar() {
     const state = window.appState || {};
+    const config = window.plannerConfig || {};
+    
+    // Conta quantos dias totais existem no seu cronograma atual
+    let totalDays = 0;
+    Object.values(config).forEach(w => totalDays += w.days.length);
+    
     let done = 0;
-    for (let i = 1; i <= 84; i++) {
-        if (state[`d${i}`] && state[`d${i}`].done) done++;
-    }
-    const pct = Math.round((done / 84) * 100);
-    const pbar = document.getElementById("pbar");
-    if (pbar) pbar.style.width = pct + "%";
-    const dcnt = document.getElementById("dcnt");
-    if (dcnt) dcnt.textContent = done;
-    const pctLabel = document.getElementById("pct");
-    if (pctLabel) pctLabel.textContent = pct + "%";
+    Object.keys(state).forEach(key => {
+        if (state[key].done) done++;
+    });
+
+    const pct = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
+    
+    document.getElementById("pbar").style.width = pct + "%";
+    document.getElementById("dcnt").textContent = done;
+    document.getElementById("pct").textContent = pct + "%";
+    
+    const totalLabel = document.querySelector('.prog-stats span:first-child');
+    if (totalLabel) totalLabel.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
 }
 
 export function setupNavigation(onWeekChange) {
     document.querySelectorAll('.mbtn').forEach(btn => {
+        if (btn.id === 'addMonthBtn') return; // Pula o botão de adicionar
         btn.onclick = (e) => {
             const m = e.target.getAttribute('data-month');
             document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
@@ -24,6 +33,7 @@ export function setupNavigation(onWeekChange) {
             if (firstW) firstW.click();
         };
     });
+
     document.querySelectorAll('.wbtn').forEach(btn => {
         btn.onclick = (e) => {
             const nav = e.target.closest('.week-nav');
