@@ -27,62 +27,51 @@ export function renderStructure(plannerConfig, onWeekChange) {
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpa a navegação antiga (preservando apenas o botão de adicionar)
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
-    // Mapeia quais meses existem no config (ex: 1, 2, 3...)
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
-        // Criar Botão do Mês no Menu
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.dataset.month = m;
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-     // Criar Painel de Conteúdo do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
+        
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
                 <p>English Study Plan — Continuous Progress</p>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
-                    <button class="edit-m-btn" data-month="${m}" style="font-size:10px; opacity:0.6; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding: 4px 8px;">⚙️ Restructure</button>
-                    <button class="del-m-btn" data-month="${m}" style="font-size:10px; opacity:0.6; background:none; border:1px solid #ffcccc; color:#cc0000; border-radius:4px; cursor:pointer; padding: 4px 8px;">🗑️ Delete Month</button>
+                    <button class="edit-m-btn" style="font-size:10px; opacity:0.6; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer; padding: 4px 8px;">⚙️ Restructure</button>
+                    <button class="del-m-btn" style="font-size:10px; opacity:0.6; background:none; border:1px solid #ffcccc; color:#cc0000; border-radius:4px; cursor:pointer; padding: 4px 8px;">🗑️ Delete Month</button>
                 </div>
-            </div>`;
+            </div>
+            <div class="week-nav"></div>
+        `;
         
-        // Lógica para os botões do cabeçalho do mês
         const user = window.auth ? window.auth.currentUser : null;
 
-        mPanel.querySelector('.edit-m-btn').onclick = (e) => {
-            if (!user) { alert("Please login first"); return; }
-            import('./planner.js').then(mModule => {
-                mModule.editMonthStructure(e.target.dataset.month, user.uid);
-            });
+        mPanel.querySelector('.edit-m-btn').onclick = () => {
+            if (!user) return;
+            import('./planner.js').then(mModule => mModule.editMonthStructure(m, user.uid));
         };
 
-        mPanel.querySelector('.del-m-btn').onclick = (e) => {
-            if (!user) { alert("Please login first"); return; }
-            import('./planner.js').then(mModule => {
-                mModule.deleteMonth(e.target.dataset.month, user.uid);
-            });
+        mPanel.querySelector('.del-m-btn').onclick = () => {
+            if (!user) return;
+            import('./planner.js').then(mModule => mModule.deleteMonth(m, user.uid));
         };
-
-        // Criar Navegação de Semanas dentro deste mês
-        const wNav = document.createElement('div');
-        wNav.className = "week-nav";
         
+        const wNav = mPanel.querySelector('.week-nav');
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
-            .sort((a, b) => {
-                return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]);
-            });
+            .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
@@ -102,7 +91,6 @@ export function renderStructure(plannerConfig, onWeekChange) {
             };
 
             wNav.appendChild(wBtn);
-            mPanel.appendChild(wNav);
             mPanel.appendChild(wPanel);
         });
 
