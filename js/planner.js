@@ -4,10 +4,10 @@ import { renderStructure, updateProgressBar } from './ui.js';
 let isEditMode = false;
 const builtWeeks = new Set();
 let activeWeekKey = null; 
-const openDays = new Set(); // NOVO: Guarda quais dias (pelo número n) estão abertos
+const openDays = new Set(); // Guarda quais dias estão abertos
 
 const ICON_MAP = {
-    vocabulary: "📚",
+    vocab: "📚",
     reading: "📖",
     shadowing: "🎙️",
     listening: "🎧",
@@ -15,70 +15,59 @@ const ICON_MAP = {
     writing: "✍️",
     speaking: "🗣️",
     review: "🔁"
-}; // Rastreia qual semana está visível para o usuário
+};
 
 export function toggleEditMode(uid) {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     
-    // Limpa o cache de todas as semanas para permitir que o buildWeek gere o novo HTML
-    builtWeeks.clear();
+    builtWeeks.clear(); // Limpa cache para redesenhar com/sem botões
 
-    // Atualiza o texto e estilo do botão
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
     
-    // Se saiu do modo edição, salva os dados
-    if (!isEditMode) {
-        saveUserData(uid);
-    }
+    if (!isEditMode) saveUserData(uid);
     
-    // Redesenha imediatamente a semana visível
     if (activeWeekKey) {
         const [m, w] = activeWeekKey.split('-');
         buildWeek(m, w, uid);
     }
 }
+
 export function buildWeek(m, w, uid) {
     const key = `${m}-${w}`;
     activeWeekKey = key; 
 
-    // Se estivermos editando, limpamos o cache desta semana para forçar o redesenho total
-    if (isEditMode) {
-        builtWeeks.delete(key);
-    } else if (builtWeeks.has(key)) {
-        // Se não for edição e já estiver no cache, não faz nada (performance)
-        return;
-    }
+    if (!isEditMode && builtWeeks.has(key)) return;
     
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
-    // Limpa o HTML atual para garantir que as novas atividades apareçam imediatamente
-    container.innerHTML = "";
-
-    // Limpa o HTML antigo para refletir as mudanças (inclusões/exclusões) imediatamente
-    container.innerHTML = "";
+    container.innerHTML = ""; // Limpa uma única vez antes de desenhar
     
-    // Limpa o HTML antigo para remover botões de edição ou estados anteriores
-    container.innerHTML = "";
-
-    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
+    const wkBar = document.createElement("div");
+    wkBar.className = `wkbar ${wk.review ? 'rv' : ''}`;
+    wkBar.innerHTML = `<h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p>`;
+    container.appendChild(wkBar);
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
         const dayData = state[dayKey] || { done: false, notes: "" };
         const card = document.createElement("div");
         card.className = "daycard";
+        
+        // Verifica se o dia deve começar aberto
+        const isOpen = openDays.has(day.n) ? 'on' : '';
+
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''} ${day.name === 'Sunday' ? 'sunday' : ''}">${day.n}</div>
                 <div class="dayname">${day.name === 'Sunday' ? '⭐ Review Day' : day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-           <div class="daybody ${openDays.has(day.n) ? 'on' : ''}" id="db${day.n}">
+            <div class="daybody ${isOpen}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -101,12 +90,13 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // Salvar edições de texto e tempo
+        // --- EVENTOS DO CARD ---
+
+        // Edição de texto
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
                 const type = e.target.dataset.type;
-                
                 if (path) {
                     const [wkK, dI, aI, field] = path.split('.');
                     window.plannerConfig[wkK].days[dI].activities[aI][field] = e.target.innerText;
@@ -119,109 +109,84 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // Botão de Adicionar Atividade
+        // Adicionar Atividade com Ícone Automático
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
-                const addBtn = card.querySelector('.add-act-btn');
-        if (addBtn) {
-            addBtn.onclick = () => {
-                const wkKey = addBtn.dataset.week;
-                const dI = addBtn.dataset.dayidx;
-                
-                // Define o tipo (pode ser baseado na lógica da semana ou padrão grammar)
                 const type = "grammar"; 
-                
                 window.plannerConfig[wkKey].days[dI].activities.push({
-                    t: type, 
-                    i: ICON_MAP[type] || "📝", // Usa o mapa de ícones automático
-                    title: "New Activity", 
-                    desc: "Edit me", 
-                    time: "20 min"
+                    t: type, i: ICON_MAP[type] || "📝", title: "New Activity", desc: "Edit me", time: "20 min"
                 });
-                
                 builtWeeks.delete(wkKey);
                 buildWeek(m, w, uid);
                 saveUserData(uid);
             };
         }
 
-        // Botão de Deletar Atividade
-       card.querySelectorAll('.del-act').forEach(btn => {
+        // Deletar Atividade
+        card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 if(confirm("Delete this activity?")) {
                     const { week, dayidx, actidx } = btn.dataset;
                     window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
-                    builtWeeks.delete(week); // Limpa o cache
-                    buildWeek(m, w, uid); // Redesenha na hora
+                    builtWeeks.delete(week);
+                    buildWeek(m, w, uid);
                     saveUserData(uid);
                 }
             };
         });
 
-        // Parte C: Seletor de Emojis ao clicar no ícone
+        // Seletor de Emojis + Vínculo de Cor (Tipo)
         card.querySelectorAll('.aico').forEach(iconEl => {
             if (!isEditMode) return;
             iconEl.onclick = (e) => {
                 e.stopPropagation();
                 const oldPicker = document.querySelector('.emoji-picker');
                 if (oldPicker) oldPicker.remove();
-
                 const picker = document.createElement('div');
                 picker.className = 'emoji-picker';
                 const emojis = ['📚','📖','🎙️','🎧','📐','✍️','🗣️','🔁','✅','📝','🎬','📻','💡','🔥','🌟'];
-                
                 emojis.forEach(emoji => {
-                    const btn = document.createElement('button');
-                    btn.className = 'emoji-btn';
-                    btn.textContent = emoji;
-                    btn.onclick = () => {
+                    const b = document.createElement('button');
+                    b.className = 'emoji-btn';
+                    b.textContent = emoji;
+                    b.onclick = () => {
                         const path = iconEl.dataset.path;
                         if (path) {
                             const [wkK, dI, aI, field] = path.split('.');
-                            window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                            window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                            
-                            // Tenta encontrar o tipo correspondente ao emoji escolhido
-                            const newType = Object.keys(ICON_MAP).find(key => ICON_MAP[key] === emoji);
-                            if (newType) {
-                                window.plannerConfig[wkK].days[dI].activities[aI].t = newType;
-                                iconEl.className = `aico ${newType}`; // Muda a cor de fundo na hora
-                            }
+                            const act = window.plannerConfig[wkK].days[dI].activities[aI];
+                            act.i = emoji;
                             iconEl.textContent = emoji;
+                            const newType = Object.keys(ICON_MAP).find(k => ICON_MAP[k] === emoji);
+                            if (newType) {
+                                act.t = newType;
+                                iconEl.className = `aico ${newType}`;
+                            }
                             saveUserData(uid);
                         }
                         picker.remove();
                     };
-                    picker.appendChild(btn);
+                    picker.appendChild(b);
                 });
                 iconEl.parentElement.appendChild(picker);
             };
         });
 
+        // Abrir/Fechar dia (Persistente)
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable')) return;
-            
             const body = card.querySelector('.daybody');
             body.classList.toggle('on');
-            
-            // Se abriu, adiciona ao Set. Se fechou, remove.
-            if (body.classList.contains('on')) {
-                openDays.add(day.n);
-            } else {
-                openDays.delete(day.n);
-            }
+            if (body.classList.contains('on')) openDays.add(day.n);
+            else openDays.delete(day.n);
         };
 
+        // Notas e Checkbox
         const textarea = card.querySelector('textarea');
-        textarea.oninput = (e) => {
-            updateState(dayKey, { notes: e.target.value });
-            saveUserData(uid);
-        };
-
+        textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
         const chk = card.querySelector('input[type="checkbox"]');
         chk.onchange = (e) => {
             updateState(dayKey, { done: e.target.checked });
@@ -233,35 +198,26 @@ export function buildWeek(m, w, uid) {
         container.appendChild(card);
     });
 
-    // Só adiciona ao cache se o modo edição estiver desativado.
-    // Isso garante que enquanto você edita, o buildWeek tenha permissão para atualizar a tela.
-    if (!isEditMode) {
-        builtWeeks.add(key);
-    }
+    if (!isEditMode) builtWeeks.add(key);
 }
 
-export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days should this month have? (Ex: 30 or 31)", "30"));
-    if (isNaN(dayCount) || dayCount <= 0) return;
+// --- OUTRAS FUNÇÕES DE ESTRUTURA ---
 
+export function addNewMonth(uid) {
+    const dayCount = parseInt(prompt("How many days should this month have?", "30"));
+    if (isNaN(dayCount) || dayCount <= 0) return;
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
-    
-    // Pergunta se quer continuar a contagem dos dias ou resetar para 1
-    const startDayInput = prompt("What is the number of the first day of this month?", 
-        (Object.values(window.plannerConfig).reduce((acc, curr) => {
-            const last = curr.days[curr.days.length - 1].n;
-            return last > acc ? last : acc;
-        }, 0) + 1));
-    
+    const startDayInput = prompt("What is the number of the first day?", (Object.values(window.plannerConfig).reduce((acc, curr) => {
+        const last = curr.days[curr.days.length - 1].n;
+        return last > acc ? last : acc;
+    }, 0) + 1));
     let currentDayCounter = parseInt(startDayInput);
     const totalWeeksInMonth = Math.ceil(dayCount / 7);
     const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
-
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${nextMonth}-${w}`;
         const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
-        
         window.plannerConfig[key] = {
             label: `Week ${totalWeeksSoFar + w}`,
             theme: "New Month - Edit theme",
@@ -276,31 +232,23 @@ export function addNewMonth(uid) {
             })
         };
     }
-
-  saveUserData(uid).then(() => {
+    saveUserData(uid).then(() => {
         renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
         updateProgressBar();
         alert("Novo mês criado!");
     });
 }
+
 export function editMonthStructure(m, uid) {
     const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
-    const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
-    
+    const newStartDay = parseInt(prompt("What should be the number of the first day?", "1"));
     if (isNaN(newDayCount) || isNaN(newStartDay)) return;
-
-    // Remove as semanas antigas deste mês do config
-    Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
-    });
-
+    Object.keys(window.plannerConfig).forEach(key => { if (key.startsWith(`${m}-`)) delete window.plannerConfig[key]; });
     let currentDayCounter = newStartDay;
     const totalWeeksInMonth = Math.ceil(newDayCount / 7);
-
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${m}-${w}`;
         const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
-        
         window.plannerConfig[key] = {
            label: `Week ${w}`,
             theme: "Adjusted Month",
@@ -315,24 +263,17 @@ export function editMonthStructure(m, uid) {
             })
         };
     }
-
     saveUserData(uid).then(() => {
         renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
         updateProgressBar();
-        alert("Month " + m + " restructured!");
     });
 }
 
 export function deleteMonth(m, uid) {
-    if(!confirm("Are you sure you want to delete Month " + m + "? This will remove all weeks from this month.")) return;
-    Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) {
-            delete window.plannerConfig[key];
-        }
-    });
-   saveUserData(uid).then(() => {
+    if(!confirm("Are you sure you want to delete Month " + m + "?")) return;
+    Object.keys(window.plannerConfig).forEach(key => { if (key.startsWith(`${m}-`)) delete window.plannerConfig[key]; });
+    saveUserData(uid).then(() => {
         renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
         updateProgressBar();
-        alert("Month " + m + " deleted.");
     });
 }
