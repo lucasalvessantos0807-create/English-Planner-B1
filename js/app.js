@@ -1,7 +1,7 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth } from './planner.js';
-import { renderStructure, updateProgressBar, applyTheme } from './ui.js';
+import { renderStructure, updateProgressBar } from './ui.js';
 
 let currentUser = null;
 
@@ -16,10 +16,6 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("planner").style.display = "block";
         
         const userData = await loadUserData(currentUser);
-        // Aplica o tema salvo (ou o padrão) vindo do storage
-        if (userData.themeConfig) {
-            applyTheme(userData.themeConfig);
-        }
         
         // Renderiza a estrutura de botões e painéis dinamicamente
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
@@ -36,8 +32,6 @@ onAuthStateChanged(auth, async (user) => {
         if (firstKey) {
             const [m, w] = firstKey.split('-');
             buildWeek(m, w, currentUser);
-            // Aplica o tema salvo do usuário
-        applyTheme(userData.themeConfig);
         }
         updateProgressBar();
     } else {
@@ -45,3 +39,25 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("login-screen").style.display = "flex";
     }
 });
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCE4d1pH7qM5X2nqhxqsIbh7qp1bgbwTYc",
+  authDomain: "english-planner-a1.firebaseapp.com",
+  projectId: "english-planner-a1",
+  storageBucket: "english-planner-a1.firebasestorage.app",
+  messagingSenderId: "794904439088",
+  appId: "1:794904439088:web:daa0ed2bed1506ae2b00f5",
+  measurementId: "G-RPDY8X75WV"
+};
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+window.auth = auth; // Isso permite que o ui.js veja o login
+export const provider = new GoogleAuthProvider();
+
+export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
