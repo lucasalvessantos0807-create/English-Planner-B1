@@ -5,10 +5,9 @@ export let state = {};
 export let plannerConfig = {};
 export let pageContent = {};
 
-// Função para limpar a memória local ao trocar de usuário
 export function resetLocalData() {
     state = {};
-    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData)); // Cópia limpa do padrão
+    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
     pageContent = {};
     window.appState = state;
     window.plannerConfig = plannerConfig;
@@ -16,21 +15,19 @@ export function resetLocalData() {
 }
 
 export async function loadUserData(uid) {
-    resetLocalData(); // Limpa antes de carregar o novo
+    resetLocalData();
     try {
         const snap = await getDoc(doc(db, "users", uid));
-        
         if (snap.exists()) {
             const data = snap.data();
             state = data.state || {};
             plannerConfig = data.plannerConfig || initialWeeksData;
-            pageContent = data.pageContent || {}; 
+            pageContent = data.pageContent || {};
             
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
 
-            // Aplica os textos personalizados do usuário na UI
             Object.keys(pageContent).forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = pageContent[id];
