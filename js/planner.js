@@ -79,19 +79,14 @@ export function buildWeek(m, w, uid, openDays = []) {
             </div>
         `;
 
-       if (isEditMode) {
+        if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
                     e.preventDefault();
-                    e.stopPropagation(); // Impede o card de minimizar
-                    
+                    e.stopPropagation();
                     const wrapper = icon.closest('.aico-wrapper');
                     const wasOpen = wrapper.classList.contains('show-suggestions');
-                    
-                    // Fecha todos os outros menus abertos antes de abrir este
                     document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    
-                    // Abre apenas se já não estivesse aberto
                     if (!wasOpen) wrapper.classList.add('show-suggestions');
                 };
             });
@@ -105,21 +100,9 @@ export function buildWeek(m, w, uid, openDays = []) {
                 const wrapper = e.target.closest('.aico-wrapper');
                 const aico = wrapper.querySelector('.aico');
                 aico.innerText = emoji;
-                wrapper.classList.remove('show-suggestions'); // Fecha o menu
-                aico.focus(); aico.blur();
-            };
-        });
-        }
-
-        card.querySelectorAll('.suggest-emoji').forEach(sug => {
-            sug.onclick = (e) => {
-                e.stopPropagation();
-                const emoji = e.target.dataset.emoji;
-                const wrapper = e.target.closest('.aico-wrapper');
-                const aico = wrapper.querySelector('.aico');
-                aico.innerText = emoji;
                 wrapper.classList.remove('show-suggestions');
-                aico.focus(); aico.blur();
+                aico.focus(); 
+                aico.blur();
             };
         });
 
@@ -164,8 +147,7 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
-       card.querySelector('.dayhead').onclick = (e) => {
-            // Se clicar em algo editável ou no container de ícones, não minimiza
+        card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable') || e.target.closest('.aico-wrapper')) return;
             card.querySelector('.daybody').classList.toggle('on');
         };
