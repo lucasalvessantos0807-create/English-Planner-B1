@@ -17,16 +17,18 @@ export async function loadUserData(uid) {
             plannerConfig = data.plannerConfig || initialWeeksData;
             window.appState = state;
             window.plannerConfig = plannerConfig;
-            return { state, plannerConfig };
+            return { state, plannerConfig, themeConfig };
         }
     } catch (e) {
         console.error("Erro ao carregar:", e);
     }
     state = {};
     plannerConfig = initialWeeksData;
+    themeConfig = { mode:'light', accent:'#c85a2a', font:'Georgia, serif', size:'15', width:'900px', radius:'10' };
     window.appState = state;
     window.plannerConfig = plannerConfig;
-    return { state, plannerConfig };
+    window.themeConfig = themeConfig;
+    return { state, plannerConfig, themeConfig };
 }
 
 export async function saveUserData(uid) {
