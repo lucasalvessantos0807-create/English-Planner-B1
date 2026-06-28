@@ -302,3 +302,19 @@ button, input, select, textarea {
 }
 .font-item:hover { background: var(--accent-light); color: var(--accent); }
 .font-item.active { background: var(--accent); color: white; }
+
+/* --- Accordion Style --- */
+#fontStyleToggle {
+    transition: color 0.2s;
+    padding: 5px 0;
+}
+#fontStyleToggle:hover {
+    color: var(--accent);
+}
+#fontArrow {
+    font-size: 0.6rem;
+    transition: transform 0.3s;
+}
+.expanded #fontArrow {
+    transform: rotate(180deg);
+}
