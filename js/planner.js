@@ -3,9 +3,9 @@ import { updateProgressBar } from './ui.js';
 
 let isEditMode = false;
 const builtWeeks = new Set();
+const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 
 export function toggleEditMode(uid) {
-    // Salva quais dias estão abertos para reabri-los após o redesenho
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
     
     isEditMode = !isEditMode;
@@ -39,8 +39,30 @@ export function buildWeek(m, w, uid, openDays = []) {
         const dayData = state[dayKey] || { done: false, notes: "" };
         const card = document.createElement("div");
         card.className = "daycard";
-        
         const isOpen = openDays.includes(day.n.toString());
+
+        // Pré-calcula o HTML das atividades para evitar erro de sintaxe por aninhamento excessivo
+        const activitiesHtml = day.activities.map((act, aIdx) => {
+            let suggestionsHtml = '';
+            if (isEditMode) {
+                const emojis = EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('');
+                suggestionsHtml = `<div class="icon-suggestions">${emojis}</div>`;
+            }
+
+            return `
+                <div class="act">
+                    <div class="aico-wrapper">
+                        <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                        ${suggestionsHtml}
+                    </div>
+                    <div class="acont">
+                        <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                        <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                    </div>
+                    <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                    ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                </div>`;
+        }).join('');
 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
@@ -49,28 +71,7 @@ export function buildWeek(m, w, uid, openDays = []) {
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
-                <div class="activities-container">
-                    ${day.activities.map((act, aIdx) => `
-                        <div class="act">
-                            <div class="aico-wrapper">
-                                <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
-                                ${isEditMode ? `
-                                    <div class="icon-suggestions">
-                                        ${['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'].map(emoji => `
-                                            <span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>
-                                        `).join('')}
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div class="acont">
-                                <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
-                                <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
-                            </div>
-                            <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
-                            ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
+                <div class="activities-container">${activitiesHtml}</div>
                 ${isEditMode ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
                 <textarea class="ntxt" id="nt${day.n}" placeholder="Notes...">${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}">
@@ -80,33 +81,31 @@ export function buildWeek(m, w, uid, openDays = []) {
             </div>
         `;
 
+        // Eventos: Ícones
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     const wrapper = icon.closest('.aico-wrapper');
                     const wasOpen = wrapper.classList.contains('show-suggestions');
                     document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
                     if (!wasOpen) wrapper.classList.add('show-suggestions');
                 };
             });
+            card.querySelectorAll('.suggest-emoji').forEach(sug => {
+                sug.onclick = (e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    const emoji = e.target.dataset.emoji;
+                    const wrapper = e.target.closest('.aico-wrapper');
+                    const aico = wrapper.querySelector('.aico');
+                    aico.innerText = emoji;
+                    wrapper.classList.remove('show-suggestions');
+                    aico.focus(); aico.blur();
+                };
+            });
         }
 
-        card.querySelectorAll('.suggest-emoji').forEach(sug => {
-            sug.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const emoji = e.target.dataset.emoji;
-                const wrapper = e.target.closest('.aico-wrapper');
-                const aico = wrapper.querySelector('.aico');
-                aico.innerText = emoji;
-                wrapper.classList.remove('show-suggestions');
-                aico.focus(); 
-                aico.blur();
-            };
-        });
-
+        // Eventos: Salvamento
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
@@ -123,13 +122,12 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
+        // Eventos: Botões de ação
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
                 const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
-                const wkKey = addBtn.dataset.week;
-                const dI = addBtn.dataset.dayidx;
-                window.plannerConfig[wkKey].days[dI].activities.push({
+                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({
                     t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
                 });
                 saveUserData(uid).then(() => buildWeek(m, w, uid, open));
@@ -141,8 +139,7 @@ export function buildWeek(m, w, uid, openDays = []) {
                 e.stopPropagation();
                 if(confirm("Delete this activity?")) {
                     const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
-                    const { week, dayidx, actidx } = btn.dataset;
-                    window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
+                    window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
                     saveUserData(uid).then(() => buildWeek(m, w, uid, open));
                 }
             };
@@ -254,7 +251,6 @@ function refreshUI(uid) {
     });
 }
 
-// Fecha menus de ícones se clicar fora
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.aico-wrapper')) {
         document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
