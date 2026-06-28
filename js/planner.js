@@ -5,6 +5,8 @@ let isEditMode = false;
 const builtWeeks = new Set();
 
 export function toggleEditMode(uid) {
+    const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
+    
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
@@ -16,15 +18,14 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    // Força a atualização imediata da semana ativa em qualquer mês
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
     if (activeWeekPanel) {
         const idParts = activeWeekPanel.id.replace('wp', '').split('-');
-        buildWeek(idParts[0], idParts[1], uid);
+        buildWeek(idParts[0], idParts[1], uid, openDays);
     }
 }
 
-export function buildWeek(m, w, uid) {
+export function buildWeek(m, w, uid, openDays = []) {
     const key = `${m}-${w}`;
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
@@ -37,13 +38,16 @@ export function buildWeek(m, w, uid) {
         const dayData = state[dayKey] || { done: false, notes: "" };
         const card = document.createElement("div");
         card.className = "daycard";
+        
+        const isOpen = openDays.includes(day.n.toString());
+
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody" id="db${day.n}">
+            <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
@@ -75,14 +79,25 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // Lógica para as sugestões de ícones (fora do HTML para evitar erro de sintaxe)
+        if (isEditMode) {
+            card.querySelectorAll('.aico').forEach(icon => {
+                icon.onclick = (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                    icon.closest('.aico-wrapper').classList.toggle('show-suggestions');
+                };
+            });
+        }
+
         card.querySelectorAll('.suggest-emoji').forEach(sug => {
             sug.onclick = (e) => {
+                e.stopPropagation();
                 const emoji = e.target.dataset.emoji;
-                const aico = e.target.closest('.aico-wrapper').querySelector('.aico');
+                const wrapper = e.target.closest('.aico-wrapper');
+                const aico = wrapper.querySelector('.aico');
                 aico.innerText = emoji;
-                aico.focus();
-                aico.blur(); // Força o salvamento no Firebase
+                wrapper.classList.remove('show-suggestions');
+                aico.focus(); aico.blur();
             };
         });
 
@@ -105,12 +120,13 @@ export function buildWeek(m, w, uid) {
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
+                const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
                 const wkKey = addBtn.dataset.week;
                 const dI = addBtn.dataset.dayidx;
                 window.plannerConfig[wkKey].days[dI].activities.push({
                     t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
                 });
-                saveUserData(uid).then(() => buildWeek(m, w, uid));
+                saveUserData(uid).then(() => buildWeek(m, w, uid, open));
             };
         }
 
@@ -118,15 +134,16 @@ export function buildWeek(m, w, uid) {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 if(confirm("Delete this activity?")) {
+                    const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
                     const { week, dayidx, actidx } = btn.dataset;
                     window.plannerConfig[week].days[dayidx].activities.splice(actidx, 1);
-                    saveUserData(uid).then(() => buildWeek(m, w, uid));
+                    saveUserData(uid).then(() => buildWeek(m, w, uid, open));
                 }
             };
         });
 
         card.querySelector('.dayhead').onclick = (e) => {
-            if (e.target.hasAttribute('contenteditable')) return;
+            if (e.target.hasAttribute('contenteditable') || e.target.classList.contains('aico')) return;
             card.querySelector('.daybody').classList.toggle('on');
         };
 
@@ -147,6 +164,10 @@ export function buildWeek(m, w, uid) {
         container.appendChild(card);
     });
     builtWeeks.add(key);
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+    }, { once: true });
 }
 
 export function addNewMonth(uid) {
