@@ -137,7 +137,6 @@ export function addNewMonth(uid) {
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
-    // Pergunta se quer continuar a contagem dos dias ou resetar para 1
     const startDayInput = prompt("What is the number of the first day of this month?", 
         (Object.values(window.plannerConfig).reduce((acc, curr) => {
             const last = curr.days[curr.days.length - 1].n;
@@ -168,55 +167,17 @@ export function addNewMonth(uid) {
     }
 
     saveUserData(uid).then(() => {
-        alert("Novo mês criado com " + dayCount + " dias!");
+        alert("Novo mês criado!");
         location.reload(); 
-    });
-}export function editMonthStructure(m, uid) {
-    const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
-    const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
-    
-    if (isNaN(newDayCount) || isNaN(newStartDay)) return;
-
-    // Remove as semanas antigas deste mês do config
-    Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
-    });
-
-    let currentDayCounter = newStartDay;
-    const totalWeeksInMonth = Math.ceil(newDayCount / 7);
-
-    for (let w = 1; w <= totalWeeksInMonth; w++) {
-        const key = `${m}-${w}`;
-        const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
-        
-        window.plannerConfig[key] = {
-            label: `Week ${w} (M${m})`,
-            theme: "Adjusted Month",
-            days: Array.from({length: daysInThisWeek}, (_, i) => {
-                const dayNum = currentDayCounter++;
-                return {
-                    n: dayNum,
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
-                    tag: "Activity",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
-                };
-            })
-        };
-    }
-
-    saveUserData(uid).then(() => {
-        alert("Month " + m + " restructured!");
-        location.reload();
     });
 }
 
 export function editMonthStructure(m, uid) {
-    const newDayCount = parseInt(prompt("How many days should this month have total?", "30"));
-    const newStartDay = parseInt(prompt("What should be the number of the first day of this month?", "1"));
+    const newDayCount = parseInt(prompt("How many days total?", "30"));
+    const newStartDay = parseInt(prompt("First day number?", "1"));
     
     if (isNaN(newDayCount) || isNaN(newStartDay)) return;
 
-    // Remove as semanas antigas deste mês do config
     Object.keys(window.plannerConfig).forEach(key => {
         if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
     });
