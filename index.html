@@ -63,7 +63,7 @@
       <div class="tpl-row"><div class="tpl-time">0–15 min</div><div class="tpl-act">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
       <div class="tpl-row"><div class="tpl-time">15–35 min</div><div class="tpl-act">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
       <div class="tpl-row"><div class="tpl-time">35–55 min</div><div class="tpl-act">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
-      <div class="tpl-row"><div class="tpl-time">55–75 min</div><div class="tpl-act">🎧 <strong>Listening</strong> — Short clip. Tuesday &amp; Friday: dictation exercise.</div></div>
+      <div class="tpl-row"><div class="tpl-time">55–75 min</div><div class="tpl-act">🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.</div></div>
       <div class="tpl-row"><div class="tpl-time">75–95 min</div><div class="tpl-act">📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)</div></div>
       <div class="tpl-row"><div class="tpl-time">95–115 min</div><div class="tpl-act">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
       <div class="tpl-row"><div class="tpl-time">Sunday</div><div class="tpl-act">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
@@ -96,12 +96,12 @@
         <button id="closeDrawer">✕</button>
       </div>
       <div class="drawer-body">
+        
+        <!-- Bloco de Font Style -->
         <div class="control-group">
-          <!-- Título clicável agora como DIV -->
           <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
             Font Style <span id="fontArrow">▼</span>
           </div>
-          <!-- Conteúdo que expande -->
           <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
             <div class="font-search-container">
               <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
@@ -111,6 +111,15 @@
             </div>
           </div>
         </div>
+
+        <!-- Bloco de Font Size (Novo Slider) -->
+        <div class="control-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <label style="display:flex; justify-content:space-between; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
+            Font Size <span id="fontSizeVal">15px</span>
+          </label>
+          <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
+        </div>
+
       </div>
     </div>
 
