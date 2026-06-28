@@ -15,7 +15,6 @@ export function toggleEditMode(uid) {
         saveUserData(uid);
     }
     
-    // Limpa o cache visual para redesenhar com ou sem campos de edição
     builtWeeks.clear();
     const activeBtn = document.querySelector('.wbtn.on');
     if (activeBtn) activeBtn.click();
@@ -63,12 +62,10 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // Salvar edições de texto e tempo
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
                 const type = e.target.dataset.type;
-                
                 if (path) {
                     const [wkK, dI, aI, field] = path.split('.');
                     window.plannerConfig[wkK].days[dI].activities[aI][field] = e.target.innerText;
@@ -81,7 +78,6 @@ export function buildWeek(m, w, uid) {
             };
         });
 
-        // Botão de Adicionar Atividade
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
@@ -94,7 +90,6 @@ export function buildWeek(m, w, uid) {
             };
         }
 
-        // Botão de Deletar Atividade
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
