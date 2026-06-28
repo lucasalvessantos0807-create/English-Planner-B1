@@ -5,52 +5,33 @@ let isEditMode = false;
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 const ICON_MAP = {
-    '📚': 'Vocabulary',
-    '📖': 'Reading',
-    '🎙️': 'Shadowing',
-    '🎧': 'Listening',
-    '📐': 'Grammar',
-    '✍️': 'Writing',
-    '🗣️': 'Speaking',
-    '🔁': 'Review Day',
-    '⭐': 'Review Day',
-    '✅': 'Completed',
-    '📝': 'Exercise',
-    '📍': 'Extra Activity'
+    '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening',
+    '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day',
+    '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity'
 };
 
 export function toggleEditMode(uid) {
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
-    
     isEditMode = !isEditMode;
 
-    // --- LÓGICA DE EDIÇÃO DE TEXTOS GLOBAIS ---
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = isEditMode;
-        
         if (isEditMode) {
             el.onblur = () => {
-                // Segurança: Só prossegue se houver um usuário logado
-                if (!uid) return; 
-                
+                if (!uid) return;
                 if (!window.pageContent) window.pageContent = {};
-                
-                // Salva o conteúdo no objeto global
                 window.pageContent[el.id] = el.innerHTML;
-                
-                // Salva no Firebase na pasta específica deste UID
                 saveUserData(uid);
             };
         }
+    });
 
     const btn = document.getElementById('editModeBtn');
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
     
-    if (!isEditMode) {
-        saveUserData(uid);
-    }
+    if (!isEditMode) saveUserData(uid);
     
     builtWeeks.clear();
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
@@ -76,12 +57,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         const isOpen = openDays.includes(day.n.toString());
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
-            let suggestionsHtml = '';
-            if (isEditMode) {
-                const emojis = EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('');
-                suggestionsHtml = `<div class="icon-suggestions">${emojis}</div>`;
-            }
-
+            let suggestionsHtml = isEditMode ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
             return `
                 <div class="act">
                     <div class="aico-wrapper">
@@ -107,17 +83,12 @@ export function buildWeek(m, w, uid, openDays = []) {
                 <div class="activities-container">${activitiesHtml}</div>
                 ${isEditMode ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
                 <textarea class="ntxt" id="nt${day.n}" placeholder="Notes...">${dayData.notes || ""}</textarea>
-                <label class="chk ${dayData.done ? 'done' : ''}">
-                    <input type="checkbox" ${dayData.done ? 'checked' : ''}>
-                    <span>Day ${day.n} completed</span>
-                </label>
-            </div>
-        `;
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''}><span>Day ${day.n} completed</span></label>
+            </div>`;
 
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
-                    e.preventDefault(); e.stopPropagation();
                     const wrapper = icon.closest('.aico-wrapper');
                     const wasOpen = wrapper.classList.contains('show-suggestions');
                     document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
@@ -126,25 +97,18 @@ export function buildWeek(m, w, uid, openDays = []) {
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
-                    e.preventDefault(); e.stopPropagation();
                     const emoji = e.target.dataset.emoji;
-                    const wrapper = e.target.closest('.aico-wrapper');
-                    const aico = wrapper.querySelector('.aico');
-                    const titleEl = e.target.closest('.act').querySelector('.atitle');
+                    const act = e.target.closest('.act');
+                    const titleEl = act.querySelector('.atitle');
                     const path = titleEl.dataset.path;
                     const [wkK, dI, aI] = path.split('.');
-                    
-                    aico.innerText = emoji;
+                    act.querySelector('.aico').innerText = emoji;
                     window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                    
                     if (ICON_MAP[emoji]) {
                         titleEl.innerText = ICON_MAP[emoji];
                         window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
                     }
-
-                    wrapper.classList.remove('show-suggestions');
                     saveUserData(uid);
-                    aico.focus(); aico.blur();
                 };
             });
         }
@@ -167,37 +131,28 @@ export function buildWeek(m, w, uid, openDays = []) {
         });
 
         const addBtn = card.querySelector('.add-act-btn');
-        if (addBtn) {
-            addBtn.onclick = () => {
-                const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
-                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({
-                    t: "grammar", i: "📝", title: "New Activity", desc: "Description here", time: "20 min"
-                });
-                saveUserData(uid).then(() => buildWeek(m, w, uid, open));
-            };
-        }
+        if (addBtn) addBtn.onclick = () => {
+            window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
+            saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
+        };
 
         card.querySelectorAll('.del-act').forEach(btn => {
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                if(confirm("Delete this activity?")) {
-                    const open = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
+            btn.onclick = () => {
+                if(confirm("Delete?")) {
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    saveUserData(uid).then(() => buildWeek(m, w, uid, open));
+                    saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
                 }
             };
         });
 
         card.querySelector('.dayhead').onclick = (e) => {
-            if (e.target.hasAttribute('contenteditable') || e.target.closest('.aico-wrapper')) return;
-            card.querySelector('.daybody').classList.toggle('on');
+            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
+                card.querySelector('.daybody').classList.toggle('on');
+            }
         };
 
         const textarea = card.querySelector('textarea');
-        textarea.oninput = (e) => {
-            updateState(dayKey, { notes: e.target.value });
-            saveUserData(uid);
-        };
+        textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
 
         const chk = card.querySelector('input[type="checkbox"]');
         chk.onchange = (e) => {
@@ -213,32 +168,20 @@ export function buildWeek(m, w, uid, openDays = []) {
 }
 
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days should this month have?", "30"));
+    const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
-    const startDayInput = prompt("First day number?", 
-        (Object.values(window.plannerConfig).reduce((acc, curr) => {
-            const last = curr.days[curr.days.length - 1].n;
-            return last > acc ? last : acc;
-        }, 0) + 1));
-    let currentDayCounter = parseInt(startDayInput);
-    const totalWeeksInMonth = Math.ceil(dayCount / 7);
-    const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
-    for (let w = 1; w <= totalWeeksInMonth; w++) {
-        const key = `${nextMonth}-${w}`;
-        const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
-        window.plannerConfig[key] = {
-            label: `Week ${totalWeeksSoFar + w}`,
-            theme: "New Month - Edit theme",
-            days: Array.from({length: daysInThisWeek}, (_, i) => {
-                const dayNum = currentDayCounter++;
-                return {
-                    n: dayNum,
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
-                    tag: "Activity",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
-                };
+    const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
+    let currentDay = startDay;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${nextMonth}-${w}`] = {
+            label: `Week ${Object.keys(window.plannerConfig).length + 1}`,
+            theme: "New Month",
+            days: Array.from({length: daysInW}, () => {
+                const d = currentDay++;
+                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
             })
         };
     }
@@ -246,28 +189,17 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    const newDayCount = parseInt(prompt("How many days total?", "30"));
-    const newStartDay = parseInt(prompt("First day number?", "1"));
-    if (isNaN(newDayCount) || isNaN(newStartDay)) return;
-    Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
-    });
-    let currentDayCounter = newStartDay;
-    const totalWeeksInMonth = Math.ceil(newDayCount / 7);
-    for (let w = 1; w <= totalWeeksInMonth; w++) {
-        const key = `${m}-${w}`;
-        const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
-        window.plannerConfig[key] = {
-            label: `Week ${w}`,
-            theme: "Adjusted Month",
-            days: Array.from({length: daysInThisWeek}, (_, i) => {
-                const dayNum = currentDayCounter++;
-                return {
-                    n: dayNum,
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dayNum - 1) % 7],
-                    tag: "Activity",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit me", time: "20 min"}]
-                };
+    const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
+    if (isNaN(dayCount)) return;
+    Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+    let currentDay = startDay;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${m}-${w}`] = {
+            label: `Week ${w}`, theme: "Adjusted",
+            days: Array.from({length: daysInW}, () => {
+                const d = currentDay++;
+                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
             })
         };
     }
@@ -275,27 +207,19 @@ export function editMonthStructure(m, uid) {
 }
 
 export function deleteMonth(m, uid) {
-    if (!confirm(`Are you sure you want to delete Month ${m} and all its weeks?`)) return;
-    Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
-    });
-    saveUserData(uid).then(() => refreshUI(uid));
+    if (confirm(`Delete Month ${m}?`)) {
+        Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+        saveUserData(uid).then(() => refreshUI(uid));
+    }
 }
 
 function refreshUI(uid) {
-    import('./ui.js').then(modUI => {
-        modUI.renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
-        const firstKey = Object.keys(window.plannerConfig).sort()[0];
-        if (firstKey) {
-            const [m, w] = firstKey.split('-');
-            buildWeek(m, w, uid);
-        }
-        modUI.updateProgressBar();
+    import('./ui.js').then(mod => {
+        mod.renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        const first = Object.keys(window.plannerConfig).sort()[0];
+        if (first) { const [m, w] = first.split('-'); buildWeek(m, w, uid); }
+        mod.updateProgressBar();
     });
 }
 
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.aico-wrapper')) {
-        document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-    }
-});
+document.addEventListener('click', (e) => { if (!e.target.closest('.aico-wrapper')) document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions')); });
