@@ -1,11 +1,51 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f7f5f0;--white:#fff;--ink:#1a1814;--muted:#7a7570;
-  --border:#e0dbd4;--accent:#c85a2a;--accent-light:#fdf0eb;
-  --green:#2a7a5a;--green-light:#eaf4ef;--blue:#2a4f8a;--blue-light:#edf1f9;
-  --purple:#6a3a8a;--purple-light:#f3eef8;--amber:#b87a10;--amber-light:#fdf5e0;
-  --radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.07);
+:root {
+  --bg: #f7f5f0;
+  --white: #fff;
+  --ink: #1a1814;
+  --muted: #7a7570;
+  --border: #e0dbd4;
+  --accent: #c85a2a;
+  --accent-light: #fdf0eb;
+  --green: #2a7a5a;
+  --green-light: #eaf4ef;
+  --blue: #2a4f8a;
+  --blue-light: #edf1f9;
+  --purple: #6a3a8a;
+  --purple-light: #f3eef8;
+  --amber: #b87a10;
+  --amber-light: #fdf5e0;
+  --radius: 10px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  --font-size: 15px;
+  --content-width: 900px;
 }
+/* Aplicação das variáveis dinâmicas */
+body { 
+    background: var(--bg); 
+    color: var(--ink); 
+    font-family: var(--font-family, Georgia, serif); 
+    font-size: var(--font-size); 
+}
+.page { max-width: var(--content-width); }
+.ov-card, .tpl, .prog-box, .mheader, .daycard, .mbtn, .wbtn, .login-box { border-radius: var(--radius); }
+
+/* Tema Escuro */
+[data-theme="dark"] {
+  --bg: #121212;
+  --white: #1e1e1e;
+  --ink: #e0e0e0;
+  --muted: #a0a0a0;
+  --border: #333;
+  --accent-light: #2c1a14;
+}
+
+/* Tema Gradiente */
+[data-theme="gradient"] {
+  --bg: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --white: rgba(255, 255, 255, 0.9);
+}
+
 body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:15px;line-height:1.7}
 
 /* ── LOGIN SCREEN ── */
