@@ -23,6 +23,21 @@ export function toggleEditMode(uid) {
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
     
     isEditMode = !isEditMode;
+
+    // --- LÓGICA DE EDIÇÃO DE TEXTOS GLOBAIS ---
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = isEditMode;
+        
+        if (isEditMode) {
+            el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
+                // Salva o conteúdo no objeto global e dispara o salvamento no Firebase
+                window.pageContent[el.id] = el.innerHTML;
+                saveUserData(uid);
+            };
+        }
+    });
+
     const btn = document.getElementById('editModeBtn');
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
@@ -55,7 +70,6 @@ export function buildWeek(m, w, uid, openDays = []) {
         card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
 
-        // Pré-calcula o HTML das atividades para evitar erro de sintaxe por aninhamento excessivo
         const activitiesHtml = day.activities.map((act, aIdx) => {
             let suggestionsHtml = '';
             if (isEditMode) {
@@ -95,7 +109,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             </div>
         `;
 
-        // Eventos: Ícones
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
@@ -116,11 +129,9 @@ export function buildWeek(m, w, uid, openDays = []) {
                     const path = titleEl.dataset.path;
                     const [wkK, dI, aI] = path.split('.');
                     
-                    // Atualiza o ícone e o dado no config
                     aico.innerText = emoji;
                     window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
                     
-                    // Aplica o título automático se existir no mapa
                     if (ICON_MAP[emoji]) {
                         titleEl.innerText = ICON_MAP[emoji];
                         window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
@@ -133,14 +144,12 @@ export function buildWeek(m, w, uid, openDays = []) {
             });
         }
 
-        // Eventos: Salvamento
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
                 const type = e.target.dataset.type;
                 if (path) {
                     const [wkK, dI, aI, field] = path.split('.');
-                    // Garante que o campo correto (i, title, desc ou time) seja atualizado
                     const actualField = field === 'i' ? 'i' : (e.target.classList.contains('atitle') ? 'title' : (e.target.classList.contains('adesc') ? 'desc' : 'time'));
                     window.plannerConfig[wkK].days[dI].activities[aI][actualField] = e.target.innerText;
                 } else if (type === 'tag') {
@@ -152,7 +161,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
-        // Eventos: Botões de ação
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
