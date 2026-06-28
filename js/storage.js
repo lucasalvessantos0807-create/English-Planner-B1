@@ -3,6 +3,7 @@ import { weeksData as initialWeeksData } from './weeks.js';
 
 export let state = {};
 export let plannerConfig = {};
+export let pageContent = {};
 
 export async function loadUserData(uid) {
     try {
@@ -10,21 +11,24 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             state = data.state || {};
-            // Carrega o cronograma do banco, ou o padrão se for a primeira vez
             plannerConfig = data.plannerConfig || initialWeeksData;
+            pageContent = data.pageContent || {}; // Carrega textos globais
+            
             window.appState = state;
             window.plannerConfig = plannerConfig;
-            return { state, plannerConfig };
+            window.pageContent = pageContent;
+
+            // Aplica os textos carregados na UI
+            Object.keys(pageContent).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = pageContent[id];
+            });
+
+            return { state, plannerConfig, pageContent };
         }
     } catch (e) {
         console.error("Erro ao carregar:", e);
     }
-    state = {};
-    plannerConfig = initialWeeksData;
-    window.appState = state;
-    window.plannerConfig = plannerConfig;
-    return { state, plannerConfig };
-}
 
 export async function saveUserData(uid) {
     if (!uid) return;
@@ -32,7 +36,8 @@ export async function saveUserData(uid) {
         // Removido { merge: true } para permitir deleções reais no Firebase
         await setDoc(doc(db, "users", uid), { 
             state: state,
-            plannerConfig: plannerConfig 
+            plannerConfig: plannerConfig,
+            pageContent: window.pageContent || {} // Salva textos globais
         });
     } catch (e) {
         console.error("Erro ao salvar:", e);
