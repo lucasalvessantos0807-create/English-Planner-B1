@@ -206,28 +206,13 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     position: relative;
     display: flex;
     justify-content: center;
-    z-index: 99;
+    z-index: 1;
 }
 
-.icon-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    display: none; /* ALTERADO: Escondido por padrão */
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    padding: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    z-index: 1000;
-    width: max-content;
-    margin-top: 5px;
+.aico-wrapper.show-suggestions {
+    z-index: 1001;
 }
 
-/* MOSTRAR APENAS QUANDO ATIVO (Clicado) */
 .aico-wrapper.show-suggestions .icon-suggestions {
     display: grid;
 }
