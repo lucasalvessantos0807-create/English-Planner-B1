@@ -200,3 +200,40 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     background: var(--bg) !important;
     opacity: 1 !important;
 }
+
+/* --- Sugestões de Ícones --- */
+.aico-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.icon-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    z-index: 10;
+    box-shadow: var(--shadow);
+    margin-top: 5px;
+}
+.suggest-emoji {
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 2px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.suggest-emoji:hover {
+    background: var(--bg);
+}
+/* Esconde sugestões se não estiver em edição (segurança extra) */
+body:not(.edit-active) .icon-suggestions {
+    display: none;
+}
