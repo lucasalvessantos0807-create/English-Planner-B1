@@ -36,7 +36,7 @@ export function renderStructure(plannerConfig, onWeekChange) {
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpa navegação e painéis para evitar duplicatas
+    // 1. Limpeza total de segurança
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
@@ -47,13 +47,11 @@ export function renderStructure(plannerConfig, onWeekChange) {
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
-        // Criar Botão do Mês
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-        // Criar Painel do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
@@ -71,54 +69,45 @@ export function renderStructure(plannerConfig, onWeekChange) {
         `;
         
         const user = window.auth ? window.auth.currentUser : null;
-        mPanel.querySelector('.edit-m-btn').onclick = () => { if (user) import('./planner.js').then(mod => mod.editMonthStructure(m, user.uid)); };
-        mPanel.querySelector('.del-m-btn').onclick = () => { if (user) import('./planner.js').then(mod => mod.deleteMonth(m, user.uid)); };
+        mPanel.querySelector('.edit-m-btn').onclick = (e) => { e.stopPropagation(); if (user) import('./planner.js').then(mod => mod.editMonthStructure(m, user.uid)); };
+        mPanel.querySelector('.del-m-btn').onclick = (e) => { e.stopPropagation(); if (user) import('./planner.js').then(mod => mod.deleteMonth(m, user.uid)); };
         
         const wNav = mPanel.querySelector('.week-nav');
         const weeks = Object.keys(plannerConfig).filter(key => key.startsWith(`${m}-`)).sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
-            
-            // Criar Botão da Semana
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.textContent = plannerConfig[wkKey].label;
             
-            // Criar Painel da Semana
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
             wPanel.id = `wp${m}-${weekNum}`;
 
-            wBtn.onclick = () => {
-                // Remove 'on' de todas as semanas DESTE mês
+            wBtn.onclick = (e) => {
+                e.stopPropagation();
                 mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
                 wBtn.classList.add('on');
                 wPanel.classList.add('on');
                 onWeekChange(m, weekNum);
             };
-
             wNav.appendChild(wBtn);
             mPanel.appendChild(wPanel);
         });
 
         monthPanels.appendChild(mPanel);
-
-        // Clique no Mês
         mBtn.onclick = () => {
-            // Remove 'on' de todos os meses e botões de meses
             document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
             mBtn.classList.add('on');
             mPanel.classList.add('on');
-            
-            // Ativa automaticamente a primeira semana do mês selecionado
             const firstW = mPanel.querySelector('.wbtn');
             if(firstW) firstW.click();
         };
     });
 }
 
-// --- LOGICA DE CORES E TEMAS ---
+// --- LOGICA DE CORES E TEMAS (REATIVIDADE TOTAL) ---
 
 function getContrastYIQ(hexcolor){
     hexcolor = hexcolor.replace("#", "");
@@ -144,10 +133,7 @@ export function applyTheme(config) {
     root.setAttribute('data-theme', config.mode);
     
     const isDark = config.mode === 'dark';
-    const inkColor = isDark ? '#ffffff' : '#1a1814';
     
-    root.style.setProperty('--ink', inkColor);
-
     if (config.mode === 'gradient') {
         const g1 = config.grad1 || '#c85a2a';
         const g2 = config.grad2 || '#2a4f8a';
@@ -156,17 +142,17 @@ export function applyTheme(config) {
         root.style.setProperty('--accent-text', getContrastYIQ(g1));
         root.style.setProperty('--accent-opposite', g2);
         
-        // Ajuste dinâmico do Muted para não sumir no gradiente
+        // Ajuste inteligente de visibilidade para textos "muted" e "ink" em gradientes
         const brightness = getContrastYIQ(g1);
-        if (brightness === '#ffffff') root.style.setProperty('--muted', 'rgba(255,255,255,0.7)');
-        else root.style.setProperty('--muted', 'rgba(0,0,0,0.55)');
-        
+        root.style.setProperty('--ink', brightness === '#ffffff' ? '#ffffff' : '#1a1814');
+        root.style.setProperty('--muted', brightness === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)');
     } else {
         const acc = config.accent || '#c85a2a';
         root.style.setProperty('--accent', acc);
         root.style.setProperty('--accent-text', getContrastYIQ(acc));
         root.style.setProperty('--accent-opposite', getOppositeColor(acc));
         root.style.setProperty('--bg', isDark ? '#121212' : '#f7f5f0');
+        root.style.setProperty('--ink', isDark ? '#ffffff' : '#1a1814');
         root.style.setProperty('--muted', isDark ? '#a0a0a0' : '#7a7570');
     }
 
