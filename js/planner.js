@@ -161,10 +161,7 @@ export function addNewMonth(uid) {
         };
     }
 
-    saveUserData(uid).then(() => {
-        alert("Novo mês criado!");
-        location.reload(); 
-    });
+    saveUserData(uid).then(() => refreshUI(uid));
 }
 
 export function editMonthStructure(m, uid) {
@@ -199,10 +196,7 @@ export function editMonthStructure(m, uid) {
         };
     }
 
-    saveUserData(uid).then(() => {
-        alert("Month " + m + " restructured!");
-        location.reload();
-    });
+    saveUserData(uid).then(() => refreshUI(uid));
 }
 
 export function deleteMonth(m, uid) {
@@ -214,8 +208,17 @@ export function deleteMonth(m, uid) {
         }
     });
 
-    saveUserData(uid).then(() => {
-        alert("Month " + m + " removed!");
-        location.reload();
+    saveUserData(uid).then(() => refreshUI(uid));
+}
+
+function refreshUI(uid) {
+    import('./ui.js').then(modUI => {
+        modUI.renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        const firstKey = Object.keys(window.plannerConfig).sort()[0];
+        if (firstKey) {
+            const [m, w] = firstKey.split('-');
+            buildWeek(m, w, uid);
+        }
+        modUI.updateProgressBar();
     });
 }
