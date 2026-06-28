@@ -16,8 +16,14 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    const activeBtn = document.querySelector('.wbtn.on');
-    if (activeBtn) activeBtn.click();
+    // Identifica qual painel de semana está aberto no momento para atualizar imediatamente
+    const activePanel = document.querySelector('.wpanel.on');
+    if (activePanel) {
+        const idParts = activePanel.id.replace('wp', '').split('-');
+        const m = idParts[0];
+        const w = idParts[1];
+        buildWeek(m, w, uid);
+    }
 }
 
 export function buildWeek(m, w, uid) {
@@ -43,7 +49,16 @@ export function buildWeek(m, w, uid) {
                 <div class="activities-container">
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
+                            <div class="aico-wrapper">
                             <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                            ${isEditMode ? `
+                                <div class="icon-suggestions">
+                                    ${['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐'].map(emoji => `
+                                        <span class="suggest-emoji" onclick="this.parentElement.previousElementSibling.innerText='${emoji}'; this.parentElement.previousElementSibling.dispatchEvent(new Event('blur'))">${emoji}</span>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
                             <div class="acont">
                                 <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
                                 <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
