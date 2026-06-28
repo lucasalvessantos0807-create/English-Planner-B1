@@ -190,7 +190,7 @@ export function editMonthStructure(m, uid) {
         const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
         
         window.plannerConfig[key] = {
-            label: `Week ${w}`, // Corrigido: com crases e sem o (M)
+            label: `Week ${w}`,
             theme: "Adjusted Month",
             days: Array.from({length: daysInThisWeek}, (_, i) => {
                 const dayNum = currentDayCounter++;
@@ -210,7 +210,6 @@ export function editMonthStructure(m, uid) {
     });
 }
 
-// A função deleteMonth deve ficar FORA das outras chaves
 export function deleteMonth(m, uid) {
     if (!confirm(`Are you sure you want to delete Month ${m} and all its weeks?`)) return;
 
@@ -222,12 +221,6 @@ export function deleteMonth(m, uid) {
 
     saveUserData(uid).then(() => {
         alert("Month " + m + " removed!");
-        location.reload();
-    });
-}
-
-    saveUserData(uid).then(() => {
-        alert("Month " + m + " restructured!");
         location.reload();
     });
 }
