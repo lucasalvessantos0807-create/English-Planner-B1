@@ -113,17 +113,18 @@ onAuthStateChanged(auth, async (user) => {
             document.documentElement.style.setProperty('--main-font', "Georgia, serif");
         }
 
-        // Aplica o Tamanho da Fonte
+        // Aplica o Tamanho da Fonte individual
         const savedSize = userSettings.fontSize || "15";
         fontSizeSlider.value = savedSize;
         fontSizeVal.textContent = savedSize + "px";
         document.documentElement.style.setProperty('--main-font-size', savedSize + "px");
         
         renderFonts();
-        // Lógica do Slider de Tamanho de Fonte
+       // Lógica do Slider de Tamanho de Fonte
         fontSizeSlider.oninput = (e) => {
             const size = e.target.value + "px";
             fontSizeVal.textContent = size;
+            // Altera o tamanho base do HTML para que o 'rem' funcione
             document.documentElement.style.setProperty('--main-font-size', size);
         };
 
