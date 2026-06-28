@@ -96,11 +96,15 @@
       </div>
       <div class="drawer-body">
         <div class="control-group">
-          <label>Font Style</label>
-          <div class="font-search-container">
-            <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
-            <div id="fontList" class="font-list-results">
-              <!-- JS preencherá aqui -->
+          <label id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+            Font Style <span id="fontArrow">▼</span>
+          </label>
+          <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
+            <div class="font-search-container">
+              <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
+              <div id="fontList" class="font-list-results">
+                <!-- JS preencherá aqui -->
+              </div>
             </div>
           </div>
         </div>
