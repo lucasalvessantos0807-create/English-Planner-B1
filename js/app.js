@@ -16,6 +16,10 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("planner").style.display = "block";
         
         const userData = await loadUserData(currentUser);
+        // Aplica o tema salvo (ou o padrão) vindo do storage
+        if (userData.themeConfig) {
+            applyTheme(userData.themeConfig);
+        }
         
         // Renderiza a estrutura de botões e painéis dinamicamente
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
