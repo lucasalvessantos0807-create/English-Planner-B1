@@ -5,7 +5,7 @@ let isEditMode = false;
 const builtWeeks = new Set();
 
 export function toggleEditMode(uid) {
-    // Captura quais dias estão abertos para manter a visualização ao trocar o modo
+    // Salva quais dias estão abertos para reabri-los após o redesenho
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
     
     isEditMode = !isEditMode;
@@ -19,7 +19,6 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    // Força a atualização imediata da semana ativa na tela
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
     if (activeWeekPanel) {
         const idParts = activeWeekPanel.id.replace('wp', '').split('-');
@@ -41,7 +40,6 @@ export function buildWeek(m, w, uid, openDays = []) {
         const card = document.createElement("div");
         card.className = "daycard";
         
-        // Verifica se este dia deve permanecer expandido
         const isOpen = openDays.includes(day.n.toString());
 
         card.innerHTML = `
@@ -82,7 +80,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             </div>
         `;
 
-        // Lógica dos ícones (Abrir menu)
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
@@ -96,7 +93,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             });
         }
 
-        // Lógica dos emojis (Selecionar)
         card.querySelectorAll('.suggest-emoji').forEach(sug => {
             sug.onclick = (e) => {
                 e.preventDefault();
@@ -111,7 +107,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
-        // Salvar edições de texto
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
@@ -128,7 +123,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
-        // Botão Adicionar Atividade
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) {
             addBtn.onclick = () => {
@@ -142,7 +136,6 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         }
 
-        // Botão Deletar Atividade
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -155,13 +148,11 @@ export function buildWeek(m, w, uid, openDays = []) {
             };
         });
 
-        // Expandir/Minimizar Dia
         card.querySelector('.dayhead').onclick = (e) => {
             if (e.target.hasAttribute('contenteditable') || e.target.closest('.aico-wrapper')) return;
             card.querySelector('.daybody').classList.toggle('on');
         };
 
-        // Notas e Checkbox
         const textarea = card.querySelector('textarea');
         textarea.oninput = (e) => {
             updateState(dayKey, { notes: e.target.value });
@@ -179,12 +170,6 @@ export function buildWeek(m, w, uid, openDays = []) {
         container.appendChild(card);
     });
     builtWeeks.add(key);
-
-    // Fecha menus de ícones ao clicar fora
-    const closeMenus = () => {
-        document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-    };
-    document.addEventListener('click', closeMenus, { once: true });
 }
 
 export function addNewMonth(uid) {
@@ -268,3 +253,10 @@ function refreshUI(uid) {
         modUI.updateProgressBar();
     });
 }
+
+// Fecha menus de ícones se clicar fora
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.aico-wrapper')) {
+        document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+    }
+});
