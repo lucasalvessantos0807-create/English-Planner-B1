@@ -1,9 +1,10 @@
+// --- FUNÇÕES DE INTERFACE (PROGRESSO E RENDER) ---
+
 export function updateProgressBar() {
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
     let totalDays = 0;
-    // Conta os dias baseando-se no plannerConfig atual (dinâmico)
     Object.values(config).forEach(w => {
         if (w.days) totalDays += w.days.length;
     });
@@ -15,39 +16,19 @@ export function updateProgressBar() {
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
-    // Atualiza a barra visual
     const pbar = document.getElementById("pbar");
     if (pbar) pbar.style.width = pctValue + "%";
     
-    // Atualiza o texto de progresso (Recriando o strong com o ID para não perdê-lo)
+    const dcntEl = document.getElementById("dcnt");
+    if (dcntEl) dcntEl.textContent = done;
+
     const statsContainer = document.querySelector('.prog-stats span:first-child');
     if (statsContainer) {
         statsContainer.innerHTML = `<strong id="dcnt">${done}</strong> / ${totalDays} days`;
     }
 
-    // Atualiza a porcentagem
     const pctEl = document.getElementById("pct");
     if (pctEl) pctEl.textContent = pctValue + "%";
-    
-    const totalLabel = document.querySelector('.prog-stats span:first-child');
-    if (totalLabel) totalLabel.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
-}
-
-// Função para aplicar as customizações visualmente
-export function applyTheme(config) {
-    const root = document.documentElement;
-    if (!config || Object.keys(config).length === 0) return;
-
-    if (config.mode) root.setAttribute('data-theme', config.mode);
-    if (config.accent) {
-        root.style.setProperty('--accent', config.accent);
-        // Cria uma versão clara da cor de destaque para os fundos
-        root.style.setProperty('--accent-light', config.accent + '22'); 
-    }
-    if (config.font) root.style.setProperty('--font-family', config.font);
-    if (config.size) root.style.setProperty('--font-size', config.size + 'px');
-    if (config.width) root.style.setProperty('--content-width', config.width);
-    if (config.radius) root.style.setProperty('--radius', config.radius + 'px');
 }
 
 export function renderStructure(plannerConfig, onWeekChange) {
@@ -58,7 +39,6 @@ export function renderStructure(plannerConfig, onWeekChange) {
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
-    // Garante que o planner continue visível e o login escondido
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("planner").style.display = "block";
 
@@ -89,21 +69,11 @@ export function renderStructure(plannerConfig, onWeekChange) {
         `;
         
         const user = window.auth ? window.auth.currentUser : null;
-
-        mPanel.querySelector('.edit-m-btn').onclick = () => {
-            if (!user) return;
-            import('./planner.js').then(mModule => mModule.editMonthStructure(m, user.uid));
-        };
-
-        mPanel.querySelector('.del-m-btn').onclick = () => {
-            if (!user) return;
-            import('./planner.js').then(mModule => mModule.deleteMonth(m, user.uid));
-        };
+        mPanel.querySelector('.edit-m-btn').onclick = () => { if (user) import('./planner.js').then(mModule => mModule.editMonthStructure(m, user.uid)); };
+        mPanel.querySelector('.del-m-btn').onclick = () => { if (user) import('./planner.js').then(mModule => mModule.deleteMonth(m, user.uid)); };
         
         const wNav = mPanel.querySelector('.week-nav');
-        const weeks = Object.keys(plannerConfig)
-            .filter(key => key.startsWith(`${m}-`))
-            .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+        const weeks = Object.keys(plannerConfig).filter(key => key.startsWith(`${m}-`)).sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
@@ -121,13 +91,11 @@ export function renderStructure(plannerConfig, onWeekChange) {
                 wPanel.classList.add('on');
                 onWeekChange(m, weekNum);
             };
-
             wNav.appendChild(wBtn);
             mPanel.appendChild(wPanel);
         });
 
         monthPanels.appendChild(mPanel);
-
         mBtn.onclick = () => {
             document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
             mBtn.classList.add('on');
@@ -138,13 +106,63 @@ export function renderStructure(plannerConfig, onWeekChange) {
     });
 }
 
-// --- LOGICA DO PAINEL DE CONFIGURAÇÕES ---
+// --- LOGICA DE CORES E TEMAS ---
 
-// Abrir Modal
+function getContrastYIQ(hexcolor){
+    hexcolor = hexcolor.replace("#", "");
+    var r = parseInt(hexcolor.substr(0,2),16);
+    var g = parseInt(hexcolor.substr(2,2),16);
+    var b = parseInt(hexcolor.substr(4,2),16);
+    var yiq = ((r*299)+(g*587)+(b*114))/1000;
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+
+function getOppositeColor(hex) {
+    hex = hex.replace('#', '');
+    let r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16).padStart(2, '0');
+    let g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16).padStart(2, '0');
+    let b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16).padStart(2, '0');
+    return '#' + r + g + b;
+}
+
+export function applyTheme(config) {
+    const root = document.documentElement;
+    if (!config || Object.keys(config).length === 0) return;
+
+    root.setAttribute('data-theme', config.mode);
+    const baseInk = config.mode === 'dark' ? '#ffffff' : '#1a1814';
+    root.style.setProperty('--ink', baseInk);
+
+    if (config.mode === 'gradient') {
+        const g1 = config.grad1 || '#c85a2a';
+        const g2 = config.grad2 || '#2a4f8a';
+        root.style.setProperty('--bg', `linear-gradient(135deg, ${g1}, ${g2})`);
+        root.style.setProperty('--accent', g1);
+        root.style.setProperty('--accent-text', getContrastYIQ(g1));
+        root.style.setProperty('--accent-opposite', g2);
+    } else {
+        const acc = config.accent || '#c85a2a';
+        root.style.setProperty('--accent', acc);
+        root.style.setProperty('--accent-text', getContrastYIQ(acc));
+        root.style.setProperty('--accent-opposite', getOppositeColor(acc));
+        root.style.setProperty('--bg', config.mode === 'dark' ? '#121212' : '#f7f5f0');
+    }
+
+    if (config.font) root.style.setProperty('--font-family', config.font);
+    if (config.size) root.style.setProperty('--font-size', config.size + 'px');
+    if (config.width) root.style.setProperty('--content-width', config.width);
+    if (config.radius) root.style.setProperty('--radius', config.radius + 'px');
+}
+
+// --- CONFIGURAÇÕES DO MODAL ---
+
 document.getElementById('settingsBtn').onclick = () => {
     const cfg = window.themeConfig || {};
     if(cfg.mode) document.getElementById('themeMode').value = cfg.mode;
+    document.getElementById('themeMode').dispatchEvent(new Event('change'));
     if(cfg.accent) document.getElementById('accentColor').value = cfg.accent;
+    if(cfg.grad1) document.getElementById('gradColor1').value = cfg.grad1;
+    if(cfg.grad2) document.getElementById('gradColor2').value = cfg.grad2;
     if(cfg.font) document.getElementById('fontFamily').value = cfg.font;
     if(cfg.size) document.getElementById('fontSize').value = cfg.size;
     if(cfg.width) document.getElementById('contentWidth').value = cfg.width;
@@ -152,39 +170,41 @@ document.getElementById('settingsBtn').onclick = () => {
     document.getElementById('settingsModal').style.display = 'flex';
 };
 
-// Fechar Modal
+document.getElementById('themeMode').onchange = (e) => {
+    const isGrad = e.target.value === 'gradient';
+    document.getElementById('singleColorArea').style.display = isGrad ? 'none' : 'block';
+    document.getElementById('gradientColorArea').style.display = isGrad ? 'grid' : 'none';
+};
+
 document.getElementById('closeSettingsBtn').onclick = () => {
     document.getElementById('settingsModal').style.display = 'none';
 };
 
-// Botão Salvar
 document.getElementById('saveThemeBtn').onclick = async () => {
     const newTheme = {
         mode: document.getElementById('themeMode').value,
         accent: document.getElementById('accentColor').value,
+        grad1: document.getElementById('gradColor1').value,
+        grad2: document.getElementById('gradColor2').value,
         font: document.getElementById('fontFamily').value,
         size: document.getElementById('fontSize').value,
         width: document.getElementById('contentWidth').value,
         radius: document.getElementById('borderRadius').value
     };
-    
     applyTheme(newTheme);
-    
     const user = window.auth.currentUser;
     if (user) {
         const storage = await import('./storage.js');
-        // Atualiza a referência global
         Object.assign(window.themeConfig, newTheme);
         storage.saveUserData(user.uid);
     }
     document.getElementById('settingsModal').style.display = 'none';
 };
 
-// Botão Resetar
 document.getElementById('resetThemeBtn').onclick = () => {
-    if(confirm("Restaurar todas as configurações para o padrão?")) {
-        const defaultTheme = { mode: 'light', accent: '#c85a2a', font: 'Georgia, serif', size: '15', width: '900px', radius: '10' };
-        applyTheme(defaultTheme);
+    if(confirm("Restaurar padrões?")) {
+        const def = { mode:'light', accent:'#c85a2a', font:'Georgia, serif', size:'15', width:'900px', radius:'10' };
+        applyTheme(def);
         document.getElementById('saveThemeBtn').click();
     }
 };
