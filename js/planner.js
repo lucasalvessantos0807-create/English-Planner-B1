@@ -16,11 +16,11 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    // Procura a semana ativa em qualquer mês (mpanel on -> wpanel on)
+    // Força a atualização imediata da semana que está na tela (independente do mês)
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
     if (activeWeekPanel) {
-        const [m, w] = activeWeekPanel.id.replace('wp', '').split('-');
-        buildWeek(m, w, uid);
+        const idParts = activeWeekPanel.id.replace('wp', '').split('-');
+        buildWeek(idParts[0], idParts[1], uid);
     }
 }
 
@@ -45,15 +45,26 @@ export function buildWeek(m, w, uid) {
             </div>
             <div class="daybody" id="db${day.n}">
                 <div class="activities-container">
-                    ${day.activities.map((act, aIdx) => `
+                   ${day.activities.map((act, aIdx) => `
                         <div class="act">
                             <div class="aico-wrapper">
                                 <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
                                 ${isEditMode ? `
                                     <div class="icon-suggestions">
                                         ${['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'].map(emoji => `
-                                            <span class="suggest-emoji" onclick="this.closest('.aico-wrapper').querySelector('.aico').innerText='${emoji}'; this.closest('.aico-wrapper').querySelector('.aico').focus(); this.closest('.aico-wrapper').querySelector('.aico').blur();">${emoji}</span>
+                                            <span class="suggest-emoji" onclick="const aico=this.closest('.aico-wrapper').querySelector('.aico'); aico.innerText='${emoji}'; aico.focus(); aico.blur();">${emoji}</span>
                                         `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="acont">
+                                <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                                <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                            </div>
+                            <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                            ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                        </div>
+                    `).join('')}
                                     </div>
                                 ` : ''}
                             </div>
