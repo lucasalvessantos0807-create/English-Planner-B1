@@ -78,7 +78,7 @@ onAuthStateChanged(auth, async (user) => {
                 div.onclick = () => {
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
                     localStorage.setItem('plannerFont', font);
-                    fontWrapper.style.display = 'none';
+                    fontWrapper.style.setProperty('display', 'none', 'important');
                     fontToggle.classList.remove('expanded');
                     document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
                     div.classList.add('active');
