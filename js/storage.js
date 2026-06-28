@@ -29,6 +29,7 @@ export async function loadUserData(uid) {
 export async function saveUserData(uid) {
     if (!uid) return;
     try {
+        // Removido { merge: true } para permitir deleções reais no Firebase
         await setDoc(doc(db, "users", uid), { 
             state: state,
             plannerConfig: plannerConfig 
