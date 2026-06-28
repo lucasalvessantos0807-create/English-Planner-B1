@@ -178,3 +178,16 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 .chk input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
 .chk.done span{color:var(--muted);text-decoration:line-through}
 @media(max-width:600px){.ov-grid{grid-template-columns:1fr}}
+/* --- Ajustes de Posicionamento --- */
+.week-nav {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.wkbar {
+    margin-top: 10px; /* Garante um espaço entre os botões e o resumo */
+}
