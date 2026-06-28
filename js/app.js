@@ -1,12 +1,9 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData } from './storage.js';
-import { buildWeek, toggleEditMode, addNewMonth } from './planner.js';
+import { buildWeek, toggleEditMode, addNewMonth, performUndo } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
 let currentUser = null;
-
-document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
-document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -18,44 +15,68 @@ onAuthStateChanged(auth, async (user) => {
         const userData = await loadUserData(currentUser);
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
         
+        // --- BOTÕES TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // --- PERSONALIZAÇÃO ---
+        // --- DRAWERS (Personalize e Settings) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
-        const fontSearchInput = document.getElementById('fontSearchInput');
-        const fontListContainer = document.getElementById('fontList');
-        const fontToggle = document.getElementById('fontStyleToggle');
-        const fontWrapper = document.getElementById('fontPickerWrapper');
-        const fontSizeSlider = document.getElementById('fontSizeSlider');
-        const fontSizeVal = document.getElementById('fontSizeVal');
+        
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsDrawer = document.getElementById('settingsDrawer');
+        const closeSettings = document.getElementById('closeSettings');
 
-        if (fontToggle && fontWrapper) {
-            fontToggle.onclick = () => {
-                const isHidden = window.getComputedStyle(fontWrapper).display === 'none';
-                fontWrapper.style.display = isHidden ? 'block' : 'none';
-                fontToggle.classList.toggle('expanded', isHidden);
-            };
+        personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
+        settingsBtn.onclick = () => { 
+            customDrawer.classList.remove('open'); 
+            settingsDrawer.classList.toggle('open'); 
+            renderHistory(); 
+        };
+        closeDrawer.onclick = () => customDrawer.classList.remove('open');
+        closeSettings.onclick = () => settingsDrawer.classList.remove('open');
+
+        // --- LÓGICA DE HISTÓRICO ---
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            import('./storage.js').then(store => {
+                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history yet.</p>' : '';
+                store.history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    const date = new Date(item.timestamp).toLocaleString();
+                    div.innerHTML = `
+                        <span class="history-date">${date}</span>
+                        <strong>${item.label}</strong>
+                        <button class="history-restore" data-id="${item.id}">Restore This Version</button>
+                    `;
+                    div.querySelector('.history-restore').onclick = () => {
+                        if(confirm("Restore this version? Current changes will be overwritten.")){
+                            window.plannerConfig = item.plannerConfig;
+                            window.pageContent = item.pageContent;
+                            // Salva no banco e recarrega
+                            store.saveUserData(currentUser).then(() => window.location.reload());
+                        }
+                    };
+                    container.appendChild(div);
+                });
+            });
         }
 
-        const googleFonts = [
-            "Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT", // Fontes de Sistema
-            "Abel", "Abril Fatface", "Aclonica", "Acme", "Actor", "Adamina", "Advent Pro", "Aguafina Script", "Akronim", "Aladin", "Aldrich", "Alef", "Alegreya", "Alex Brush", "Alfa Slab One", "Alice", "Alike", "Allan", "Allerta", "Allura", "Almendra", "Amarante", "Amaranth", "Amatic SC", "Amethysta", "Amiri", "Amita", "Anaheim", "Andada", "Andika", "Angkor", "Annie Use Your Telescope", "Anonymous Pro", "Antic", "Anton", "Arapey", "Arbutus", "Architects Daughter", "Archivo Black", "Are You Serious", "Arima Madurai", "Arimo", "Arizonia", "Armata", "Artifika", "Arvo", "Arya", "Asap", "Asar", "Asset", "Assistant", "Astloch", "Asul", "Athiti", "Atma", "Atomic Age", "Aubrey", "Audiowide", "Autour One", "Average", "Averia Libre", "Bangers", "Barlow", "Baskervville", "Bebas Neue", "Belgrano", "Belleza", "BenchNine", "Bentham", "Berkshire Swash", "Bevan", "Bigelow Rules", "Bigshot One", "Bilbo", "BioRhyme", "Biryani", "Bitter", "Black Ops One", "Bokor", "Bonbon", "Boogaloo", "Bowlby One", "Brawler", "Bree Serif", "Bubblegum Sans", "Buda", "Cabin", "Calligraffitti", "Candal", "Cantarell", "Cardo", "Carme", "Caveat", "Chakra Petch", "Changa One", "Charm", "Chivo", "Cinzel", "Comfortaa", "Cookie", "Cormorant", "Courgette", "Crimson Text", "Dancing Script", "Domine", "Dosis", "Droid Sans", "Eczar", "Exo", "Fahkwang", "Fira Sans", "Frank Ruhl Libre", "Gloria Hallelujah", "Great Vibes", "Heebo", "Hind", "Inconsolata", "Indie Flower", "Inter", "Josefin Sans", "Jost", "Kanit", "Karla", "Lato", "Libre Baskerville", "Lobster", "Lora", "Mali", "Merriweather", "Montserrat", "Mukta", "Nanum Gothic", "Noto Sans", "Nunito", "Open Sans", "Oswald", "Oxygen", "Pacifico", "PT Sans", "PT Serif", "Playfair Display", "Poppins", "Quicksand", "Raleway", "Roboto", "Rubik", "Saira", "Shadows Into Light", "Slabo 27px", "Source Sans Pro", "Spectral", "Titillium Web", "Ubuntu", "Varela Round", "Work Sans", "Zilla Slab"
-        ];
+        // --- LÓGICA DE FONTES (Mantida) ---
+        const googleFonts = ["Arial", "Verdana", "Times New Roman", "Georgia", "Abel", "Abril Fatface", "Acme", "Aladin", "Amatic SC", "Anton", "Architects Daughter", "Bebas Neue", "Bitter", "Caveat", "Comfortaa", "Cookie", "Dancing Script", "Great Vibes", "Indie Flower", "Josefin Sans", "Jost", "Lobster", "Montserrat", "Pacifico", "Playfair Display", "Poppins", "Quicksand", "Raleway", "Roboto", "Shadows Into Light"];
+        const fontListContainer = document.getElementById('fontList');
+        const fontSearchInput = document.getElementById('fontSearchInput');
 
         function loadGoogleFont(fontName) {
-            // Lista de fontes que já existem no Windows/Mac/Android e não precisam de download
-            const systemFonts = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
-            
-            if (!fontName || systemFonts.includes(fontName)) return;
-
+            const sys = ["Arial", "Verdana", "Times New Roman", "Georgia"];
+            if (!fontName || sys.includes(fontName)) return;
             const id = `font-${fontName.replace(/\s+/g, '-')}`;
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
-                link.id = id; 
-                link.rel = 'stylesheet';
-                // Faz a requisição apenas para fontes externas
+                link.id = id; link.rel = 'stylesheet';
                 link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
                 document.head.appendChild(link);
             }
@@ -63,52 +84,36 @@ onAuthStateChanged(auth, async (user) => {
 
         function renderFonts(filter = "") {
             fontListContainer.innerHTML = "";
-            const filtered = googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase()));
-            
-            filtered.forEach(font => {
+            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
                 const div = document.createElement('div');
                 div.className = 'font-item';
                 div.textContent = font;
-                
-                // Carrega o link da fonte para o preview
                 loadGoogleFont(font);
                 div.style.fontFamily = `"${font}", sans-serif`;
-
                 div.onclick = () => {
-                    const systemFonts = ["Arial", "Verdana", "Tahoma", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
-                    
-                    // Se for sistema, usa a fonte pura. Se for Google, adiciona o fallback genérico.
-                    const fontValue = systemFonts.includes(font) ? `"${font}"` : `"${font}", sans-serif`;
-                    
-                    document.documentElement.style.setProperty('--main-font', fontValue);
-                    
+                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
                     import('./storage.js').then(store => {
                         if (!store.state.settings) store.state.settings = {};
                         store.state.settings.font = font;
                         store.saveUserData(currentUser);
                     });
-
-                    document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
-                    div.classList.add('active');
                 };
                 fontListContainer.appendChild(div);
             });
         }
-
-        personalizeBtn.onclick = () => customDrawer.classList.toggle('open');
-        closeDrawer.onclick = () => customDrawer.classList.remove('open');
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
+        renderFonts();
 
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeVal = document.getElementById('fontSizeVal');
         const settings = userData.state.settings || {};
         if (settings.font) {
             loadGoogleFont(settings.font);
             document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
         }
-        
-        const savedSize = settings.fontSize || "15";
-        fontSizeSlider.value = savedSize;
-        fontSizeVal.textContent = savedSize + "px";
-        document.documentElement.style.setProperty('--main-font-size', savedSize + "px");
+        fontSizeSlider.value = settings.fontSize || "15";
+        fontSizeVal.textContent = fontSizeSlider.value + "px";
+        document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
         fontSizeSlider.oninput = (e) => {
             fontSizeVal.textContent = e.target.value + "px";
@@ -122,10 +127,13 @@ onAuthStateChanged(auth, async (user) => {
             });
         };
 
-        renderFonts();
+        document.getElementById('fontStyleToggle').onclick = () => {
+            const wrapper = document.getElementById('fontPickerWrapper');
+            wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+        };
+
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
         updateProgressBar();
-
     } else {
         if (currentUser) window.location.reload();
         document.getElementById("planner").style.display = "none";
@@ -133,3 +141,5 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = null;
     }
 });
+
+document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
