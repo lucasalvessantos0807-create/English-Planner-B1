@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>English Study Planner — A2+ to B1</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📖</div>
+    <div class="login-title">Study Planner</div>
+    <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your personal progress</div>
+    <button class="login-btn" id="googleLoginBtn">Continue with Google</button>
+    <div class="login-note">Seu progresso é salvo automaticamente na sua conta Google.</div>
+  </div>
+</div>
+
+<!-- ── PLANNER ── -->
+<div id="planner">
+  <div class="topbar">
+    <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
+    <div style="display: flex; gap: 8px;">
+      <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+      <button class="topbar-logout" id="logoutBtn">Sair</button>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="cover">
+      <div class="cover-eye">Personal English Study Planner</div>
+      <div class="cover-title">A2+ to B1 Roadmap</div>
+      <div class="cover-sub">3 months &nbsp;·&nbsp; Every day &nbsp;·&nbsp; 1.5–2+ hours &nbsp;·&nbsp; Full fluency focus</div>
+    </div>
+
+    <div class="goal-box">
+      <strong>🎯 Your Goal</strong>
+      Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.
+    </div>
+
+    <div class="sec">3-Month Overview</div>
+    <div class="ov-grid">
+      <div class="ov-card ca">
+        <div class="ov-label">Month 1 — Foundation</div>
+        <div class="ov-body">Past simple · Present perfect · Used to · Have/have got · A few/a little · Although/despite<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte's Web</div>
+      </div>
+      <div class="ov-card cb">
+        <div class="ov-label">Month 2 — Building</div>
+        <div class="ov-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
+      </div>
+      <div class="ov-card cg">
+        <div class="ov-label">Month 3 — Consolidation</div>
+        <div class="ov-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
+      </div>
+    </div>
+
+    <div class="sec">Daily Template (1.5–2 hours)</div>
+    <div class="tpl">
+      <div class="tpl-row"><div class="tpl-time">0–15 min</div><div class="tpl-act">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
+      <div class="tpl-row"><div class="tpl-time">15–35 min</div><div class="tpl-act">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
+      <div class="tpl-row"><div class="tpl-time">35–55 min</div><div class="tpl-act">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
+      <div class="tpl-row"><div class="tpl-time">55–75 min</div><div class="tpl-act">🎧 <strong>Listening</strong> — Short clip. Tuesday &amp; Friday: dictation exercise.</div></div>
+      <div class="tpl-row"><div class="tpl-time">75–95 min</div><div class="tpl-act">📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)</div></div>
+      <div class="tpl-row"><div class="tpl-time">95–115 min</div><div class="tpl-act">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
+      <div class="tpl-row"><div class="tpl-time">Sunday</div><div class="tpl-act">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
+    </div>
+
+    <div class="sec">Your Progress</div>
+    <div class="prog-box">
+      <div class="prog-lbl">Days completed</div>
+      <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
+      <div class="prog-stats">
+        <span><strong id="dcnt">0</strong> / 0 days</span>
+        <span><strong id="pct">0%</strong> complete</span>
+        <span id="mstat">Learning Progress</span>
+      </div>
+    </div>
+
+    <div class="sec">Monthly Plans</div>
+    <!-- NAVEGAÇÃO DINÂMICA: JavaScript preencherá aqui -->
+    <div class="month-nav" id="monthNav">
+        <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
+    </div>
+
+    <!-- CONTEÚDO DINÂMICO: JavaScript preencherá aqui -->
+    <div id="monthPanels"></div>
+
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
