@@ -25,6 +25,7 @@
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <div style="display: flex; gap: 8px;">
       <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+        <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">🎨 Personalize</button>
       <button class="topbar-logout" id="logoutBtn">Sair</button>
     </div>
   </div>
@@ -87,6 +88,24 @@
 
     <!-- CONTEÚDO DINÂMICO: JavaScript preencherá aqui -->
     <div id="monthPanels"></div>
+      <!-- Personalization Drawer -->
+    <div id="customDrawer" class="custom-drawer">
+      <div class="drawer-header">
+        <span>Personalization</span>
+        <button id="closeDrawer">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="control-group">
+          <label>Font Style</label>
+          <select id="fontFamilySelect">
+            <option value="Georgia, serif">Default (Classic)</option>
+            <option value="'Segoe UI', system-ui, sans-serif">Modern (System)</option>
+            <option value="'Courier New', monospace">Typewriter (Fixed)</option>
+            <option value="'Trebuchet MS', sans-serif">Clean (Trebuchet)</option>
+          </select>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>
