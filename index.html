@@ -97,12 +97,12 @@
       <div class="drawer-body">
         <div class="control-group">
           <label>Font Style</label>
-          <select id="fontFamilySelect">
-            <option value="Georgia, serif">Default (Classic)</option>
-            <option value="'Segoe UI', system-ui, sans-serif">Modern (System)</option>
-            <option value="'Courier New', monospace">Typewriter (Fixed)</option>
-            <option value="'Trebuchet MS', sans-serif">Clean (Trebuchet)</option>
-          </select>
+          <div class="font-search-container">
+            <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
+            <div id="fontList" class="font-list-results">
+              <!-- JS preencherá aqui -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
