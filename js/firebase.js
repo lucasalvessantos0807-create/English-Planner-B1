@@ -1,21 +1,59 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { db, doc, getDoc, setDoc } from './firebase.js';
+import { weeksData as initialWeeksData } from './weeks.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCE4d1pH7qM5X2nqhxqsIbh7qp1bgbwTYc",
-  authDomain: "english-planner-a1.firebaseapp.com",
-  projectId: "english-planner-a1",
-  storageBucket: "english-planner-a1.firebasestorage.app",
-  messagingSenderId: "794904439088",
-  appId: "1:794904439088:web:daa0ed2bed1506ae2b00f5",
-  measurementId: "G-RPDY8X75WV"
-};
+export let state = {};
+export let plannerConfig = {};
+export let pageContent = {};
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-window.auth = auth; // Isso permite que o ui.js veja o login
-export const provider = new GoogleAuthProvider();
+export function resetLocalData() {
+    state = {};
+    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
+    pageContent = {};
+    window.appState = state;
+    window.plannerConfig = plannerConfig;
+    window.pageContent = pageContent;
+}
 
-export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
+export async function loadUserData(uid) {
+    resetLocalData();
+    try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (snap.exists()) {
+            const data = snap.data();
+            state = data.state || {};
+            plannerConfig = data.plannerConfig || initialWeeksData;
+            pageContent = data.pageContent || {};
+            
+            window.appState = state;
+            window.plannerConfig = plannerConfig;
+            window.pageContent = pageContent;
+
+            Object.keys(pageContent).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = pageContent[id];
+            });
+
+            return { state, plannerConfig, pageContent };
+        }
+    } catch (e) {
+        console.error("Erro ao carregar:", e);
+    }
+    return { state, plannerConfig, pageContent };
+}
+
+export async function saveUserData(uid) {
+    if (!uid) return;
+    try {
+        await setDoc(doc(db, "users", uid), { 
+            state: state,
+            plannerConfig: plannerConfig,
+            pageContent: window.pageContent || {} 
+        });
+    } catch (e) {
+        console.error("Erro ao salvar:", e);
+    }
+}
+
+export function updateState(dayKey, data) {
+    state[dayKey] = { ...state[dayKey], ...data };
+}
