@@ -66,12 +66,11 @@ export function renderStructure(plannerConfig, onWeekChange) {
         // Criar Navegação de Semanas dentro deste mês
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
-        
+        mPanel.appendChild(wNav); // Adicionamos a navegação antes das semanas
+
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
-            .sort((a, b) => {
-                return parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]);
-            });
+            .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
@@ -91,10 +90,9 @@ export function renderStructure(plannerConfig, onWeekChange) {
             };
 
             wNav.appendChild(wBtn);
-            mPanel.appendChild(wNav);
-            mPanel.appendChild(wPanel);
+            mPanel.appendChild(wPanel); // Adiciona o painel de conteúdo abaixo da navegação
         });
-
+        
         monthPanels.appendChild(mPanel);
 
         mBtn.onclick = () => {
