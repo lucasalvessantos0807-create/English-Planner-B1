@@ -103,10 +103,21 @@
             </select>
           </div>
 
-          <!-- COR PRINCIPAL -->
-          <div>
+         <!-- CONTROLE DE CORES DINÂMICO -->
+          <div id="singleColorArea">
             <label class="login-label">Accent Color</label>
             <input type="color" id="accentColor" style="width:100%; height:40px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+          </div>
+
+          <div id="gradientColorArea" style="display:none; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label class="login-label">Color 1</label>
+              <input type="color" id="gradColor1" value="#c85a2a" style="width:100%; height:40px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+            </div>
+            <div>
+              <label class="login-label">Color 2</label>
+              <input type="color" id="gradColor2" value="#2a4f8a" style="width:100%; height:40px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+            </div>
           </div>
 
           <!-- FONTE -->
