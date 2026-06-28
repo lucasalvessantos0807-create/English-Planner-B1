@@ -21,6 +21,27 @@ onAuthStateChanged(auth, async (user) => {
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
         
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        // Personalization Logic
+        const personalizeBtn = document.getElementById('personalizeBtn');
+        const customDrawer = document.getElementById('customDrawer');
+        const closeDrawer = document.getElementById('closeDrawer');
+        const fontSelect = document.getElementById('fontFamilySelect');
+
+        personalizeBtn.onclick = () => customDrawer.classList.add('open');
+        closeDrawer.onclick = () => customDrawer.classList.remove('open');
+
+        fontSelect.onchange = (e) => {
+            document.body.style.fontFamily = e.target.value;
+            // Salva a preferência localmente
+            localStorage.setItem('plannerFont', e.target.value);
+        };
+
+        // Carrega fonte salva ao iniciar
+        const savedFont = localStorage.getItem('plannerFont');
+        if (savedFont) {
+            document.body.style.fontFamily = savedFont;
+            fontSelect.value = savedFont;
+        }
         document.getElementById('addMonthBtn').onclick = () => {
             if(confirm("Deseja criar um novo mês (4 semanas) no seu cronograma?")) {
                 addNewMonth(currentUser);
