@@ -261,7 +261,7 @@ button, input, select, textarea {
   background: var(--white); border-left: 1px solid var(--border);
   box-shadow: -4px 0 15px rgba(0,0,0,0.05); z-index: 1001;
   transition: right 0.3s ease; padding: 1.5rem;
-  font-family: var(--main-font);
+  font-family: system-ui, -apple-system, sans-serif !important;
 }
 .custom-drawer.open { right: 0; }
 .drawer-header {
@@ -274,3 +274,26 @@ button, input, select, textarea {
 .control-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
 .control-group select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); outline: none; background: var(--bg); }
 #personalizeBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* --- Font Picker Styles --- */
+.font-search-container {
+  position: relative;
+  margin-top: 5px;
+}
+#fontSearchInput {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 0.9rem; margin-bottom: 10px; outline: none;
+}
+.font-list-results {
+  max-height: 300px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--white);
+}
+.font-item {
+  padding: 10px; cursor: pointer; border-bottom: 1px solid var(--bg);
+  font-size: 1rem; color: var(--ink); transition: background 0.2s;
+  font-family: system-ui, sans-serif !important; /* Mantém o nome na lista legível */
+}
+.font-item:hover { background: var(--accent-light); color: var(--accent); }
+.font-item.active { background: var(--accent); color: white; }
