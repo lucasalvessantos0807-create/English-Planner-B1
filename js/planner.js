@@ -4,6 +4,20 @@ import { updateProgressBar } from './ui.js';
 let isEditMode = false;
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
+const ICON_MAP = {
+    '📚': 'Vocabulary',
+    '📖': 'Reading',
+    '🎙️': 'Shadowing',
+    '🎧': 'Listening',
+    '📐': 'Grammar',
+    '✍️': 'Writing',
+    '🗣️': 'Speaking',
+    '🔁': 'Review Day',
+    '⭐': 'Review Day',
+    '✅': 'Completed',
+    '📝': 'Exercise',
+    '📍': 'Extra Activity'
+};
 
 export function toggleEditMode(uid) {
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
@@ -98,8 +112,22 @@ export function buildWeek(m, w, uid, openDays = []) {
                     const emoji = e.target.dataset.emoji;
                     const wrapper = e.target.closest('.aico-wrapper');
                     const aico = wrapper.querySelector('.aico');
+                    const titleEl = e.target.closest('.act').querySelector('.atitle');
+                    const path = titleEl.dataset.path;
+                    const [wkK, dI, aI] = path.split('.');
+                    
+                    // Atualiza o ícone e o dado no config
                     aico.innerText = emoji;
+                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                    
+                    // Aplica o título automático se existir no mapa
+                    if (ICON_MAP[emoji]) {
+                        titleEl.innerText = ICON_MAP[emoji];
+                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
+                    }
+
                     wrapper.classList.remove('show-suggestions');
+                    saveUserData(uid);
                     aico.focus(); aico.blur();
                 };
             });
@@ -112,7 +140,9 @@ export function buildWeek(m, w, uid, openDays = []) {
                 const type = e.target.dataset.type;
                 if (path) {
                     const [wkK, dI, aI, field] = path.split('.');
-                    window.plannerConfig[wkK].days[dI].activities[aI][field] = e.target.innerText;
+                    // Garante que o campo correto (i, title, desc ou time) seja atualizado
+                    const actualField = field === 'i' ? 'i' : (e.target.classList.contains('atitle') ? 'title' : (e.target.classList.contains('adesc') ? 'desc' : 'time'));
+                    window.plannerConfig[wkK].days[dI].activities[aI][actualField] = e.target.innerText;
                 } else if (type === 'tag') {
                     window.plannerConfig[e.target.dataset.week].days[e.target.dataset.dayidx].tag = e.target.innerText;
                 } else if (type === 'theme') {
