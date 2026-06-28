@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <div class="page">
+<div class="page">
     <div class="cover">
       <div class="cover-eye editable-global" id="global-cover-eye">Personal English Study Planner</div>
       <div class="cover-title editable-global" id="global-cover-title">A2+ to B1 Roadmap</div>
@@ -53,13 +53,13 @@
         <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
       </div>
       <div class="ov-card cg">
-        <div class="ov-label editable-global" id="global-ov-cg-label">Month 1 — Consolidation</div>
+        <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
         <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
       </div>
     </div>
 
     <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
-    <div class="tpl" id="global-tpl-container">
+    <div class="tpl">
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t1">0–15 min</div><div class="tpl-act editable-global" id="tpl-a1">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t2">15–35 min</div><div class="tpl-act editable-global" id="tpl-a2">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t3">35–55 min</div><div class="tpl-act editable-global" id="tpl-a3">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
@@ -68,35 +68,25 @@
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t6">95–115 min</div><div class="tpl-act editable-global" id="tpl-a6">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t7">Sunday</div><div class="tpl-act editable-global" id="tpl-a7">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
     </div>
-      <div class="tpl-row"><div class="tpl-time">0–15 min</div><div class="tpl-act">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
-      <div class="tpl-row"><div class="tpl-time">15–35 min</div><div class="tpl-act">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
-      <div class="tpl-row"><div class="tpl-time">35–55 min</div><div class="tpl-act">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
-      <div class="tpl-row"><div class="tpl-time">55–75 min</div><div class="tpl-act">🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.</div></div>
-      <div class="tpl-row"><div class="tpl-time">75–95 min</div><div class="tpl-act">📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)</div></div>
-      <div class="tpl-row"><div class="tpl-time">95–115 min</div><div class="tpl-act">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
-      <div class="tpl-row"><div class="tpl-time">Sunday</div><div class="tpl-act">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
-    </div>
 
-    <div class="sec">Your Progress</div>
+    <div class="sec editable-global" id="global-sec-progress">Your Progress</div>
     <div class="prog-box">
       <div class="prog-lbl editable-global" id="global-prog-lbl">Days completed</div>
       <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
       <div class="prog-stats">
         <span><strong id="dcnt">0</strong> / 0 days</span>
         <span><strong id="pct">0%</strong> complete</span>
-        <span id="mstat">Learning Progress</span>
+        <span class="editable-global" id="global-mstat">Learning Progress</span>
       </div>
     </div>
 
-    <div class="sec">Monthly Plans</div>
-    <!-- NAVEGAÇÃO DINÂMICA: JavaScript preencherá aqui -->
+    <div class="sec editable-global" id="global-sec-monthly">Monthly Plans</div>
     <div class="month-nav" id="monthNav">
         <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
     </div>
 
-    <!-- CONTEÚDO DINÂMICO: JavaScript preencherá aqui -->
     <div id="monthPanels"></div>
-
+    
     <!-- Personalization Drawer -->
     <div id="customDrawer" class="custom-drawer">
       <div class="drawer-header">
