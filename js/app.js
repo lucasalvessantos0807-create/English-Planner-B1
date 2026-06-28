@@ -1,7 +1,7 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth } from './planner.js';
-import { renderStructure, updateProgressBar } from './ui.js';
+import { renderStructure, updateProgressBar, applyTheme } from './ui.js';
 
 let currentUser = null;
 
@@ -16,6 +16,10 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("planner").style.display = "block";
         
         const userData = await loadUserData(currentUser);
+        // Aplica o tema salvo (ou o padrão) vindo do storage
+        if (userData.themeConfig) {
+            applyTheme(userData.themeConfig);
+        }
         
         // Renderiza a estrutura de botões e painéis dinamicamente
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
@@ -32,6 +36,8 @@ onAuthStateChanged(auth, async (user) => {
         if (firstKey) {
             const [m, w] = firstKey.split('-');
             buildWeek(m, w, currentUser);
+            // Aplica o tema salvo do usuário
+        applyTheme(userData.themeConfig);
         }
         updateProgressBar();
     } else {
