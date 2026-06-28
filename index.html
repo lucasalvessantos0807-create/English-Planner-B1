@@ -88,7 +88,8 @@
 
     <!-- CONTEÚDO DINÂMICO: JavaScript preencherá aqui -->
     <div id="monthPanels"></div>
-      <!-- Personalization Drawer -->
+
+    <!-- Personalization Drawer -->
     <div id="customDrawer" class="custom-drawer">
       <div class="drawer-header">
         <span>Personalization</span>
@@ -96,9 +97,11 @@
       </div>
       <div class="drawer-body">
         <div class="control-group">
-          <label id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none;">
+          <!-- Título clicável agora como DIV -->
+          <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
             Font Style <span id="fontArrow">▼</span>
-          </label>
+          </div>
+          <!-- Conteúdo que expande -->
           <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
             <div class="font-search-container">
               <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
