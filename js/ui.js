@@ -130,8 +130,11 @@ export function applyTheme(config) {
     if (!config || Object.keys(config).length === 0) return;
 
     root.setAttribute('data-theme', config.mode);
-    const baseInk = config.mode === 'dark' ? '#ffffff' : '#1a1814';
-    root.style.setProperty('--ink', baseInk);
+    
+    const isDark = config.mode === 'dark';
+    const inkColor = isDark ? '#ffffff' : '#1a1814';
+    
+    root.style.setProperty('--ink', inkColor);
 
     if (config.mode === 'gradient') {
         const g1 = config.grad1 || '#c85a2a';
@@ -140,12 +143,19 @@ export function applyTheme(config) {
         root.style.setProperty('--accent', g1);
         root.style.setProperty('--accent-text', getContrastYIQ(g1));
         root.style.setProperty('--accent-opposite', g2);
+        
+        // Ajuste dinâmico do Muted para não sumir no gradiente
+        const brightness = getContrastYIQ(g1);
+        if (brightness === '#ffffff') root.style.setProperty('--muted', 'rgba(255,255,255,0.7)');
+        else root.style.setProperty('--muted', 'rgba(0,0,0,0.55)');
+        
     } else {
         const acc = config.accent || '#c85a2a';
         root.style.setProperty('--accent', acc);
         root.style.setProperty('--accent-text', getContrastYIQ(acc));
         root.style.setProperty('--accent-opposite', getOppositeColor(acc));
-        root.style.setProperty('--bg', config.mode === 'dark' ? '#121212' : '#f7f5f0');
+        root.style.setProperty('--bg', isDark ? '#121212' : '#f7f5f0');
+        root.style.setProperty('--muted', isDark ? '#a0a0a0' : '#7a7570');
     }
 
     if (config.font) root.style.setProperty('--font-family', config.font);
