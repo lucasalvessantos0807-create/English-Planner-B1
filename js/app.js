@@ -76,8 +76,15 @@ onAuthStateChanged(auth, async (user) => {
                 div.style.fontFamily = `"${font}", sans-serif`;
 
                 div.onclick = () => {
-                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    localStorage.setItem('plannerFont', font);
+                    const fontValue = `"${font}", sans-serif`;
+                    document.documentElement.style.setProperty('--main-font', fontValue);
+                    
+                    // Salva na "state" do usuário para ser persistente e individual
+                    import('./storage.js').then(store => {
+                        store.updateState('settings', { font: font });
+                        store.saveUserData(currentUser);
+                    });
+
                     fontWrapper.style.setProperty('display', 'none', 'important');
                     fontToggle.classList.remove('expanded');
                     document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
@@ -91,9 +98,16 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
 
-        const savedFont = localStorage.getItem('plannerFont') || "Georgia, serif";
-        loadGoogleFont(savedFont);
-        document.documentElement.style.setProperty('--main-font', savedFont.includes(",") ? savedFont : `"${savedFont}", sans-serif`);
+        // Carrega a fonte vinda do banco de dados do usuário
+        const userSettings = userData.state.settings || {};
+        const savedFont = userSettings.font || "Georgia, serif";
+        
+        if (savedFont !== "Georgia, serif") {
+            loadGoogleFont(savedFont);
+            document.documentElement.style.setProperty('--main-font', `"${savedFont}", sans-serif`);
+        } else {
+            document.documentElement.style.setProperty('--main-font', "Georgia, serif");
+        }
         
         renderFonts();
 
