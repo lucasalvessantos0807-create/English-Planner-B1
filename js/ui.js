@@ -31,50 +31,44 @@ export function renderStructure(plannerConfig, onWeekChange) {
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
-    // Mapeia quais meses existem no config (ex: 1, 2, 3...)
+    // Mapeia quais meses existem no config
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
-        // 1. Criar Botão do Mês no Menu Superior
+        // Criar Botão do Mês no Menu
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-        // 2. Criar Painel do Mês
+        // Criar Painel de Conteúdo do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
-        
-        // 3. Adicionar Cabeçalho ao Painel
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
                 <p>English Study Plan — Continuous Progress</p>
                 <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month ${m}</button>
             </div>`;
-
-        // 4. CRIAR A NAVEGAÇÃO DE SEMANAS (Aqui é o segredo: adicionamos UMA vez no topo)
+        
+        // --- AQUI ESTÁ A BARRA DE SEMANAS (Sendo adicionada antes dos conteúdos) ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
         mPanel.appendChild(wNav); 
-
-        // 5. Filtrar e ordenar as semanas deste mês
+        
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
             .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
-        // 6. Criar os botões e os painéis de conteúdo
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
             
-            // Criar Botão da Semana
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.textContent = plannerConfig[wkKey].label;
             
-            // Criar Painel de Conteúdo da Semana (onde ficam os cards)
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
             wPanel.id = `wp${m}-${weekNum}`;
@@ -87,27 +81,18 @@ export function renderStructure(plannerConfig, onWeekChange) {
                 onWeekChange(m, weekNum);
             };
 
-            wNav.appendChild(wBtn);     // Adiciona o botão na barra superior
-            mPanel.appendChild(wPanel); // Adiciona o conteúdo ABAIXO da barra
+            wNav.appendChild(wBtn);      // Botão vai para a barra superior
+            mPanel.appendChild(wPanel);  // Conteúdo vai para baixo da barra
         });
 
-        // Lógica do botão de reestruturar
+        // Lógica para o botão de reestruturar
         mPanel.querySelector('.edit-m-btn').onclick = (e) => {
             const uid = window.auth.currentUser.uid;
-            import('./planner.js').then(mModule => mModule.editMonthStructure(m, uid));
+            import('./planner.js').then(mModule => {
+                mModule.editMonthStructure(m, uid);
+            });
         };
 
-        monthPanels.appendChild(mPanel);
-
-        mBtn.onclick = () => {
-            document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
-            mBtn.classList.add('on');
-            mPanel.classList.add('on');
-            const firstW = mPanel.querySelector('.wbtn');
-            if(firstW) firstW.click();
-        };
-    });
-        
         monthPanels.appendChild(mPanel);
 
         mBtn.onclick = () => {
