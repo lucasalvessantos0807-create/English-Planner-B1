@@ -335,3 +335,14 @@ button, input, select, textarea {
 .expanded #fontArrow {
     transform: rotate(180deg);
 }
+
+/* Feedback visual para campos editáveis globais */
+.editable-global[contenteditable="true"] {
+    outline: 1px dashed var(--accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+    cursor: text;
+}
+.editable-global[contenteditable="true"]:hover {
+    background: var(--accent-light);
+}
