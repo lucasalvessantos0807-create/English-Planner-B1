@@ -191,3 +191,12 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 .wkbar {
     margin-top: 10px; /* Garante um espaço entre os botões e o resumo */
 }
+
+.del-m-btn:hover {
+    background: #ffeeee !important;
+    opacity: 1 !important;
+}
+.edit-m-btn:hover {
+    background: var(--bg) !important;
+    opacity: 1 !important;
+}
