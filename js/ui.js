@@ -33,6 +33,23 @@ export function updateProgressBar() {
     if (totalLabel) totalLabel.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
 }
 
+// Função para aplicar as customizações visualmente
+export function applyTheme(config) {
+    const root = document.documentElement;
+    if (!config || Object.keys(config).length === 0) return;
+
+    if (config.mode) root.setAttribute('data-theme', config.mode);
+    if (config.accent) {
+        root.style.setProperty('--accent', config.accent);
+        // Cria uma versão clara da cor de destaque para os fundos
+        root.style.setProperty('--accent-light', config.accent + '22'); 
+    }
+    if (config.font) root.style.setProperty('--font-family', config.font);
+    if (config.size) root.style.setProperty('--font-size', config.size + 'px');
+    if (config.width) root.style.setProperty('--content-width', config.width);
+    if (config.radius) root.style.setProperty('--radius', config.radius + 'px');
+}
+
 export function renderStructure(plannerConfig, onWeekChange) {
     const monthNav = document.getElementById('monthNav');
     const monthPanels = document.getElementById('monthPanels');
@@ -120,3 +137,54 @@ export function renderStructure(plannerConfig, onWeekChange) {
         };
     });
 }
+
+// --- LOGICA DO PAINEL DE CONFIGURAÇÕES ---
+
+// Abrir Modal
+document.getElementById('settingsBtn').onclick = () => {
+    const cfg = window.themeConfig || {};
+    if(cfg.mode) document.getElementById('themeMode').value = cfg.mode;
+    if(cfg.accent) document.getElementById('accentColor').value = cfg.accent;
+    if(cfg.font) document.getElementById('fontFamily').value = cfg.font;
+    if(cfg.size) document.getElementById('fontSize').value = cfg.size;
+    if(cfg.width) document.getElementById('contentWidth').value = cfg.width;
+    if(cfg.radius) document.getElementById('borderRadius').value = cfg.radius;
+    document.getElementById('settingsModal').style.display = 'flex';
+};
+
+// Fechar Modal
+document.getElementById('closeSettingsBtn').onclick = () => {
+    document.getElementById('settingsModal').style.display = 'none';
+};
+
+// Botão Salvar
+document.getElementById('saveThemeBtn').onclick = async () => {
+    const newTheme = {
+        mode: document.getElementById('themeMode').value,
+        accent: document.getElementById('accentColor').value,
+        font: document.getElementById('fontFamily').value,
+        size: document.getElementById('fontSize').value,
+        width: document.getElementById('contentWidth').value,
+        radius: document.getElementById('borderRadius').value
+    };
+    
+    applyTheme(newTheme);
+    
+    const user = window.auth.currentUser;
+    if (user) {
+        const storage = await import('./storage.js');
+        // Atualiza a referência global
+        Object.assign(window.themeConfig, newTheme);
+        storage.saveUserData(user.uid);
+    }
+    document.getElementById('settingsModal').style.display = 'none';
+};
+
+// Botão Resetar
+document.getElementById('resetThemeBtn').onclick = () => {
+    if(confirm("Restaurar todas as configurações para o padrão?")) {
+        const defaultTheme = { mode: 'light', accent: '#c85a2a', font: 'Georgia, serif', size: '15', width: '900px', radius: '10' };
+        applyTheme(defaultTheme);
+        document.getElementById('saveThemeBtn').click();
+    }
+};
