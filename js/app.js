@@ -22,7 +22,7 @@ onAuthStateChanged(auth, async (user) => {
         
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
 
-        // --- LÓGICA DE PERSONALIZAÇÃO (FONTES) ---
+        // --- LÓGICA DE PERSONALIZAÇÃO ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -34,8 +34,12 @@ onAuthStateChanged(auth, async (user) => {
         ];
 
         function loadGoogleFont(fontName) {
-            if (fontName === "Georgia, serif" || fontName === "Arial" || fontName === "system-ui") return;
+            if (!fontName || fontName === "Georgia, serif" || fontName === "system-ui") return;
+            const fontId = `font-${fontName.replace(/\s+/g, '-')}`;
+            if (document.getElementById(fontId)) return;
+            
             const link = document.createElement('link');
+            link.id = fontId;
             link.rel = 'stylesheet';
             link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
             document.head.appendChild(link);
@@ -49,8 +53,12 @@ onAuthStateChanged(auth, async (user) => {
                 const div = document.createElement('div');
                 div.className = 'font-item';
                 div.textContent = font;
+                
+                // Carrega a fonte para o preview individual
+                loadGoogleFont(font);
+                div.style.fontFamily = `"${font}", sans-serif`;
+
                 div.onclick = () => {
-                    loadGoogleFont(font);
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
                     localStorage.setItem('plannerFont', font);
                     document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
@@ -60,16 +68,14 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        personalizeBtn.onclick = () => customDrawer.classList.add('open');
+        personalizeBtn.onclick = () => customDrawer.classList.toggle('open');
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
 
-        // Carrega fonte salva ao iniciar
         const savedFont = localStorage.getItem('plannerFont') || "Georgia, serif";
-        if (savedFont !== "Georgia, serif") {
-            loadGoogleFont(savedFont);
-            document.documentElement.style.setProperty('--main-font', `"${savedFont}", sans-serif`);
-        }
+        loadGoogleFont(savedFont);
+        document.documentElement.style.setProperty('--main-font', savedFont.includes(",") ? savedFont : `"${savedFont}", sans-serif`);
+        
         renderFonts();
 
         // --- BOTÕES DE AÇÃO ---
