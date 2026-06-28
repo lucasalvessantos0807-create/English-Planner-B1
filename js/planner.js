@@ -30,13 +30,18 @@ export function toggleEditMode(uid) {
         
         if (isEditMode) {
             el.onblur = () => {
+                // Segurança: Só prossegue se houver um usuário logado
+                if (!uid) return; 
+                
                 if (!window.pageContent) window.pageContent = {};
-                // Salva o conteúdo no objeto global e dispara o salvamento no Firebase
+                
+                // Salva o conteúdo no objeto global
                 window.pageContent[el.id] = el.innerHTML;
+                
+                // Salva no Firebase na pasta específica deste UID
                 saveUserData(uid);
             };
         }
-    });
 
     const btn = document.getElementById('editModeBtn');
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
