@@ -1,22 +1,62 @@
-import { updateState, saveUserData, state, plannerConfig } from './storage.js';
+import { updateState, saveUserData, state, plannerConfig, addHistoryEntry } from './storage.js';
 import { updateProgressBar } from './ui.js';
 
 let isEditMode = false;
+let undoStack = []; // Pilha de desfazer local
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
-const ICON_MAP = {
-    '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening',
-    '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day',
-    '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity'
-};
+const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
+
+// Função para salvar estado atual na pilha de Undo
+function pushToUndo() {
+    undoStack.push({
+        config: JSON.parse(JSON.stringify(window.plannerConfig)),
+        content: JSON.parse(JSON.stringify(window.pageContent || {}))
+    });
+    document.getElementById('undoBtn').style.display = 'block';
+}
+
+export function performUndo(uid) {
+    if (undoStack.length === 0) return;
+    const lastState = undoStack.pop();
+    window.plannerConfig = lastState.config;
+    window.pageContent = lastState.content;
+    
+    // Atualiza a interface
+    Object.keys(window.pageContent).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = window.pageContent[id];
+    });
+    
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    
+    const active = document.querySelector('.mpanel.on .wpanel.on');
+    if (active) {
+        const [m, w] = active.id.replace('wp', '').split('-');
+        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+    }
+}
 
 export function toggleEditMode(uid) {
     const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
+    
+    if (!isEditMode) {
+        // Entrando no modo edição: Guarda estado inicial no histórico caso queira reverter a sessão inteira depois
+        addHistoryEntry("Before Edit Session", window.plannerConfig, window.pageContent);
+        undoStack = []; 
+        document.getElementById('undoBtn').style.display = 'none';
+    } else {
+        // Saindo do modo edição: Salva no histórico que uma sessão foi concluída
+        addHistoryEntry("Saved Edit Session", window.plannerConfig, window.pageContent);
+        document.getElementById('undoBtn').style.display = 'none';
+    }
+
     isEditMode = !isEditMode;
 
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = isEditMode;
         if (isEditMode) {
+            el.onfocus = () => pushToUndo(); // Salva antes de mudar
             el.onblur = () => {
                 if (!uid) return;
                 if (!window.pageContent) window.pageContent = {};
@@ -31,7 +71,7 @@ export function toggleEditMode(uid) {
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
     
-    if (!isEditMode) saveUserData(uid);
+    saveUserData(uid);
     
     builtWeeks.clear();
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
@@ -88,15 +128,15 @@ export function buildWeek(m, w, uid, openDays = []) {
 
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = (e) => {
+                icon.onclick = () => {
                     const wrapper = icon.closest('.aico-wrapper');
-                    const wasOpen = wrapper.classList.contains('show-suggestions');
                     document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    if (!wasOpen) wrapper.classList.add('show-suggestions');
+                    wrapper.classList.add('show-suggestions');
                 };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
+                    pushToUndo();
                     const emoji = e.target.dataset.emoji;
                     const act = e.target.closest('.act');
                     const titleEl = act.querySelector('.atitle');
@@ -114,6 +154,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         }
 
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => { if(isEditMode) pushToUndo(); };
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
                 const type = e.target.dataset.type;
@@ -132,6 +173,7 @@ export function buildWeek(m, w, uid, openDays = []) {
 
         const addBtn = card.querySelector('.add-act-btn');
         if (addBtn) addBtn.onclick = () => {
+            pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
             saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
         };
@@ -139,6 +181,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = () => {
                 if(confirm("Delete?")) {
+                    pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
                     saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
                 }
@@ -168,6 +211,7 @@ export function buildWeek(m, w, uid, openDays = []) {
 }
 
 export function addNewMonth(uid) {
+    addHistoryEntry("Before Add Month", window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
@@ -177,8 +221,7 @@ export function addNewMonth(uid) {
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${Object.keys(window.plannerConfig).length + 1}`,
-            theme: "New Month",
+            label: `Week ${Object.keys(window.plannerConfig).length + 1}`, theme: "New Month",
             days: Array.from({length: daysInW}, () => {
                 const d = currentDay++;
                 return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
@@ -189,6 +232,7 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
+    addHistoryEntry(`Before Restructure Month ${m}`, window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
     if (isNaN(dayCount)) return;
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
@@ -208,6 +252,7 @@ export function editMonthStructure(m, uid) {
 
 export function deleteMonth(m, uid) {
     if (confirm(`Delete Month ${m}?`)) {
+        addHistoryEntry(`Before Delete Month ${m}`, window.plannerConfig, window.pageContent);
         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
         saveUserData(uid).then(() => refreshUI(uid));
     }
@@ -221,5 +266,3 @@ function refreshUI(uid) {
         mod.updateProgressBar();
     });
 }
-
-document.addEventListener('click', (e) => { if (!e.target.closest('.aico-wrapper')) document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions')); });
