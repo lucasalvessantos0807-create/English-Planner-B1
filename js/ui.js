@@ -1,59 +1,69 @@
+// --- FUNÇÕES DE PROGRESSO ---
 export function updateProgressBar() {
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
     let totalDays = 0;
-    Object.values(config).forEach(w => totalDays += w.days.length);
+    Object.values(config).forEach(w => {
+        if (w.days) totalDays += w.days.length;
+    });
     
     let done = 0;
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) done++;
     });
 
-    const pct = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
+    const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
     const pbar = document.getElementById("pbar");
-    if(pbar) pbar.style.width = pct + "%";
+    if (pbar) pbar.style.width = pctValue + "%";
     
-    document.getElementById("dcnt").textContent = done;
-    document.getElementById("pct").textContent = pct + "%";
-    
-    const totalLabel = document.querySelector('.prog-stats span:first-child');
-    if (totalLabel) totalLabel.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
+    const dcntEl = document.getElementById("dcnt");
+    if (dcntEl) dcntEl.textContent = done;
+
+    const statsContainer = document.querySelector('.prog-stats span:first-child');
+    if (statsContainer) {
+        statsContainer.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
+    }
+
+    const pctEl = document.getElementById("pct");
+    if (pctEl) pctEl.textContent = pctValue + "%";
 }
 
+// --- FUNÇÃO DE RENDERIZAÇÃO DA ESTRUTURA ---
 export function renderStructure(plannerConfig, onWeekChange) {
     const monthNav = document.getElementById('monthNav');
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpa a navegação antiga (preservando apenas o botão de adicionar)
+    // Limpeza
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
-    // Mapeia quais meses existem no config
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
-        // Criar Botão do Mês no Menu
+        // Criar Botão do Mês
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-        // Criar Painel de Conteúdo do Mês
+        // Criar Painel do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
+        
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
                 <p>English Study Plan — Continuous Progress</p>
                 <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month ${m}</button>
-            </div>`;
-        
-        // --- AQUI ESTÁ A BARRA DE SEMANAS (Sendo adicionada antes dos conteúdos) ---
+            </div>
+        `;
+
+        // --- BARRA DE NAVEGAÇÃO DE SEMANAS (Sempre no topo) ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
         mPanel.appendChild(wNav); 
@@ -81,16 +91,15 @@ export function renderStructure(plannerConfig, onWeekChange) {
                 onWeekChange(m, weekNum);
             };
 
-            wNav.appendChild(wBtn);      // Botão vai para a barra superior
-            mPanel.appendChild(wPanel);  // Conteúdo vai para baixo da barra
+            wNav.appendChild(wBtn);
+            mPanel.appendChild(wPanel);
         });
 
-        // Lógica para o botão de reestruturar
+        // Evento do botão de reestruturar
         mPanel.querySelector('.edit-m-btn').onclick = (e) => {
+            e.stopPropagation();
             const uid = window.auth.currentUser.uid;
-            import('./planner.js').then(mModule => {
-                mModule.editMonthStructure(m, uid);
-            });
+            import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
         };
 
         monthPanels.appendChild(mPanel);
