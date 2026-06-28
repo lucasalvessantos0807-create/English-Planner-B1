@@ -217,7 +217,7 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 8px;
-    display: grid;
+    display: none; /* ALTERADO: Escondido por padrão */
     grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 8px;
@@ -225,6 +225,11 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     z-index: 1000;
     width: max-content;
     margin-top: 5px;
+}
+
+/* MOSTRAR APENAS QUANDO ATIVO (Clicado) */
+.aico-wrapper.show-suggestions .icon-suggestions {
+    display: grid;
 }
 
 .suggest-emoji {
@@ -240,5 +245,5 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
     background: var(--bg);
 }
 
-/* Garante que o card não corte o menu */
+/* Garante que o card não corte o menu e mantém profundidade */
 .act { position: relative; }
