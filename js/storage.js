@@ -3,6 +3,7 @@ import { weeksData as initialWeeksData } from './weeks.js';
 
 export let state = {};
 export let plannerConfig = {};
+export let themeConfig = {};
 
 export async function loadUserData(uid) {
     try {
@@ -10,6 +11,8 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             state = data.state || {};
+            themeConfig = data.themeConfig || {};
+            window.themeConfig = themeConfig;
             // Carrega o cronograma do banco, ou o padrão se for a primeira vez
             plannerConfig = data.plannerConfig || initialWeeksData;
             window.appState = state;
@@ -31,6 +34,7 @@ export async function saveUserData(uid) {
     try {
         await setDoc(doc(db, "users", uid), { 
             state: state,
+            themeConfig: themeConfig,
             plannerConfig: plannerConfig 
         });
     } catch (e) {
