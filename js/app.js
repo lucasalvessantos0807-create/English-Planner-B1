@@ -124,6 +124,27 @@ onAuthStateChanged(auth, async (user) => {
 
         renderFonts();
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
+        // --- FERRAMENTA DE EMERGÊNCIA: RESTAURAR MÊS 1 ---
+        if (!userData.plannerConfig["1-1"]) {
+            if (confirm("O Mês 1 não foi encontrado. Deseja restaurá-lo a partir das configurações padrão?")) {
+                import('./weeks.js').then(mod => {
+                    const defaultData = mod.weeksData;
+                    // Copia apenas as semanas do Mês 1 do arquivo original
+                    Object.keys(defaultData).forEach(key => {
+                        if (key.startsWith("1-")) {
+                            window.plannerConfig[key] = defaultData[key];
+                        }
+                    });
+                    // Salva no seu Firebase e recarrega
+                    import('./storage.js').then(store => {
+                        store.saveUserData(currentUser).then(() => {
+                            alert("Mês 1 restaurado com sucesso!");
+                            window.location.reload();
+                        });
+                    });
+                });
+            }
+        }
         updateProgressBar();
 
     } else {
