@@ -25,6 +25,7 @@
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <div style="display: flex; gap: 8px;">
       <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+        <button id="settingsBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">⚙️ Settings</button>
       <button class="topbar-logout" id="logoutBtn">Sair</button>
     </div>
   </div>
@@ -86,6 +87,68 @@
     </div>
 
     <!-- CONTEÚDO DINÂMICO: JavaScript preencherá aqui -->
+      <!-- MODAL DE CONFIGURAÇÕES -->
+    <div id="settingsModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center; padding:1rem;">
+      <div style="background:var(--white); padding:2rem; border-radius:16px; max-width:450px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+        <h2 style="margin-bottom:1.5rem; font-family:system-ui;">Customization</h2>
+        
+        <div style="display:grid; gap:1.2rem; font-family:system-ui; font-size:.9rem;">
+          <!-- TEMA -->
+          <div>
+            <label class="login-label">Theme Mode</label>
+            <select id="themeMode" class="login-input" style="margin-bottom:0;">
+              <option value="light">☀️ Light</option>
+              <option value="dark">🌙 Dark</option>
+              <option value="gradient">🌈 Gradient</option>
+            </select>
+          </div>
+
+          <!-- COR PRINCIPAL -->
+          <div>
+            <label class="login-label">Accent Color</label>
+            <input type="color" id="accentColor" style="width:100%; height:40px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+          </div>
+
+          <!-- FONTE -->
+          <div>
+            <label class="login-label">Font Family</label>
+            <select id="fontFamily" class="login-input" style="margin-bottom:0;">
+              <option value="Georgia, serif">Classic (Serif)</option>
+              <option value="system-ui, sans-serif">Modern (Sans)</option>
+              <option value="'Courier New', monospace">Minimal (Mono)</option>
+            </select>
+          </div>
+
+          <!-- TAMANHO DA FONTE -->
+          <div>
+            <label class="login-label">Font Size</label>
+            <input type="range" id="fontSize" min="12" max="20" value="15" style="width:100%;">
+          </div>
+
+          <!-- LARGURA -->
+          <div>
+            <label class="login-label">Content Width</label>
+            <select id="contentWidth" class="login-input" style="margin-bottom:0;">
+              <option value="900px">Normal</option>
+              <option value="1200px">Wide</option>
+              <option value="100%">Full Screen</option>
+            </select>
+          </div>
+
+          <!-- BORDAS -->
+          <div>
+            <label class="login-label">Rounded Corners</label>
+            <input type="range" id="borderRadius" min="0" max="25" value="10" style="width:100%;">
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:1rem;">
+            <button id="saveThemeBtn" class="login-btn">Save Settings</button>
+            <button id="resetThemeBtn" class="login-btn" style="background:var(--bg); color:var(--ink); border:1px solid var(--border);">Reset</button>
+          </div>
+          <button id="closeSettingsBtn" style="background:none; border:none; color:var(--muted); cursor:pointer; font-size:.8rem;">Close without saving</button>
+        </div>
+      </div>
+    </div>
     <div id="monthPanels"></div>
 
   </div>
