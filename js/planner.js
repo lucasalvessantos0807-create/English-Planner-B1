@@ -16,12 +16,10 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    // Identifica qual painel de semana está aberto no momento para atualizar imediatamente
-    const activePanel = document.querySelector('.wpanel.on');
-    if (activePanel) {
-        const idParts = activePanel.id.replace('wp', '').split('-');
-        const m = idParts[0];
-        const w = idParts[1];
+    // Procura a semana ativa em qualquer mês (mpanel on -> wpanel on)
+    const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
+    if (activeWeekPanel) {
+        const [m, w] = activeWeekPanel.id.replace('wp', '').split('-');
         buildWeek(m, w, uid);
     }
 }
@@ -50,12 +48,23 @@ export function buildWeek(m, w, uid) {
                     ${day.activities.map((act, aIdx) => `
                         <div class="act">
                             <div class="aico-wrapper">
-                            <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
-                            ${isEditMode ? `
-                                <div class="icon-suggestions">
-                                    ${['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐'].map(emoji => `
-                                        <span class="suggest-emoji" onclick="this.parentElement.previousElementSibling.innerText='${emoji}'; this.parentElement.previousElementSibling.dispatchEvent(new Event('blur'))">${emoji}</span>
-                                    `).join('')}
+                                <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                                ${isEditMode ? `
+                                    <div class="icon-suggestions">
+                                        ${['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'].map(emoji => `
+                                            <span class="suggest-emoji" onclick="this.closest('.aico-wrapper').querySelector('.aico').innerText='${emoji}'; this.closest('.aico-wrapper').querySelector('.aico').focus(); this.closest('.aico-wrapper').querySelector('.aico').blur();">${emoji}</span>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="acont">
+                                <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                                <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                            </div>
+                            <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                            ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                        </div>
+                    `).join('')}
                                 </div>
                             ` : ''}
                         </div>
