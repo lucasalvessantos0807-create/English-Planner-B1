@@ -250,3 +250,23 @@ body{background:var(--bg);color:var(--ink);font-family:Georgia,serif;font-size:1
 }
 
 .act { position: relative !important; }
+
+/* --- Personalization Drawer --- */
+.custom-drawer {
+  position: fixed; top: 0; right: -300px; width: 300px; height: 100%;
+  background: var(--white); border-left: 1px solid var(--border);
+  box-shadow: -4px 0 15px rgba(0,0,0,0.05); z-index: 1001;
+  transition: right 0.3s ease; padding: 1.5rem;
+  font-family: system-ui, sans-serif;
+}
+.custom-drawer.open { right: 0; }
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+}
+.drawer-header span { font-weight: 600; font-size: 1.1rem; }
+#closeDrawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+.control-group { margin-bottom: 1.5rem; }
+.control-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
+.control-group select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); outline: none; background: var(--bg); }
+#personalizeBtn:hover { border-color: var(--accent); color: var(--accent); }
