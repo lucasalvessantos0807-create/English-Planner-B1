@@ -346,3 +346,24 @@ button, input, select, textarea {
 .editable-global[contenteditable="true"]:hover {
     background: var(--accent-light);
 }
+
+.history-item {
+    padding: 8px;
+    border-bottom: 1px solid var(--bg);
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { color: var(--muted); font-size: 0.7rem; }
+.history-restore {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    align-self: flex-end;
+}
+.history-restore:hover { background: var(--accent-light); color: var(--accent); }
