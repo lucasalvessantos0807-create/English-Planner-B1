@@ -56,12 +56,17 @@ onAuthStateChanged(auth, async (user) => {
 
         function renderFonts(filter = "") {
             fontListContainer.innerHTML = "";
-            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
+            const filtered = googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase()));
+            
+            filtered.forEach(font => {
                 const div = document.createElement('div');
                 div.className = 'font-item';
                 div.textContent = font;
+                
+                // Carrega o link da fonte para o preview
                 loadGoogleFont(font);
                 div.style.fontFamily = `"${font}", sans-serif`;
+
                 div.onclick = () => {
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
                     import('./storage.js').then(store => {
@@ -69,6 +74,9 @@ onAuthStateChanged(auth, async (user) => {
                         store.state.settings.font = font;
                         store.saveUserData(currentUser);
                     });
+                    // Feedback visual de seleção
+                    document.querySelectorAll('.font-item').forEach(i => i.classList.remove('active'));
+                    div.classList.add('active');
                 };
                 fontListContainer.appendChild(div);
             });
