@@ -30,6 +30,8 @@ onAuthStateChanged(auth, async (user) => {
         const fontListContainer = document.getElementById('fontList');
         const fontToggle = document.getElementById('fontStyleToggle');
         const fontWrapper = document.getElementById('fontPickerWrapper');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const fontSizeVal = document.getElementById('fontSizeVal');
 
         if (fontToggle && fontWrapper) {
             fontToggle.onclick = (e) => {
@@ -99,17 +101,39 @@ onAuthStateChanged(auth, async (user) => {
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
 
         // Carrega a fonte vinda do banco de dados do usuário
+        // Carrega as configurações salvas no Firebase
         const userSettings = userData.state.settings || {};
-        const savedFont = userSettings.font || "Georgia, serif";
         
+        // Aplica a Fonte
+        const savedFont = userSettings.font || "Georgia, serif";
         if (savedFont !== "Georgia, serif") {
             loadGoogleFont(savedFont);
             document.documentElement.style.setProperty('--main-font', `"${savedFont}", sans-serif`);
         } else {
             document.documentElement.style.setProperty('--main-font', "Georgia, serif");
         }
+
+        // Aplica o Tamanho da Fonte
+        const savedSize = userSettings.fontSize || "15";
+        fontSizeSlider.value = savedSize;
+        fontSizeVal.textContent = savedSize + "px";
+        document.documentElement.style.setProperty('--main-font-size', savedSize + "px");
         
         renderFonts();
+        // Lógica do Slider de Tamanho de Fonte
+        fontSizeSlider.oninput = (e) => {
+            const size = e.target.value + "px";
+            fontSizeVal.textContent = size;
+            document.documentElement.style.setProperty('--main-font-size', size);
+        };
+
+        fontSizeSlider.onchange = (e) => {
+            const size = e.target.value;
+            import('./storage.js').then(store => {
+                store.updateState('settings', { fontSize: size });
+                store.saveUserData(currentUser);
+            });
+        };
 
         // --- BOTÕES DE AÇÃO ---
         document.getElementById('addMonthBtn').onclick = () => {
