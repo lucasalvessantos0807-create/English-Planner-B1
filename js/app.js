@@ -31,15 +31,15 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
 
         fontSelect.onchange = (e) => {
-            document.body.style.fontFamily = e.target.value;
-            // Salva a preferência localmente
-            localStorage.setItem('plannerFont', e.target.value);
+            const font = e.target.value;
+            document.documentElement.style.setProperty('--main-font', font);
+            localStorage.setItem('plannerFont', font);
         };
 
         // Carrega fonte salva ao iniciar
         const savedFont = localStorage.getItem('plannerFont');
         if (savedFont) {
-            document.body.style.fontFamily = savedFont;
+            document.documentElement.style.setProperty('--main-font', savedFont);
             fontSelect.value = savedFont;
         }
         document.getElementById('addMonthBtn').onclick = () => {
