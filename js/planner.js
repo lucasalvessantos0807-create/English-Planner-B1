@@ -16,7 +16,7 @@ export function toggleEditMode(uid) {
     }
     
     builtWeeks.clear();
-    // Força a atualização imediata da semana que está na tela (independente do mês)
+    // Força a atualização imediata da semana ativa em qualquer mês
     const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
     if (activeWeekPanel) {
         const idParts = activeWeekPanel.id.replace('wp', '').split('-');
@@ -75,14 +75,14 @@ export function buildWeek(m, w, uid) {
             </div>
         `;
 
-        // Lógica para as sugestões de ícones
+        // Lógica para as sugestões de ícones (fora do HTML para evitar erro de sintaxe)
         card.querySelectorAll('.suggest-emoji').forEach(sug => {
             sug.onclick = (e) => {
                 const emoji = e.target.dataset.emoji;
                 const aico = e.target.closest('.aico-wrapper').querySelector('.aico');
                 aico.innerText = emoji;
                 aico.focus();
-                aico.blur();
+                aico.blur(); // Força o salvamento no Firebase
             };
         });
 
@@ -150,26 +150,21 @@ export function buildWeek(m, w, uid) {
 }
 
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days should this month have? (Ex: 30 or 31)", "30"));
+    const dayCount = parseInt(prompt("How many days should this month have?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
-
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
-    
-    const startDayInput = prompt("What is the number of the first day of this month?", 
+    const startDayInput = prompt("First day number?", 
         (Object.values(window.plannerConfig).reduce((acc, curr) => {
             const last = curr.days[curr.days.length - 1].n;
             return last > acc ? last : acc;
         }, 0) + 1));
-    
     let currentDayCounter = parseInt(startDayInput);
     const totalWeeksInMonth = Math.ceil(dayCount / 7);
     const totalWeeksSoFar = Object.keys(window.plannerConfig).length;
-
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${nextMonth}-${w}`;
         const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
-        
         window.plannerConfig[key] = {
             label: `Week ${totalWeeksSoFar + w}`,
             theme: "New Month - Edit theme",
@@ -184,27 +179,21 @@ export function addNewMonth(uid) {
             })
         };
     }
-
     saveUserData(uid).then(() => refreshUI(uid));
 }
 
 export function editMonthStructure(m, uid) {
     const newDayCount = parseInt(prompt("How many days total?", "30"));
     const newStartDay = parseInt(prompt("First day number?", "1"));
-    
     if (isNaN(newDayCount) || isNaN(newStartDay)) return;
-
     Object.keys(window.plannerConfig).forEach(key => {
         if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
     });
-
     let currentDayCounter = newStartDay;
     const totalWeeksInMonth = Math.ceil(newDayCount / 7);
-
     for (let w = 1; w <= totalWeeksInMonth; w++) {
         const key = `${m}-${w}`;
         const daysInThisWeek = Math.min(7, newDayCount - ((w - 1) * 7));
-        
         window.plannerConfig[key] = {
             label: `Week ${w}`,
             theme: "Adjusted Month",
@@ -219,19 +208,14 @@ export function editMonthStructure(m, uid) {
             })
         };
     }
-
     saveUserData(uid).then(() => refreshUI(uid));
 }
 
 export function deleteMonth(m, uid) {
     if (!confirm(`Are you sure you want to delete Month ${m} and all its weeks?`)) return;
-
     Object.keys(window.plannerConfig).forEach(key => {
-        if (key.startsWith(`${m}-`)) {
-            delete window.plannerConfig[key];
-        }
+        if (key.startsWith(`${m}-`)) delete window.plannerConfig[key];
     });
-
     saveUserData(uid).then(() => refreshUI(uid));
 }
 
