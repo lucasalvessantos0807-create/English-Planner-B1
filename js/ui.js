@@ -55,13 +55,16 @@ export function renderStructure(plannerConfig, onWeekChange) {
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
         
-        mPanel.innerHTML = `
-            <div class="mheader">
-                <h2>Month ${m}</h2>
-                <p>English Study Plan — Continuous Progress</p>
-                <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month ${m}</button>
-            </div>
-        `;
+       mPanel.innerHTML = `
+    <div class="mheader">
+        <h2>Month ${m}</h2>
+        <p>English Study Plan — Continuous Progress</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure</button>
+            <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
+        </div>
+    </div>
+`;
 
         // --- BARRA DE NAVEGAÇÃO DE SEMANAS (Sempre no topo) ---
         const wNav = document.createElement('div');
@@ -101,6 +104,13 @@ export function renderStructure(plannerConfig, onWeekChange) {
             const uid = window.auth.currentUser.uid;
             import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
         };
+       
+        // Evento do botão de deletar
+mPanel.querySelector('.del-m-btn').onclick = (e) => {
+    e.stopPropagation();
+    const uid = window.auth.currentUser.uid;
+    import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+};
 
         monthPanels.appendChild(mPanel);
 
