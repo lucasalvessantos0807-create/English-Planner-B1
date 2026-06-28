@@ -1,7 +1,7 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth } from './planner.js';
-import { renderStructure, updateProgressBar } from './ui.js';
+import { renderStructure, updateProgressBar, applyTheme } from './ui.js';
 
 let currentUser = null;
 
@@ -32,6 +32,8 @@ onAuthStateChanged(auth, async (user) => {
         if (firstKey) {
             const [m, w] = firstKey.split('-');
             buildWeek(m, w, currentUser);
+            // Aplica o tema salvo do usuário
+        applyTheme(userData.themeConfig);
         }
         updateProgressBar();
     } else {
