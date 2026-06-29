@@ -23,28 +23,36 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
+        // Abre o seletor de cores do Google (Nativo) imediatamente
         editCoverBtn.onclick = () => {
-            const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
-            
-            if (mode) {
-                // Modo Cor Sólida: Abre o seletor nativo
-                const colorInput = document.getElementById('coverColorInput');
-                colorInput.click();
-                colorInput.oninput = (e) => {
-                    const color = e.target.value;
-                    cover.style.background = color;
-                    saveCoverSettings(color);
-                };
-            } else {
-                // Modo Degradê
-                const color1 = prompt("Digite a primeira cor (Hex ou nome, ex: #ff7e5f):", "#ff7e5f");
-                const color2 = prompt("Digite a segunda cor (Hex ou nome, ex: #feb47b):", "#feb47b");
-                if (color1 && color2) {
-                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
-                    cover.style.background = gradient;
-                    saveCoverSettings(gradient);
-                }
+            document.getElementById('coverColorInput').click();
+        };
+
+        // Aplica a cor assim que você escolhe no painel
+        document.getElementById('coverColorInput').oninput = (e) => {
+            const color = e.target.value;
+            cover.style.background = color;
+            saveCoverSettings(color);
+        };
+
+        // Lógica separada para o Degradê
+        document.getElementById('editGradientBtn').onclick = () => {
+            const color1 = prompt("Cor 1 (Hex):", "#ff7e5f");
+            const color2 = prompt("Cor 2 (Hex):", "#feb47b");
+            if (color1 && color2) {
+                const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+                cover.style.background = gradient;
+                saveCoverSettings(gradient);
             }
+        };
+
+        function saveCoverSettings(value) {
+            import('./storage.js').then(store => {
+                if(!store.state.settings) store.state.settings = {};
+                store.state.settings.coverColor = value;
+                store.saveUserData(currentUser);
+            });
+        }
         };
 
         // Função auxiliar para salvar a escolha
