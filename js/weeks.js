@@ -636,3 +636,1329 @@ export const weeksData = {
   ]
 }
 };
+
+import { db, doc, getDoc, setDoc } from './firebase.js';
+import { weeksData as initialWeeksData } from './weeks.js';
+
+export let state = {};
+export let plannerConfig = {};
+export let pageContent = {};
+export let history = [];
+
+export function resetLocalData() {
+    state = {};
+    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
+    pageContent = {};
+    history = [];
+    window.appState = state;
+    window.plannerConfig = plannerConfig;
+    window.pageContent = pageContent;
+}
+
+// FUNÇÃO CRUCIAL PARA A RESTAURAÇÃO FUNCIONAR
+export function applySnapshot(newConfig, newContent) {
+    plannerConfig = JSON.parse(JSON.stringify(newConfig));
+    pageContent = JSON.parse(JSON.stringify(newContent));
+    window.plannerConfig = plannerConfig;
+    window.pageContent = pageContent;
+}
+
+export async function loadUserData(uid) {
+    resetLocalData();
+    try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (snap.exists()) {
+            const data = snap.data();
+            state = data.state || {};
+            plannerConfig = data.plannerConfig || initialWeeksData;
+            pageContent = data.pageContent || {};
+            history = data.history || [];
+
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const initialLength = history.length;
+            history = history.filter(item => item.timestamp > thirtyDaysAgo);
+            
+            if (history.length !== initialLength) saveUserData(uid);
+
+            window.appState = state;
+            window.plannerConfig = plannerConfig;
+            window.pageContent = pageContent;
+
+            Object.keys(pageContent).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = pageContent[id];
+            });
+
+            return { state, plannerConfig, pageContent, history };
+        }
+    } catch (e) {
+        console.error("Erro ao carregar dados individuais:", e);
+    }
+    return { state, plannerConfig, pageContent, history };
+}
+
+export async function saveUserData(uid) {
+    if (!uid) return;
+    try {
+        await setDoc(doc(db, "users", uid), { 
+            state: state,
+            plannerConfig: plannerConfig, // Salva a variável interna do módulo
+            pageContent: pageContent,     // Salva a variável interna do módulo
+            history: history 
+        });
+    } catch (e) {
+        console.error("Erro ao salvar dados individuais:", e);
+    }
+}
+
+export function addHistoryEntry(label, config, content) {
+    const entry = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        label: label,
+        plannerConfig: JSON.parse(JSON.stringify(config)),
+        pageContent: JSON.parse(JSON.stringify(content || {}))
+    };
+    history.unshift(entry);
+    if (history.length > 50) history.pop();
+}
+
+export async function deleteHistoryEntry(uid, entryId) {
+    history = history.filter(item => item.id !== entryId);
+    await saveUserData(uid);
+}
+
+export async function clearAllHistory(uid) {
+    history = [];
+    await saveUserData(uid);
+}
+
+export function updateState(dayKey, data) {
+    state[dayKey] = { ...state[dayKey], ...data };
+}
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCE4d1pH7qM5X2nqhxqsIbh7qp1bgbwTYc",
+  authDomain: "english-planner-a1.firebaseapp.com",
+  projectId: "english-planner-a1",
+  storageBucket: "english-planner-a1.firebasestorage.app",
+  messagingSenderId: "794904439088",
+  appId: "1:794904439088:web:daa0ed2bed1506ae2b00f5",
+  measurementId: "G-RPDY8X75WV"
+};
+
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+window.auth = auth; // Isso permite que o ui.js veja o login
+export const provider = new GoogleAuthProvider();
+
+export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>English Study Planner — A2+ to B1</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">📖</div>
+    <div class="login-title">Study Planner</div>
+    <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your personal progress</div>
+    <button class="login-btn" id="googleLoginBtn">Continue with Google</button>
+    <div class="login-note">Seu progresso é salvo automaticamente na sua conta Google.</div>
+  </div>
+</div>
+
+<!-- ── PLANNER ── -->
+<div id="planner">
+  <div class="topbar">
+    <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
+    <div style="display: flex; gap: 8px;">
+      <!-- Botões de Controle -->
+      <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+      <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
+      <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
+      <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">🎨 Personalize</button>
+      <button id="settingsBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">⚙️ Settings</button>
+    </div>
+  </div>
+
+    <div id="page-cover-container" style="position: relative;">
+  <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
+  <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+</div>
+  <div class="page">
+    <div class="cover">
+      <div class="cover-eye editable-global" id="global-cover-eye">Personal English Study Planner</div>
+      <div class="cover-title editable-global" id="global-cover-title">A2+ to B1 Roadmap</div>
+      <div class="cover-sub editable-global" id="global-cover-sub">3 months &nbsp;·&nbsp; Every day &nbsp;·&nbsp; 1.5–2+ hours &nbsp;·&nbsp; Full fluency focus</div>
+    </div>
+
+    <div class="goal-box">
+      <strong class="editable-global" id="global-goal-strong">🎯 Your Goal</strong>
+      <div class="editable-global" id="global-goal-text">Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.</div>
+    </div>
+
+    <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
+    <div id="overview-container">
+    <div class="ov-grid" id="dynamic-ov-grid">
+      <!-- Blocos iniciais serão movidos para o JS ou gerados aqui -->
+      <div class="ov-card ca">
+        <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
+        <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect...</div>
+      </div>
+    </div>
+    <button id="addOverviewBlockBtn" style="width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
+</div>
+      <div class="ov-card cb">
+        <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
+        <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
+      </div>
+      <div class="ov-card cg">
+        <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
+        <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
+      </div>
+    </div>
+
+    <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
+    <div class="tpl">
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t1">0–15 min</div><div class="tpl-act editable-global" id="tpl-a1">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t2">15–35 min</div><div class="tpl-act editable-global" id="tpl-a2">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t3">35–55 min</div><div class="tpl-act editable-global" id="tpl-a3">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t4">55–75 min</div><div class="tpl-act editable-global" id="tpl-a4">🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t5">75–95 min</div><div class="tpl-act editable-global" id="tpl-a5">📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t6">95–115 min</div><div class="tpl-act editable-global" id="tpl-a6">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
+      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t7">Sunday</div><div class="tpl-act editable-global" id="tpl-a7">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
+    </div>
+
+    <div class="sec editable-global" id="global-sec-progress">Your Progress</div>
+    <div class="prog-box">
+      <div class="prog-lbl editable-global" id="global-prog-lbl">Days completed</div>
+      <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
+      <div class="prog-stats">
+        <span><strong id="dcnt">0</strong> / 0 days</span>
+        <span><strong id="pct">0%</strong> complete</span>
+        <span class="editable-global" id="global-mstat">Learning Progress</span>
+      </div>
+    </div>
+
+    <div class="sec editable-global" id="global-sec-monthly">Monthly Plans</div>
+    <div class="month-nav" id="monthNav">
+        <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
+    </div>
+
+    <div id="monthPanels"></div>
+    
+    <!-- Personalization Drawer -->
+    <div id="customDrawer" class="custom-drawer">
+      <div class="drawer-header">
+        <span>Personalization</span>
+        <button id="closeDrawer">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="control-group">
+          <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
+            Font Style <span id="fontArrow">▼</span>
+          </div>
+          <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
+            <div class="font-search-container">
+              <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
+              <div id="fontList" class="font-list-results"></div>
+            </div>
+          </div>
+        </div>
+        <div class="control-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <label style="display:flex; justify-content:space-between; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
+            Font Size <span id="fontSizeVal">15px</span>
+          </label>
+          <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings & History Drawer -->
+    <div id="settingsDrawer" class="custom-drawer">
+      <div class="drawer-header">
+        <span>Settings & History</span>
+        <button id="closeSettings">✕</button>
+      </div>
+      <div class="drawer-body">
+        <div class="control-group">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <label style="margin:0;">Change History (30 days)</label>
+            <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
+          </div>
+          <div id="historyList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
+            <!-- Itens preenchidos via JS -->
+          </div>
+        </div>
+        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout / Sair</button>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- Fim da Page -->
+</div> <!-- Fim do Planner -->
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
+
+// --- FUNÇÕES DE PROGRESSO ---
+export function updateProgressBar() {
+    const state = window.appState || {};
+    const config = window.plannerConfig || {};
+    
+    let totalDays = 0;
+    Object.values(config).forEach(w => {
+        if (w.days) totalDays += w.days.length;
+    });
+    
+    let done = 0;
+    Object.keys(state).forEach(key => {
+        if (state[key] && state[key].done) done++;
+    });
+
+    const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
+    
+    const pbar = document.getElementById("pbar");
+    if (pbar) pbar.style.width = pctValue + "%";
+    
+    const dcntEl = document.getElementById("dcnt");
+    if (dcntEl) dcntEl.textContent = done;
+
+    const statsContainer = document.querySelector('.prog-stats span:first-child');
+    if (statsContainer) {
+        statsContainer.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
+    }
+
+    const pctEl = document.getElementById("pct");
+    if (pctEl) pctEl.textContent = pctValue + "%";
+}
+
+// --- FUNÇÃO DE RENDERIZAÇÃO DA ESTRUTURA ---
+export function renderStructure(plannerConfig, onWeekChange) {
+    const monthNav = document.getElementById('monthNav');
+    const monthPanels = document.getElementById('monthPanels');
+    const addBtn = document.getElementById('addMonthBtn');
+
+    // Limpeza
+    monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
+    monthPanels.innerHTML = '';
+
+    const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
+                   .sort((a, b) => Number(a) - Number(b));
+
+    months.forEach((m, idx) => {
+        // Criar Botão do Mês
+        const mBtn = document.createElement('button');
+        mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
+        mBtn.textContent = `Month ${m}`;
+        monthNav.insertBefore(mBtn, addBtn);
+
+        // Criar Painel do Mês
+        const mPanel = document.createElement('div');
+        mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
+        mPanel.id = `mp${m}`;
+        
+       mPanel.innerHTML = `
+    <div class="mheader">
+        <h2>Month ${m}</h2>
+        <p class="editable-global" id="m-desc-${m}" contenteditable="true">English Study Plan — Continuous Progress</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure</button>
+            <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
+        </div>
+    </div>
+`;
+        // --- BARRA DE NAVEGAÇÃO DE SEMANAS (Sempre no topo) ---
+        const wNav = document.createElement('div');
+        wNav.className = "week-nav";
+        mPanel.appendChild(wNav); 
+        
+        const weeks = Object.keys(plannerConfig)
+            .filter(key => key.startsWith(`${m}-`))
+            .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+
+        weeks.forEach((wkKey, wIdx) => {
+            const weekNum = wkKey.split('-')[1];
+            
+            const wBtn = document.createElement('button');
+            wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
+            wBtn.textContent = plannerConfig[wkKey].label;
+            
+            const wPanel = document.createElement('div');
+            wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
+            wPanel.id = `wp${m}-${weekNum}`;
+
+            wBtn.onclick = (e) => {
+                e.stopPropagation();
+                mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
+                wBtn.classList.add('on');
+                wPanel.classList.add('on');
+                onWeekChange(m, weekNum);
+            };
+
+            wNav.appendChild(wBtn);
+            mPanel.appendChild(wPanel);
+        });
+
+        // Evento do botão de reestruturar
+        mPanel.querySelector('.edit-m-btn').onclick = (e) => {
+            e.stopPropagation();
+            const uid = window.auth.currentUser.uid;
+            import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
+        };
+       
+        // Evento do botão de deletar
+mPanel.querySelector('.del-m-btn').onclick = (e) => {
+    e.stopPropagation();
+    const uid = window.auth.currentUser.uid;
+    import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+};
+
+        monthPanels.appendChild(mPanel);
+
+        mBtn.onclick = () => {
+            document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
+            mBtn.classList.add('on');
+            mPanel.classList.add('on');
+            const firstW = mPanel.querySelector('.wbtn');
+            if(firstW) firstW.click();
+        };
+    });
+}
+
+import { updateState, saveUserData, state, plannerConfig, addHistoryEntry } from './storage.js';
+import { updateProgressBar } from './ui.js';
+
+let isEditMode = false;
+let undoStack = []; 
+let sessionInitialConfig = null; 
+let sessionInitialContent = null; 
+let sessionInitialDOMSnapshot = {}; 
+
+const builtWeeks = new Set();
+const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
+const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
+
+function pushToUndo() {
+    undoStack.push({
+        config: JSON.parse(JSON.stringify(window.plannerConfig)),
+        content: JSON.parse(JSON.stringify(window.pageContent || {}))
+    });
+    document.getElementById('undoBtn').style.display = 'block';
+}
+
+export function performUndo(uid) {
+    if (undoStack.length === 0) return;
+    const lastState = undoStack.pop();
+    window.plannerConfig = lastState.config;
+    window.pageContent = lastState.content;
+    refreshGlobalTexts();
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    refreshCurrentWeek(uid);
+}
+
+function refreshGlobalTexts() {
+    Object.keys(window.pageContent || {}).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = window.pageContent[id];
+    });
+}
+
+// CORREÇÃO DEFINITIVA: Cancelar restaura os dados e força o Redraw completo da UI
+export function cancelEdit(uid) {
+    if (!confirm("Discard all changes made in this session?")) return;
+    
+    // 1. Restaura os dados originais na memória
+    window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
+    window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
+    
+    // 2. Desativa o modo de edição
+    isEditMode = false;
+
+    // 3. Limpa o atributo contentEditable de TODOS os campos editáveis
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = "false";
+        // Restaura o texto original do snapshot DOM para garantir que nada "vaze"
+        if (sessionInitialDOMSnapshot[el.id] !== undefined) {
+            el.innerHTML = sessionInitialDOMSnapshot[el.id];
+        }
+    });
+
+    // 4. Atualiza os botões da Topbar
+    updateUIEditMode();
+
+    // 5. RECONSTRUÇÃO TOTAL: Redesenha os meses e a semana atual do zero
+    // Isso garante que mudanças em atividades e estrutura desapareçam visualmente
+    refreshUI(uid);
+}
+
+function updateUIEditMode() {
+    const btn = document.getElementById('editModeBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    
+    btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
+    btn.style.background = isEditMode ? "var(--green-light)" : "none";
+    btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
+    cancelBtn.style.display = isEditMode ? "block" : "none";
+    if (!isEditMode) undoBtn.style.display = "none";
+}
+
+export function toggleEditMode(uid) {
+    if (!isEditMode) {
+        // INÍCIO DA SESSÃO: Salva estados e tira "foto" visual
+        sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
+        sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
+        
+        sessionInitialDOMSnapshot = {};
+        document.querySelectorAll('.editable-global').forEach(el => {
+            sessionInitialDOMSnapshot[el.id] = el.innerHTML;
+        });
+
+        undoStack = [];
+        isEditMode = true;
+    } else {
+        // SALVAMENTO: Verifica se houve mudança real para registrar histórico
+        const currentConfigStr = JSON.stringify(window.plannerConfig);
+        const initialConfigStr = JSON.stringify(sessionInitialConfig);
+        const currentContentStr = JSON.stringify(window.pageContent);
+        const initialContentStr = JSON.stringify(sessionInitialContent);
+
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
+            addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
+            saveUserData(uid);
+        }
+        isEditMode = false;
+    }
+
+    updateUIEditMode();
+    
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = isEditMode;
+        if (isEditMode) {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML;
+            };
+        }
+    });
+    
+    refreshCurrentWeek(uid);
+}
+
+function refreshCurrentWeek(uid) {
+    builtWeeks.clear();
+    const active = document.querySelector('.mpanel.on .wpanel.on');
+    if (active) {
+        const idParts = active.id.replace('wp', '').split('-');
+        buildWeek(idParts[0], idParts[1], uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+    }
+}
+
+export function buildWeek(m, w, uid, openDays = []) {
+    const key = `${m}-${w}`;
+    const wk = window.plannerConfig[key];
+    const container = document.getElementById(`wp${m}-${w}`);
+    if (!wk || !container) return;
+
+    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
+
+    wk.days.forEach((day, dIdx) => {
+        const dayKey = `d${day.n}`;
+        const dayData = state[dayKey] || { done: false, notes: "" };
+        const card = document.createElement("div");
+        card.className = "daycard";
+        const isOpen = openDays.includes(day.n.toString());
+
+        const activitiesHtml = day.activities.map((act, aIdx) => {
+            let suggestionsHtml = isEditMode ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
+            return `
+                <div class="act">
+                    <div class="aico-wrapper">
+                        <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                        ${suggestionsHtml}
+                    </div>
+                    <div class="acont">
+                        <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                        <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                    </div>
+                    <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                    ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                </div>`;
+        }).join('');
+
+        card.innerHTML = `
+            <div class="dayhead ${day.review ? 'rv' : ''}">
+                <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
+                <div class="dayname">${day.name}</div>
+                <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
+            </div>
+            <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
+                <div class="activities-container">${activitiesHtml}</div>
+                ${isEditMode ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
+                <textarea class="ntxt" id="nt${day.n}" placeholder="Notes...">${dayData.notes || ""}</textarea>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''}><span>Day ${day.n} completed</span></label>
+            </div>`;
+
+        if (isEditMode) {
+            card.querySelectorAll('.aico').forEach(icon => {
+                icon.onclick = () => {
+                    const wrapper = icon.closest('.aico-wrapper');
+                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                    wrapper.classList.add('show-suggestions');
+                };
+            });
+            card.querySelectorAll('.suggest-emoji').forEach(sug => {
+                sug.onclick = (e) => {
+                    pushToUndo();
+                    const emoji = e.target.dataset.emoji;
+                    const act = e.target.closest('.act');
+                    const titleEl = act.querySelector('.atitle');
+                    const path = titleEl.dataset.path;
+                    const [wkK, dI, aI] = path.split('.');
+                    act.querySelector('.aico').innerText = emoji;
+                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                    if (ICON_MAP[emoji]) {
+                        titleEl.innerText = ICON_MAP[emoji];
+                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
+                    }
+                };
+            });
+        }
+
+        card.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => { if(isEditMode) pushToUndo(); };
+            el.onblur = (e) => {
+                const path = e.target.dataset.path;
+                const type = e.target.dataset.type;
+                if (path) {
+                    const [wkK, dI, aI, field] = path.split('.');
+                    const actualField = field === 'i' ? 'i' : (e.target.classList.contains('atitle') ? 'title' : (e.target.classList.contains('adesc') ? 'desc' : 'time'));
+                    window.plannerConfig[wkK].days[dI].activities[aI][actualField] = e.target.innerText;
+                } else if (type === 'tag') {
+                    window.plannerConfig[e.target.dataset.week].days[e.target.dataset.dayidx].tag = e.target.innerText;
+                } else if (type === 'theme') {
+                    window.plannerConfig[e.target.dataset.week].theme = e.target.innerText;
+                }
+            };
+        });
+
+        const addBtn = card.querySelector('.add-act-btn');
+        if (addBtn) addBtn.onclick = () => {
+            pushToUndo();
+            window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+        };
+
+        card.querySelectorAll('.del-act').forEach(btn => {
+            btn.onclick = () => {
+                if(confirm("Delete?")) {
+                    pushToUndo();
+                    window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+                }
+            };
+        });
+
+        card.querySelector('.dayhead').onclick = (e) => {
+            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
+                card.querySelector('.daybody').classList.toggle('on');
+            }
+        };
+
+        const textarea = card.querySelector('textarea');
+        textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
+
+        const chk = card.querySelector('input[type="checkbox"]');
+        chk.onchange = (e) => {
+            updateState(dayKey, { done: e.target.checked });
+            card.querySelector('.chk').classList.toggle('done', e.target.checked);
+            saveUserData(uid);
+            updateProgressBar();
+        };
+
+        container.appendChild(card);
+    });
+    builtWeeks.add(key);
+}
+
+export function addNewMonth(uid) {
+    const dayCount = parseInt(prompt("How many days?", "30"));
+    if (isNaN(dayCount) || dayCount <= 0) return;
+    addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
+    const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
+    const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
+    const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
+    let currentDay = startDay;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${nextMonth}-${w}`] = {
+            label: `Week ${Object.keys(window.plannerConfig).length + 1}`, theme: "New Month",
+            days: Array.from({length: daysInW}, () => {
+                const d = currentDay++;
+                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
+            })
+        };
+    }
+    saveUserData(uid).then(() => refreshUI(uid));
+}
+
+export function editMonthStructure(m, uid) {
+    const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
+    if (isNaN(dayCount)) return;
+    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
+    Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+    let currentDay = startDay;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${m}-${w}`] = {
+            label: `Week ${w}`, theme: "Adjusted",
+            days: Array.from({length: daysInW}, () => {
+                const d = currentDay++;
+                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
+            })
+        };
+    }
+    saveUserData(uid).then(() => refreshUI(uid));
+}
+
+export function deleteMonth(m, uid) {
+    if (confirm(`Delete Month ${m}?`)) {
+        addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
+        Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+        saveUserData(uid).then(() => refreshUI(uid));
+    }
+}
+
+function refreshUI(uid) {
+    import('./ui.js').then(mod => {
+        mod.renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        const first = Object.keys(window.plannerConfig).sort()[0];
+        if (first) { const [m, w] = first.split('-'); buildWeek(m, w, uid); }
+        mod.updateProgressBar();
+    });
+}
+
+export function addOverviewBlock(uid) {
+    const grid = document.getElementById('dynamic-ov-grid');
+    const blockId = 'ov-block-' + Date.now();
+    const newBlock = document.createElement('div');
+    newBlock.className = 'ov-card ca'; // Por padrão usa a cor laranja
+    newBlock.innerHTML = `
+        <div class="ov-label editable-global" id="${blockId}-title" contenteditable="true">New Phase</div>
+        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit your goals here...</div>
+        <button class="del-ov-block" style="position:absolute; top:5px; right:5px; background:none; border:none; cursor:pointer; font-size:10px; opacity:0.3;">✕</button>
+    `;
+    
+    newBlock.querySelector('.del-ov-block').onclick = () => {
+        if(confirm("Delete this block?")) {
+            newBlock.remove();
+            saveUserData(uid);
+        }
+    };
+    
+    grid.appendChild(newBlock);
+    // Reativa o monitoramento de edição para o novo bloco
+    newBlock.querySelectorAll('.editable-global').forEach(el => {
+        el.onblur = () => {
+            if (!window.pageContent) window.pageContent = {};
+            window.pageContent[el.id] = el.innerHTML;
+            saveUserData(uid);
+        };
+    });
+}
+
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
+import { loadUserData, deleteHistoryEntry, clearAllHistory } from './storage.js';
+import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
+import { renderStructure, updateProgressBar } from './ui.js';
+
+let currentUser = null;
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user.uid;
+        document.getElementById("topbarName").textContent = user.displayName;
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("planner").style.display = "block";
+        
+        const userData = await loadUserData(currentUser);
+        renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
+        
+        // --- BOTÕES DA TOPBAR ---
+        document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
+        document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
+        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        const cover = document.getElementById('page-cover');
+        const editCoverBtn = document.getElementById('editCoverBtn');
+        
+        editCoverBtn.onclick = () => {
+            const color = prompt("Enter a Hex color (e.g., #f4f1ea):", "#f4f1ea");
+            if(color) {
+                cover.style.background = color;
+                import('./storage.js').then(store => {
+                    if(!store.state.settings) store.state.settings = {};
+                    store.state.settings.coverColor = color;
+                    store.saveUserData(currentUser);
+                });
+            }
+        };
+
+        if(userData.state.settings && userData.state.settings.coverColor) {
+            cover.style.background = userData.state.settings.coverColor;
+        }
+
+        document.getElementById('addOverviewBlockBtn').onclick = () => {
+            import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+        };
+        
+        // --- BOTÃO LIMPAR HISTÓRICO COMPLETO ---
+        document.getElementById('clearHistoryBtn').onclick = async () => {
+            if(confirm("Permanently delete ALL history? This cannot be undone.")){
+                await clearAllHistory(currentUser);
+                renderHistory();
+            }
+        };
+
+        // --- DRAWERS (Configurações e Personalização) ---
+        const personalizeBtn = document.getElementById('personalizeBtn');
+        const customDrawer = document.getElementById('customDrawer');
+        const closeDrawer = document.getElementById('closeDrawer');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsDrawer = document.getElementById('settingsDrawer');
+        const closeSettings = document.getElementById('closeSettings');
+
+        personalizeBtn.onclick = () => { 
+            settingsDrawer.classList.remove('open'); 
+            customDrawer.classList.toggle('open'); 
+        };
+        
+        settingsBtn.onclick = () => { 
+            customDrawer.classList.remove('open'); 
+            settingsDrawer.classList.toggle('open'); 
+            renderHistory(); 
+        };
+        
+        closeDrawer.onclick = () => customDrawer.classList.remove('open');
+        closeSettings.onclick = () => settingsDrawer.classList.remove('open');
+
+        // --- LÓGICA DO HISTÓRICO (Restauração e Exclusão Individual) ---
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            import('./storage.js').then(store => {
+                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
+                
+                store.history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    const date = new Date(item.timestamp).toLocaleString();
+                    div.innerHTML = `
+                        <span class="history-date">${date}</span>
+                        <strong style="font-size:0.8rem">${item.label}</strong>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
+                            <button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button>
+                        </div>
+                    `;
+
+                    // --- RESTAURAR VERSÃO ESPECÍFICA ---
+                    div.querySelector('.history-restore').onclick = async () => {
+                        if(confirm("Restore this version? This will overwrite your current months and texts.")){
+                            // SINCRONIZAÇÃO CRUCIAL: Atualiza as variáveis internas do storage.js antes de salvar
+                            store.applySnapshot(item.plannerConfig, item.pageContent);
+                            
+                            // Aguarda o salvamento oficial no Firebase baseado nos dados restaurados
+                            await store.saveUserData(currentUser);
+                            
+                            // Recarrega a página para limpar o cache visual e aplicar tudo
+                            window.location.reload();
+                        }
+                    };
+
+                    // Deletar Entrada Única
+                    div.querySelector('.history-del').onclick = async () => {
+                        if(confirm("Delete this entry?")){
+                            await deleteHistoryEntry(currentUser, item.id);
+                            renderHistory();
+                        }
+                    };
+
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        // --- GERENCIAMENTO DE FONTES ---
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
+        const fontListContainer = document.getElementById('fontList');
+        const fontSearchInput = document.getElementById('fontSearchInput');
+
+        function loadGoogleFont(fontName) {
+            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
+            const id = `font-${fontName.replace(/\s+/g, '-')}`;
+            if (!document.getElementById(id)) {
+                const link = document.createElement('link');
+                link.id = id; link.rel = 'stylesheet';
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+                document.head.appendChild(link);
+            }
+        }
+
+        function renderFonts(filter = "") {
+            fontListContainer.innerHTML = "";
+            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
+                const div = document.createElement('div');
+                div.className = 'font-item';
+                div.textContent = font;
+                loadGoogleFont(font);
+                div.style.fontFamily = `"${font}", sans-serif`;
+                div.onclick = () => {
+                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
+                    import('./storage.js').then(store => {
+                        if (!store.state.settings) store.state.settings = {};
+                        store.state.settings.font = font;
+                        store.saveUserData(currentUser);
+                    });
+                };
+                fontListContainer.appendChild(div);
+            });
+        }
+        fontSearchInput.oninput = (e) => renderFonts(e.target.value);
+        renderFonts();
+
+        // --- TAMANHO DA FONTE ---
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const settings = userData.state.settings || {};
+        if (settings.font) {
+            loadGoogleFont(settings.font);
+            document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
+        }
+        fontSizeSlider.value = settings.fontSize || "15";
+        document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
+        document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
+
+        fontSizeSlider.oninput = (e) => {
+            document.getElementById('fontSizeVal').textContent = e.target.value + "px";
+            document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
+        };
+        fontSizeSlider.onchange = (e) => {
+            import('./storage.js').then(store => {
+                if (!store.state.settings) store.state.settings = {};
+                store.state.settings.fontSize = e.target.value;
+                store.saveUserData(currentUser);
+            });
+        };
+
+        // --- ACCORDION DE FONTES ---
+        document.getElementById('fontStyleToggle').onclick = () => {
+            const wrapper = document.getElementById('fontPickerWrapper');
+            const arrow = document.getElementById('fontArrow');
+            const isHidden = wrapper.style.display === 'none';
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
+
+        // --- INICIALIZAÇÃO FINAL ---
+        document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
+        updateProgressBar();
+        
+    } else {
+        // Logout: Limpa a sessão e volta para o login
+        if (currentUser) window.location.reload();
+        document.getElementById("planner").style.display = "none";
+        document.getElementById("login-screen").style.display = "flex";
+        currentUser = null;
+    }
+});
+
+// Botão de Login do Google
+document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f7f5f0;--white:#fff;--ink:#1a1814;--muted:#7a7570;
+  --border:#e0dbd4;--accent:#c85a2a;--accent-light:#fdf0eb;
+  --green:#2a7a5a;--green-light:#eaf4ef;--blue:#2a4f8a;--blue-light:#edf1f9;
+  --purple:#6a3a8a;--purple-light:#f3eef8;--amber:#b87a10;--amber-light:#fdf5e0;
+  --radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.07);
+  /* Variáveis de Personalização */
+  --main-font: Georgia, serif;
+  --main-font-size: 15px;
+}
+
+/* Configuração para o Slider de tamanho funcionar em todo o planner */
+html {
+  font-size: var(--main-font-size);
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family: var(--main-font);
+  font-size: 1rem; /* Baseado no tamanho definido no html */
+  line-height:1.7;
+}
+
+/* Garante que botões e inputs herdem a fonte global */
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* ── LOGIN SCREEN (Blindado contra alterações de fonte/tamanho) ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  padding:2rem;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 15px !important;
+}
+.login-box{
+  background:var(--white);border:1px solid var(--border);border-radius:16px;
+  padding:2.5rem 2.5rem 2rem;box-shadow:0 4px 24px rgba(0,0,0,0.08);
+  max-width:400px;width:100%;text-align:center;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+.login-logo{font-size:2rem;margin-bottom:.5rem}
+.login-title{font-size:1.6rem;font-weight:400;letter-spacing:-.01em;margin-bottom:.25rem}
+.login-sub{
+  font-size:.88rem;color:var(--muted);
+  font-family: system-ui, -apple-system, sans-serif !important;
+  margin-bottom:2rem;
+}
+.login-label{
+  display:block;text-align:left;font-size:.72rem;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;
+}
+.login-input{
+  width:100%;border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 14px;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size:.95rem;
+  color:var(--ink);background:var(--white);outline:none;
+  transition:border-color .2s;margin-bottom:1rem;
+}
+.login-input:focus{border-color:var(--accent)}
+.login-btn{
+  width:100%;padding:11px;border-radius:8px;border:none;
+  background:var(--accent);color:#fff;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s;
+  letter-spacing:.02em;
+}
+.login-btn:hover{opacity:.88}
+.login-profiles{margin-top:1.5rem;text-align:left}
+.login-profiles-label{
+  font-size:.7rem;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;
+}
+.profile-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--border);border-radius:99px;
+  padding:4px 12px 4px 10px;margin:3px;cursor:pointer;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size:.82rem;color:var(--ink);
+  transition:border-color .15s,background .15s;
+}
+.profile-pill:hover{border-color:var(--accent);background:var(--accent-light)}
+.profile-pill .del{color:var(--muted);font-size:.75rem;margin-left:2px;opacity:.6}
+.profile-pill .del:hover{opacity:1;color:var(--accent)}
+
+.login-note{
+  font-size:.75rem;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  color:var(--muted);margin-top:1.5rem;line-height:1.5;
+}
+
+/* ── PLANNER ── */
+#page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
+.page { margin-top: 0 !important; } /* Ajuste para o banner colar no topo */
+#planner{display:none}
+.page{max-width:900px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;font-family: var(--main-font)}
+.topbar-name{font-size:.85rem;font-weight:600;color:var(--ink)}
+.topbar-name span{color:var(--muted);font-weight:400}
+.topbar-logout{font-size:.78rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:99px;padding:4px 12px;cursor:pointer;transition:all .15s}
+.topbar-logout:hover{border-color:var(--accent);color:var(--accent)}
+.cover{text-align:center;padding:3rem 0 2rem;border-bottom:2px solid var(--border);margin-bottom:2rem}
+.cover-eye{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-family: var(--main-font);margin-bottom:.6rem}
+.cover-title{font-size:2.6rem;font-weight:400;letter-spacing:-.02em;margin-bottom:.3rem}
+.cover-sub{font-size:1rem;color:var(--muted);font-family: var(--main-font)}
+.goal-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-family: var(--main-font);font-size:.9rem;line-height:1.6}
+.goal-box strong{color:var(--accent);display:block;margin-bottom:.2rem}
+.sec{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;color:var(--muted);margin:2rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.ov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+.ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow)}
+.ov-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;margin-bottom:.3rem}
+.ov-body{font-size:.84rem;font-family: var(--main-font);line-height:1.5}
+.ov-card.ca{border-left:3px solid var(--accent)}.ov-card.ca .ov-label{color:var(--accent)}
+.ov-card.cb{border-left:3px solid var(--blue)}.ov-card.cb .ov-label{color:var(--blue)}
+.ov-card.cg{border-left:3px solid var(--green)}.ov-card.cg .ov-label{color:var(--green)}
+.tpl{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.tpl-row{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-bottom:8px;font-family: var(--main-font);font-size:.87rem}
+.tpl-row:last-child{margin-bottom:0}
+.tpl-time{color:var(--muted);font-size:.78rem;padding-top:2px}
+.tpl-act{background:var(--bg);border-radius:6px;padding:6px 10px;line-height:1.45}
+.prog-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.5rem}
+.prog-lbl{font-size:.7rem;font-family: var(--main-font);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.prog-bg{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin-bottom:8px}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .4s ease}
+.prog-stats{display:flex;gap:16px;font-family: var(--main-font);font-size:.82rem;color:var(--muted)}
+.prog-stats strong{color:var(--ink)}
+.month-nav{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.mbtn{padding:8px 20px;border-radius:99px;border:1px solid var(--border);background:var(--white);font-family: var(--main-font);font-size:.84rem;cursor:pointer;color:var(--muted);font-weight:600;transition:all .15s}
+.mbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.mpanel{display:none}.mpanel.on{display:block}
+.mheader{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.mheader h2{font-size:1.2rem;font-weight:400;margin-bottom:.2rem}
+.mheader p{font-size:.82rem;color:var(--muted);font-family: var(--main-font)}
+.week-nav{display:flex;gap:6px;margin-bottom:.8rem;flex-wrap:wrap}
+.wbtn{padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:var(--white);font-family: var(--main-font);font-size:.78rem;cursor:pointer;color:var(--muted);font-weight:500;transition:all .15s}
+.wbtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.wpanel{display:none}.wpanel.on{display:block}
+.wkbar{background:#f9f7f3;border:1px solid var(--border);border-radius:var(--radius);padding:.8rem 1rem;margin-bottom:.8rem;font-family: var(--main-font)}
+.wkbar h3{font-size:.95rem;font-weight:600;margin-bottom:.15rem}
+.wkbar p{font-size:.8rem;color:var(--muted)}
+.wkbar.rv{background:var(--green-light);border-color:var(--green)}
+.daycard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:8px;position:relative}
+.dayhead{display:flex;align-items:center;gap:10px;padding:.65rem 1rem;background:#f9f7f3;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.dayhead.rv{background:var(--green-light)}
+.daynum{font-size:1.2rem;font-weight:400;color:var(--accent);min-width:26px;font-family: var(--main-font)}
+.daynum.rv{color:var(--green)}
+.dayname{font-size:.82rem;font-weight:600;font-family: var(--main-font);letter-spacing:.06em;text-transform:uppercase}
+.daytag{margin-left:auto;font-size:.68rem;font-family: var(--main-font);color:var(--muted);background:var(--bg);padding:2px 9px;border-radius:99px;border:1px solid var(--border);white-space:nowrap}
+.daytag.rv{background:var(--green-light);color:var(--green);border-color:var(--green)}
+.daybody{padding:.9rem 1rem;display:none}
+.daybody.on{display:block}
+.act{display:flex;gap:10px;margin-bottom:.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--border)}
+.act:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0}
+
+.add-act-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--main-font);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.add-act-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Trava da fonte do ícone para evitar deslocamento */
+.aico{
+  width:32px;height:32px;border-radius:7px;display:flex;
+  align-items:center;justify-content:center;font-size:.95rem;
+  flex-shrink:0;margin-top:2px;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
+}
+
+.aico.writing{background:var(--accent-light)}.aico.speaking{background:var(--purple-light)}
+.aico.shadowing{background:var(--blue-light)}.aico.reading{background:var(--green-light)}
+.aico.grammar{background:var(--amber-light)}.aico.listening{background:#f0eef8}
+.aico.vocab{background:#edf6f0}.aico.review{background:var(--green-light)}
+.acont{flex:1}
+.atitle{font-size:.76rem;font-weight:600;font-family: var(--main-font);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.adesc{font-size:.88rem;font-family: var(--main-font);line-height:1.5}
+.atip{font-size:.78rem;font-family: var(--main-font);color:var(--muted);margin-top:3px;font-style:italic}
+.atime{font-size:.68rem;font-family: var(--main-font);color:var(--muted);background:var(--bg);padding:2px 7px;border-radius:99px;border:1px solid var(--border);white-space:nowrap;align-self:flex-start;margin-top:3px}
+.nlbl{font-size:.68rem;font-family: var(--main-font);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.ntxt{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-family: var(--main-font);font-size:.86rem;color:var(--ink);background:var(--white);resize:vertical;min-height:60px;outline:none}
+.ntxt:focus{border-color:var(--accent)}
+.chk{display:flex;align-items:center;gap:8px;font-family: var(--main-font);font-size:.86rem;cursor:pointer;margin-top:8px}
+.chk input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.chk.done span{color:var(--muted);text-decoration:line-through}
+
+@media(max-width:600px){.ov-grid{grid-template-columns:1fr}}
+
+/* --- Ajustes de Posicionamento --- */
+.week-nav {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.wkbar {
+    margin-top: 10px;
+}
+
+.del-m-btn:hover {
+    background: #ffeeee !important;
+    opacity: 1 !important;
+}
+.edit-m-btn:hover {
+    background: var(--bg) !important;
+    opacity: 1 !important;
+}
+
+/* --- Menu de Sugestões de Ícones --- */
+.aico-wrapper {
+    position: relative !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 1;
+}
+
+.aico-wrapper.show-suggestions {
+    z-index: 1001 !important;
+}
+
+.icon-suggestions {
+    position: absolute !important;
+    display: none !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
+    padding: 8px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+    width: max-content !important;
+    margin-top: 5px !important;
+}
+
+.aico-wrapper.show-suggestions .icon-suggestions {
+    display: grid !important;
+}
+
+.suggest-emoji {
+    cursor: pointer !important;
+    font-size: 1.2rem !important;
+    padding: 4px !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+.suggest-emoji:hover {
+    background: var(--bg) !important;
+}
+
+.act { position: relative !important; }
+
+/* --- Personalization Drawer --- */
+.custom-drawer {
+  position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
+  background: var(--white); border-left: 1px solid var(--border);
+  box-shadow: -4px 0 15px rgba(0,0,0,0.05); z-index: 1001;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 1.5rem;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  visibility: hidden;
+  overflow-y: auto;
+}
+.custom-drawer.open { 
+  right: 0; 
+  visibility: visible; 
+}
+.drawer-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+}
+.drawer-header span { font-weight: 600; font-size: 1.1rem; }
+#closeDrawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+.control-group { margin-bottom: 1.5rem; }
+.control-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; font-weight: 600; }
+.control-group select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid var(--border); outline: none; background: var(--bg); }
+#personalizeBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* --- Font Picker Styles --- */
+.font-search-container {
+  position: relative;
+  margin-top: 5px;
+}
+#fontSearchInput {
+  width: 100%; padding: 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 0.9rem; margin-bottom: 10px; outline: none;
+}
+.font-list-results {
+  max-height: 300px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--white);
+}
+.font-item {
+  padding: 10px; cursor: pointer; border-bottom: 1px solid var(--bg);
+  font-size: 1.1rem; color: var(--ink); transition: background 0.2s;
+}
+.font-item:hover { background: var(--accent-light); color: var(--accent); }
+.font-item.active { background: var(--accent); color: white; }
+
+/* --- Accordion Style --- */
+#fontStyleToggle {
+    transition: color 0.2s;
+    padding: 5px 0;
+}
+#fontStyleToggle:hover {
+    color: var(--accent);
+}
+#fontArrow {
+    font-size: 0.6rem;
+    transition: transform 0.3s;
+}
+.expanded #fontArrow {
+    transform: rotate(180deg);
+}
+
+/* Feedback visual para campos editáveis globais */
+.editable-global[contenteditable="true"] {
+    outline: 1px dashed var(--accent);
+    outline-offset: 4px;
+    border-radius: 4px;
+    cursor: text;
+}
+.editable-global[contenteditable="true"]:hover {
+    background: var(--accent-light);
+}
+
+.history-item {
+    padding: 8px;
+    border-bottom: 1px solid var(--bg);
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { color: var(--muted); font-size: 0.7rem; }
+.history-restore {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    align-self: flex-end;
+}
+.history-restore:hover { background: var(--accent-light); color: var(--accent); }
