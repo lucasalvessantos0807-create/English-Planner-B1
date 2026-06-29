@@ -5,6 +5,7 @@ let isEditMode = false;
 let undoStack = []; 
 let sessionInitialConfig = null; 
 let sessionInitialContent = null; 
+let sessionInitialDOMSnapshot = {}; // "Foto" visual de todos os títulos da tela
 
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
@@ -35,19 +36,27 @@ function refreshGlobalTexts() {
     });
 }
 
-// CORREÇÃO PONTO 2: Cancelar agora desativa a edição de todos os campos
+// CORREÇÃO: Cancelar agora usa o Snapshot do DOM para restaurar o visual 100%
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
+    
+    // 1. Restaura as variáveis lógicas de backup
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
+    
+    // 2. Restaura o visual de TODOS os elementos baseando-se na "foto" tirada no início
+    Object.keys(sessionInitialDOMSnapshot).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = sessionInitialDOMSnapshot[id];
+    });
+
     isEditMode = false;
     
-    // Desativa edição visualmente nos textos globais
+    // Desativa edição visualmente
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = "false";
     });
 
-    refreshGlobalTexts();
     updateUIEditMode();
     refreshCurrentWeek(uid);
 }
@@ -66,11 +75,19 @@ function updateUIEditMode() {
 
 export function toggleEditMode(uid) {
     if (!isEditMode) {
+        // INÍCIO DA SESSÃO: Backup dos dados e Snapshot visual da tela
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
+        
+        sessionInitialDOMSnapshot = {};
+        document.querySelectorAll('.editable-global').forEach(el => {
+            sessionInitialDOMSnapshot[el.id] = el.innerHTML;
+        });
+
         undoStack = [];
         isEditMode = true;
     } else {
+        // SALVAMENTO: Verifica mudanças reais
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
         const currentContentStr = JSON.stringify(window.pageContent);
@@ -235,14 +252,10 @@ export function buildWeek(m, w, uid, openDays = []) {
     builtWeeks.add(key);
 }
 
-// CORREÇÃO PONTO 3: Histórico só é criado se o usuário não cancelar o prompt
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
-
-    // Snapshot ANTES de mudar
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
-
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
@@ -260,14 +273,10 @@ export function addNewMonth(uid) {
     saveUserData(uid).then(() => refreshUI(uid));
 }
 
-// CORREÇÃO PONTO 3: Histórico só é criado se o usuário não cancelar o prompt
 export function editMonthStructure(m, uid) {
     const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
     if (isNaN(dayCount)) return;
-
-    // Snapshot ANTES de mudar
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
-
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
     let currentDay = startDay;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
