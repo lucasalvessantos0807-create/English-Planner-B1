@@ -24,16 +24,37 @@ onAuthStateChanged(auth, async (user) => {
         const editCoverBtn = document.getElementById('editCoverBtn');
         
         editCoverBtn.onclick = () => {
-            const color = prompt("Enter a Hex color (e.g., #f4f1ea):", "#f4f1ea");
-            if(color) {
-                cover.style.background = color;
-                import('./storage.js').then(store => {
-                    if(!store.state.settings) store.state.settings = {};
-                    store.state.settings.coverColor = color;
-                    store.saveUserData(currentUser);
-                });
+            const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+            
+            if (mode) {
+                // Modo Cor Sólida: Abre o seletor nativo
+                const colorInput = document.getElementById('coverColorInput');
+                colorInput.click();
+                colorInput.oninput = (e) => {
+                    const color = e.target.value;
+                    cover.style.background = color;
+                    saveCoverSettings(color);
+                };
+            } else {
+                // Modo Degradê
+                const color1 = prompt("Digite a primeira cor (Hex ou nome, ex: #ff7e5f):", "#ff7e5f");
+                const color2 = prompt("Digite a segunda cor (Hex ou nome, ex: #feb47b):", "#feb47b");
+                if (color1 && color2) {
+                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+                    cover.style.background = gradient;
+                    saveCoverSettings(gradient);
+                }
             }
         };
+
+        // Função auxiliar para salvar a escolha
+        function saveCoverSettings(value) {
+            import('./storage.js').then(store => {
+                if(!store.state.settings) store.state.settings = {};
+                store.state.settings.coverColor = value;
+                store.saveUserData(currentUser);
+            });
+        }
 
         if(userData.state.settings && userData.state.settings.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
