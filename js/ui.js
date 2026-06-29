@@ -58,14 +58,13 @@ export function renderStructure(plannerConfig, onWeekChange) {
        mPanel.innerHTML = `
     <div class="mheader">
         <h2>Month ${m}</h2>
-        <p>English Study Plan — Continuous Progress</p>
+        <p class="editable-global" id="m-desc-${m}" contenteditable="true">English Study Plan — Continuous Progress</p>
         <div style="display: flex; gap: 10px;">
             <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure</button>
             <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
         </div>
     </div>
 `;
-
         // --- BARRA DE NAVEGAÇÃO DE SEMANAS (Sempre no topo) ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
