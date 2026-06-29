@@ -54,7 +54,7 @@
     <div class="login-title">Study Planner</div>
     <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your personal progress</div>
     <button class="login-btn" id="googleLoginBtn">Continue with Google</button>
-    <div class="login-note">Seu progresso é salvo automaticamente na sua conta Google.</div>
+    <div class="login-note">Your progress is automatically saved to your Google account.</div>
   </div>
 </div>
 
@@ -78,10 +78,10 @@
     
     <!-- Menu de Escolha Sutil (Posicionado abaixo do botão) -->
     <div id="colorChoiceMenu" style="display:none; position: absolute; top: 175px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; z-index: 1500; flex-direction: column; gap: 4px; min-width: 140px;">
-      <button class="mbtn" id="choiceSolid" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🎨 Cor Sólida</button>
-      <button class="mbtn" id="choiceGradient" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🌈 Degradê</button>
+      <button class="mbtn" id="choiceSolid" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🎨 Solid Color</button>
+      <button class="mbtn" id="choiceGradient" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🌈 Gradient</button>
       <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
-      <button id="choiceCancel" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; color: #cc0000;">✕ Cancelar</button>
+      <button id="choiceCancel" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; color: #cc0000;">✕ Cancel</button>
     </div>
 
     <input type="color" id="coverColorInput" style="opacity:0; position:absolute; pointer-events:none;">
@@ -213,7 +213,12 @@
 
         <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; flex-direction: column; gap: 10px;">
           <button class="topbar-logout" id="changeNameBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Change Username</button>
-          <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout / Sair</button>
+            <div class="settings-row" style="display: flex; gap: 10px; width: 100%;">
+            <button class="topbar-logout" id="exportDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Export Data</button>
+            <button class="topbar-logout" id="importDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Import Data</button>
+          </div>
+          <input type="file" id="importFileInput" style="display:none;" accept=".json">
+          <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout</button>
         </div>
       </div>
     </div>
