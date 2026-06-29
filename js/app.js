@@ -1,5 +1,5 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { loadUserData, deleteHistoryEntry, clearAllHistory } from './storage.js';
+import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
@@ -54,6 +54,24 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        document.getElementById('exportDataBtn').onclick = () => exportData();
+        
+        const importInput = document.getElementById('importFileInput');
+        document.getElementById('importDataBtn').onclick = () => importInput.click();
+        
+        importInput.onchange = async (e) => {
+            if (e.target.files.length > 0) {
+                if (confirm("This will overwrite all your current data with the imported file. Continue?")) {
+                    try {
+                        await importData(e.target.files[0], currentUser);
+                        alert("Data imported successfully! The page will now reload.");
+                        window.location.reload();
+                    } catch (err) {
+                        alert("Error importing data: " + err.message);
+                    }
+                }
+            }
+        };
         
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
