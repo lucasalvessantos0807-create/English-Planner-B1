@@ -33,12 +33,10 @@
     </div>
   </div>
 
-  <!-- Capa Full Screen (Fora da div .page) -->
-  <div id="page-cover-container" style="position: relative; width: 100%;">
-    <div id="page-cover" class="editable-global" style="width: 100%; height: 220px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
-    <button id="editCoverBtn" style="position: absolute; bottom: 15px; right: 25px; padding: 6px 14px; font-size: 11px; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--ink);">📷 Change Cover</button>
-  </div>
-
+    <div id="page-cover-container" style="position: relative;">
+  <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
+  <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+</div>
   <div class="page">
     <div class="cover">
       <div class="cover-eye editable-global" id="global-cover-eye">Personal English Study Planner</div>
@@ -52,30 +50,24 @@
     </div>
 
     <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
-    
-    <!-- Grade Dinâmica de Objetivos -->
     <div id="overview-container">
-      <div class="ov-grid" id="dynamic-ov-grid">
-        
-        <!-- Bloco Mês 1 -->
-        <div class="ov-card ca">
-          <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
-          <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect · Used to · Have/have got · A few/a little · Although/despite<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte's Web</div>
-        </div>
-
-        <!-- Bloco Mês 2 -->
-        <div class="ov-card cb">
-          <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-          <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
-        </div>
-
-        <!-- Bloco Mês 3 -->
-        <div class="ov-card cg">
-          <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-          <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
-
+    <div class="ov-grid" id="dynamic-ov-grid">
+      <!-- Blocos iniciais serão movidos para o JS ou gerados aqui -->
+      <div class="ov-card ca">
+        <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
+        <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect...</div>
       </div>
-      <button id="addOverviewBlockBtn" style="width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
+    </div>
+    <button id="addOverviewBlockBtn" style="width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
+</div>
+      <div class="ov-card cb">
+        <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
+        <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
+      </div>
+      <div class="ov-card cg">
+        <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
+        <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
+      </div>
     </div>
 
     <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
@@ -158,9 +150,6 @@
 
   </div> <!-- Fim da Page -->
 </div> <!-- Fim do Planner -->
-
-<!-- Seletor de cores escondido para a lógica da Capa -->
-<input type="color" id="colorPicker" style="display:none;">
 
 <script type="module" src="js/app.js"></script>
 </body>
