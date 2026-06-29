@@ -78,3 +78,13 @@ export function addHistoryEntry(label, config, content) {
 export function updateState(dayKey, data) {
     state[dayKey] = { ...state[dayKey], ...data };
 }
+
+export async function deleteHistoryEntry(uid, entryId) {
+    history = history.filter(item => item.id !== entryId);
+    await saveUserData(uid);
+}
+
+export async function clearAllHistory(uid) {
+    history = [];
+    await saveUserData(uid);
+}
