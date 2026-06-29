@@ -114,7 +114,7 @@ button, input, select, textarea {
 .goal-box strong{color:var(--accent);display:block;margin-bottom:.2rem}
 .sec{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;color:var(--muted);margin:2rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
 .ov-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:15px;margin-bottom:1.5rem}
-.ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow)}
+.ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow);position:relative;}
 .ov-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;margin-bottom:.3rem}
 .ov-body{font-size:.84rem;font-family: var(--main-font);line-height:1.5}
 .ov-card.ca{border-left:3px solid var(--accent)}.ov-card.ca .ov-label{color:var(--accent)}
@@ -203,6 +203,24 @@ button, input, select, textarea {
 .chk.done span{color:var(--muted);text-decoration:line-through}
 
 @media(max-width:600px){.ov-grid{grid-template-columns:1fr}}
+.del-ov-btn {
+  display: none;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #ffeeee;
+  color: #cc0000;
+  border: 1px solid #ffcccc;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.ov-card:hover .del-ov-btn { opacity: 1; }
 
 /* --- Ajustes de Posicionamento --- */
 .week-nav {
