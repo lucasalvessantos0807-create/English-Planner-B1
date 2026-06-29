@@ -98,22 +98,25 @@ button, input, select, textarea {
 
 /* ── PLANNER ── */
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
-.page { margin-top: 0 !important; } /* Ajuste para o banner colar no topo */
+.page { margin-top: 0 !important; }
 #planner{display:none}
-.page{max-width:950px;margin:0 auto;padding:0.5rem 1.5rem 5rem; width: 100%;}
+.page{max-width:950px;margin:0 auto;padding:0 1.5rem 5rem; width: 100%;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;font-family: var(--main-font)}
 .topbar-name{font-size:.85rem;font-weight:600;color:var(--ink)}
 .topbar-name span{color:var(--muted);font-weight:400}
 .topbar-logout{font-size:.78rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:99px;padding:4px 12px;cursor:pointer;transition:all .15s}
 .topbar-logout:hover{border-color:var(--accent);color:var(--accent)}
-.cover{text-align:center;padding:3rem 0 2rem;border-bottom:2px solid var(--border);margin-bottom:2rem}
-.cover-eye{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-family: var(--main-font);margin-bottom:.6rem}
-.cover-title{font-size:2.6rem;font-weight:400;letter-spacing:-.02em;margin-bottom:.3rem}
+
+.cover{text-align:center;padding:0.4rem 0 0.8rem;border-bottom:2px solid var(--border);margin-bottom:0.8rem}
+.cover-eye{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-family: var(--main-font);margin-bottom:.4rem}
+.cover-title{font-size:2.6rem;font-weight:400;letter-spacing:-.02em;margin-bottom:.2rem}
 .cover-sub{font-size:1rem;color:var(--muted);font-family: var(--main-font)}
-.goal-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-family: var(--main-font);font-size:.9rem;line-height:1.6}
+
+.goal-box{background:var(--accent-light);border-left:4px solid var(--accent);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.2rem;font-family: var(--main-font);font-size:.9rem;line-height:1.6}
 .goal-box strong{color:var(--accent);display:block;margin-bottom:.2rem}
-.sec{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;color:var(--muted);margin:2rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
-.ov-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:15px;margin-bottom:1.5rem}
+.sec{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;color:var(--muted);margin:1.2rem 0 .6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
+
+.ov-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:15px;margin-bottom:1.2rem}
 .ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow);position:relative;}
 .ov-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;margin-bottom:.3rem}
 .ov-body{font-size:.84rem;font-family: var(--main-font);line-height:1.5}
