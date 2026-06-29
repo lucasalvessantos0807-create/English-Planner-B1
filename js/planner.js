@@ -231,7 +231,7 @@ export function buildWeek(m, w, uid, openDays = []) {
 
         card.querySelectorAll('.del-act').forEach(btn => {
             btn.onclick = () => {
-                if(confirm("Delete?")) {
+                if(confirm("Delete this activity?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
                     buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
@@ -262,7 +262,7 @@ export function buildWeek(m, w, uid, openDays = []) {
 }
 
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days?", "30"));
+    const dayCount = parseInt(prompt("How many days in this month?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
@@ -283,7 +283,7 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
+    const dayCount = parseInt(prompt("Total days?", "30")), startDay = parseInt(prompt("Start Day (e.g. 1)?", "1"));
     if (isNaN(dayCount)) return;
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
@@ -302,7 +302,7 @@ export function editMonthStructure(m, uid) {
 }
 
 export function deleteMonth(m, uid) {
-    if (confirm(`Delete Month ${m}?`)) {
+   if (confirm(`Are you sure you want to delete Month ${m}?`)) {
         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
         saveUserData(uid).then(() => refreshUI(uid));
@@ -336,7 +336,7 @@ export function addOverviewBlock(uid) {
     
     newBlock.querySelector('.del-ov-btn').onclick = (e) => {
         e.stopPropagation();
-        if(confirm("Delete this block?")) {
+        if(confirm("Delete this overview block?")) {
             newBlock.remove();
             window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
             delete window.pageContent[`${blockId}-title`];
