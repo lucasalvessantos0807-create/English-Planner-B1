@@ -20,6 +20,28 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        const cover = document.getElementById('page-cover');
+        const editCoverBtn = document.getElementById('editCoverBtn');
+        
+        editCoverBtn.onclick = () => {
+            const color = prompt("Enter a Hex color (e.g., #f4f1ea):", "#f4f1ea");
+            if(color) {
+                cover.style.background = color;
+                import('./storage.js').then(store => {
+                    if(!store.state.settings) store.state.settings = {};
+                    store.state.settings.coverColor = color;
+                    store.saveUserData(currentUser);
+                });
+            }
+        };
+
+        if(userData.state.settings && userData.state.settings.coverColor) {
+            cover.style.background = userData.state.settings.coverColor;
+        }
+
+        document.getElementById('addOverviewBlockBtn').onclick = () => {
+            import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+        };
         
         // --- BOTÃO LIMPAR HISTÓRICO COMPLETO ---
         document.getElementById('clearHistoryBtn').onclick = async () => {
