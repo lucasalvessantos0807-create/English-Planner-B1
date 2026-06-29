@@ -13,7 +13,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- LÓGICA DE NOME DE USUÁRIO (ESTUDANDO COMO...) ---
+        // --- LÓGICA DE NOME DE USUÁRIO (STUDYING AS...) ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("Como você gostaria de ser chamado?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -23,7 +23,8 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("topbarName").textContent = userData.state.customName || user.email;
 
         document.getElementById('changeNameBtn').onclick = () => {
-            const newName = prompt("Digite o novo nome de exibição:", document.getElementById("topbarName").textContent);
+            const currentDisplayName = document.getElementById("topbarName").textContent;
+            const newName = prompt("Digite o novo nome de exibição:", currentDisplayName);
             if (newName && newName.trim() !== "") {
                 userData.state.customName = newName;
                 document.getElementById("topbarName").textContent = newName;
@@ -42,9 +43,9 @@ onAuthStateChanged(auth, async (user) => {
         
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
+        const menu = document.getElementById('colorChoiceMenu');
         
         // --- LÓGICA DE CORES PERSONALIZADA ---
-
         let colorHistory = userData.state.colorHistory || {
             solids: [],
             gradients: [],
@@ -61,7 +62,6 @@ onAuthStateChanged(auth, async (user) => {
 
         let pickingGradient = false;
         let color1 = null;
-        const menu = document.getElementById('colorChoiceMenu');
 
         editCoverBtn.onclick = (e) => {
             e.stopPropagation();
@@ -84,11 +84,11 @@ onAuthStateChanged(auth, async (user) => {
             openPicker();
         };
 
-        document.getElementById('choiceCancel').onclick = () => menu.style.display = 'none';
+        document.getElementById('choiceCancel').onclick = () => { menu.style.display = 'none'; };
         
         // FECHAR MENUS AO CLICAR FORA
         document.addEventListener('click', (e) => {
-            if (!menu.contains(e.target) && e.target !== editCoverBtn) {
+            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) {
                 menu.style.display = 'none';
             }
             // Fecha seletor de ícones de atividade ao clicar fora
@@ -99,7 +99,7 @@ onAuthStateChanged(auth, async (user) => {
 
         // FECHAR MENUS AO ROLAR A PÁGINA
         window.addEventListener('scroll', () => {
-            menu.style.display = 'none';
+            if (menu) menu.style.display = 'none';
             // Fecha seletor de ícones de atividade ao rolar
             document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
         }, { passive: true });
@@ -171,7 +171,7 @@ onAuthStateChanged(auth, async (user) => {
             solidContainer.innerHTML = '';
             colorHistory.solids.forEach(color => {
                 const div = document.createElement('div');
-                div.style = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);`;
+                div.style = "width:22px; height:22px; border-radius:50%; background:" + color + "; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);";
                 div.onclick = () => applySolid(color);
                 solidContainer.appendChild(div);
             });
@@ -179,7 +179,7 @@ onAuthStateChanged(auth, async (user) => {
             colorHistory.gradients.forEach((g) => {
                 const row = document.createElement('div');
                 row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin Gradient" style="cursor:pointer; font-size:12px;">📌</span>`;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => pinGradient(g);
                 gradContainer.appendChild(row);
@@ -273,7 +273,7 @@ onAuthStateChanged(auth, async (user) => {
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
                 link.id = id; link.rel = 'stylesheet';
-                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+                link.href = "https://fonts.googleapis.com/css2?family=" + fontName.replace(/ /g, '+') + "&display=swap";
                 document.head.appendChild(link);
             }
         }
@@ -285,9 +285,9 @@ onAuthStateChanged(auth, async (user) => {
                 div.className = 'font-item';
                 div.textContent = font;
                 loadGoogleFont(font);
-                div.style.fontFamily = `"${font}", sans-serif`;
+                div.style.fontFamily = '"' + font + '", sans-serif';
                 div.onclick = () => {
-                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
+                    document.documentElement.style.setProperty('--main-font', '"' + font + '", sans-serif');
                     import('./storage.js').then(store => {
                         if (!store.state.settings) store.state.settings = {};
                         store.state.settings.font = font;
@@ -304,7 +304,7 @@ onAuthStateChanged(auth, async (user) => {
         const settings = userData.state.settings || {};
         if (settings.font) {
             loadGoogleFont(settings.font);
-            document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
+            document.documentElement.style.setProperty('--main-font', '"' + settings.font + '", sans-serif');
         }
         fontSizeSlider.value = settings.fontSize || "15";
         document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
