@@ -1,6 +1,6 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { loadUserData } from './storage.js';
-import { buildWeek, toggleEditMode, addNewMonth, performUndo } from './planner.js';
+import { loadUserData, deleteHistoryEntry, clearAllHistory } from './storage.js';
+import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
 let currentUser = null;
@@ -15,49 +15,59 @@ onAuthStateChanged(auth, async (user) => {
         const userData = await loadUserData(currentUser);
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
         
-        // --- BOTÕES TOPBAR ---
+        // --- BOTÕES ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        
+        document.getElementById('clearHistoryBtn').onclick = async () => {
+            if(confirm("Permanently delete ALL history? This cannot be undone.")){
+                await clearAllHistory(currentUser);
+                renderHistory();
+            }
+        };
 
-        // --- DRAWERS (Personalize e Settings) ---
+        // --- DRAWERS ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
-        
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
 
         personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
-        settingsBtn.onclick = () => { 
-            customDrawer.classList.remove('open'); 
-            settingsDrawer.classList.toggle('open'); 
-            renderHistory(); 
-        };
+        settingsBtn.onclick = () => { customDrawer.classList.remove('open'); settingsDrawer.classList.toggle('open'); renderHistory(); };
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
-        // --- LÓGICA DE HISTÓRICO ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
-                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history yet.</p>' : '';
+                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
                 store.history.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'history-item';
                     const date = new Date(item.timestamp).toLocaleString();
                     div.innerHTML = `
                         <span class="history-date">${date}</span>
-                        <strong>${item.label}</strong>
-                        <button class="history-restore" data-id="${item.id}">Restore This Version</button>
+                        <strong style="font-size:0.8rem">${item.label}</strong>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <button class="history-restore" style="flex:1">Restore</button>
+                            <button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button>
+                        </div>
                     `;
                     div.querySelector('.history-restore').onclick = () => {
-                        if(confirm("Restore this version? Current changes will be overwritten.")){
+                        if(confirm("Restore this version?")){
                             window.plannerConfig = item.plannerConfig;
                             window.pageContent = item.pageContent;
-                            // Salva no banco e recarrega
                             store.saveUserData(currentUser).then(() => window.location.reload());
+                        }
+                    };
+                    div.querySelector('.history-del').onclick = async () => {
+                        if(confirm("Delete this entry?")){
+                            await deleteHistoryEntry(currentUser, item.id);
+                            renderHistory();
                         }
                     };
                     container.appendChild(div);
@@ -65,14 +75,13 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        // --- LÓGICA DE FONTES (Mantida) ---
-        const googleFonts = ["Arial", "Verdana", "Times New Roman", "Georgia", "Abel", "Abril Fatface", "Acme", "Aladin", "Amatic SC", "Anton", "Architects Daughter", "Bebas Neue", "Bitter", "Caveat", "Comfortaa", "Cookie", "Dancing Script", "Great Vibes", "Indie Flower", "Josefin Sans", "Jost", "Lobster", "Montserrat", "Pacifico", "Playfair Display", "Poppins", "Quicksand", "Raleway", "Roboto", "Shadows Into Light"];
+        // --- FONTES (Mantida) ---
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display"];
         const fontListContainer = document.getElementById('fontList');
         const fontSearchInput = document.getElementById('fontSearchInput');
 
         function loadGoogleFont(fontName) {
-            const sys = ["Arial", "Verdana", "Times New Roman", "Georgia"];
-            if (!fontName || sys.includes(fontName)) return;
+            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
             const id = `font-${fontName.replace(/\s+/g, '-')}`;
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
@@ -105,18 +114,16 @@ onAuthStateChanged(auth, async (user) => {
         renderFonts();
 
         const fontSizeSlider = document.getElementById('fontSizeSlider');
-        const fontSizeVal = document.getElementById('fontSizeVal');
         const settings = userData.state.settings || {};
         if (settings.font) {
             loadGoogleFont(settings.font);
             document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
         }
         fontSizeSlider.value = settings.fontSize || "15";
-        fontSizeVal.textContent = fontSizeSlider.value + "px";
         document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
         fontSizeSlider.oninput = (e) => {
-            fontSizeVal.textContent = e.target.value + "px";
+            document.getElementById('fontSizeVal').textContent = e.target.value + "px";
             document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
         };
         fontSizeSlider.onchange = (e) => {
