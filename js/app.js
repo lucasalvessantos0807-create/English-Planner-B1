@@ -25,40 +25,60 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-       editCoverBtn.onclick = () => {
-            const colorInput1 = document.getElementById('coverColorInput');
-            const colorInput2 = document.getElementById('coverColorInput2');
-            
-            const isGradient = confirm("Deseja criar um DEGRADÊ? \n(OK para Degradê / Cancelar para Cor Sólida)");
+       // Inicializa o seletor iro.js
+        const iroPicker = new iro.ColorPicker("#iroPicker", {
+            width: 200,
+            layout: [
+                { component: iro.ui.Wheel },
+                { component: iro.ui.Slider, options: { sliderType: 'value' } },
+            ]
+        });
 
-            if (!isGradient) {
-                // MODO COR SÓLIDA
-                colorInput1.oninput = (e) => {
-                    cover.style.background = e.target.value;
-                };
-                colorInput1.onchange = (e) => {
-                    saveCoverSettings(e.target.value);
-                };
-                colorInput1.click();
+        let pickingGradient = false;
+        let color1 = null;
+
+        editCoverBtn.onclick = () => {
+            pickingGradient = confirm("Deseja criar um DEGRADÊ? \n(OK para Degradê / Cancelar para Cor Sólida)");
+            color1 = null;
+            document.getElementById('pickerActionTitle').textContent = pickingGradient ? "Select Color 1" : "Select Cover Color";
+            openPicker();
+        };
+
+        function openPicker() {
+            document.getElementById('colorPickerContainer').classList.add('open');
+            document.getElementById('pickerOverlay').classList.add('open');
+        }
+
+        function closePicker() {
+            document.getElementById('colorPickerContainer').classList.remove('open');
+            document.getElementById('pickerOverlay').classList.remove('open');
+        }
+
+        document.getElementById('btnCancelPicker').onclick = closePicker;
+        document.getElementById('pickerOverlay').onclick = closePicker;
+
+        document.getElementById('btnApplyPicker').onclick = () => {
+            const selectedColor = iroPicker.color.hexString;
+
+            if (!pickingGradient) {
+                // Cor Sólida
+                cover.style.background = selectedColor;
+                saveCoverSettings(selectedColor);
+                closePicker();
             } else {
-                // MODO DEGRADÊ
-                alert("Selecione a PRIMEIRA cor.");
-                colorInput1.onchange = () => {
-                    const c1 = colorInput1.value;
-                    
-                    // Pequena pausa para o navegador permitir o segundo clique
-                    setTimeout(() => {
-                        alert("Agora selecione a SEGUNDA cor.");
-                        colorInput2.onchange = () => {
-                            const c2 = colorInput2.value;
-                            const gradient = `linear-gradient(135deg, ${c1}, ${c2})`;
-                            cover.style.background = gradient;
-                            saveCoverSettings(gradient);
-                        };
-                        colorInput2.click();
-                    }, 500);
-                };
-                colorInput1.click();
+                // Degradê
+                if (color1 === null) {
+                    color1 = selectedColor;
+                    document.getElementById('pickerActionTitle').textContent = "Select Color 2";
+                    // Feedback visual rápido
+                    cover.style.background = color1;
+                } else {
+                    const color2 = selectedColor;
+                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+                    cover.style.background = gradient;
+                    saveCoverSettings(gradient);
+                    closePicker();
+                }
             }
         };
 
