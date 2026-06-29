@@ -16,6 +16,14 @@ export function resetLocalData() {
     window.pageContent = pageContent;
 }
 
+// FUNÇÃO CRUCIAL PARA A RESTAURAÇÃO FUNCIONAR
+export function applySnapshot(newConfig, newContent) {
+    plannerConfig = JSON.parse(JSON.stringify(newConfig));
+    pageContent = JSON.parse(JSON.stringify(newContent));
+    window.plannerConfig = plannerConfig;
+    window.pageContent = pageContent;
+}
+
 export async function loadUserData(uid) {
     resetLocalData();
     try {
@@ -27,13 +35,11 @@ export async function loadUserData(uid) {
             pageContent = data.pageContent || {};
             history = data.history || [];
 
-            // Limpeza: Remove itens com mais de 30 dias
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            const originalLength = history.length;
+            const initialLength = history.length;
             history = history.filter(item => item.timestamp > thirtyDaysAgo);
             
-            // Se mudou algo, salva a limpeza no banco
-            if (history.length !== originalLength) saveUserData(uid);
+            if (history.length !== initialLength) saveUserData(uid);
 
             window.appState = state;
             window.plannerConfig = plannerConfig;
@@ -46,7 +52,9 @@ export async function loadUserData(uid) {
 
             return { state, plannerConfig, pageContent, history };
         }
-    } catch (e) { console.error("Erro ao carregar:", e); }
+    } catch (e) {
+        console.error("Erro ao carregar dados individuais:", e);
+    }
     return { state, plannerConfig, pageContent, history };
 }
 
@@ -55,14 +63,15 @@ export async function saveUserData(uid) {
     try {
         await setDoc(doc(db, "users", uid), { 
             state: state,
-            plannerConfig: plannerConfig,
-            pageContent: window.pageContent || {},
-            history: history
+            plannerConfig: plannerConfig, // Salva a variável interna do módulo
+            pageContent: pageContent,     // Salva a variável interna do módulo
+            history: history 
         });
-    } catch (e) { console.error("Erro ao salvar:", e); }
+    } catch (e) {
+        console.error("Erro ao salvar dados individuais:", e);
+    }
 }
 
-// Função para adicionar um ponto de restauração no histórico
 export function addHistoryEntry(label, config, content) {
     const entry = {
         id: Date.now(),
@@ -71,12 +80,8 @@ export function addHistoryEntry(label, config, content) {
         plannerConfig: JSON.parse(JSON.stringify(config)),
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
-    history.unshift(entry); // Adiciona no topo
-    if (history.length > 50) history.pop(); // Limite de 50 registros por segurança
-}
-
-export function updateState(dayKey, data) {
-    state[dayKey] = { ...state[dayKey], ...data };
+    history.unshift(entry);
+    if (history.length > 50) history.pop();
 }
 
 export async function deleteHistoryEntry(uid, entryId) {
@@ -87,4 +92,8 @@ export async function deleteHistoryEntry(uid, entryId) {
 export async function clearAllHistory(uid) {
     history = [];
     await saveUserData(uid);
+}
+
+export function updateState(dayKey, data) {
+    state[dayKey] = { ...state[dayKey], ...data };
 }
