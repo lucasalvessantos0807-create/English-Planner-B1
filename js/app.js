@@ -1,5 +1,5 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData } from './storage.js';
+import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
@@ -58,6 +58,78 @@ onAuthStateChanged(auth, async (user) => {
         
         const importInput = document.getElementById('importFileInput');
         document.getElementById('importDataBtn').onclick = () => importInput.click();
+        // --- IMPORT HISTORY LOGIC ---
+        const historyModal = document.getElementById('importHistoryModal');
+        const historyList = document.getElementById('importHistoryList');
+        const previewBar = document.getElementById('previewBar');
+        let originalSessionData = null;
+
+        document.getElementById('importHistoryBtn').onclick = () => {
+            renderImportHistory();
+            historyModal.style.display = 'flex';
+        };
+
+        document.getElementById('closeHistoryModal').onclick = () => {
+            historyModal.style.display = 'none';
+        };
+
+        function renderImportHistory() {
+            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted);">No import backups found.</p>' : '';
+            importHistory.forEach(backup => {
+                const card = document.createElement('div');
+                card.className = 'import-backup-card';
+                const date = new Date(backup.timestamp).toLocaleString();
+                card.innerHTML = `
+                    <div class="backup-info">
+                        <span class="backup-date">Undo Import: ${backup.filename}</span>
+                        <span class="backup-meta">Saved on: ${date}</span>
+                    </div>
+                    <div class="backup-actions">
+                        <button class="btn-preview" data-id="${backup.id}">Preview</button>
+                        <button class="btn-delete-backup" data-id="${backup.id}">✕</button>
+                    </div>
+                `;
+                
+                card.querySelector('.btn-preview').onclick = () => startPreview(backup);
+                card.querySelector('.btn-delete-backup').onclick = async () => {
+                    if(confirm("Delete this backup permanently?")) {
+                        await deleteImportBackup(currentUser, backup.id);
+                        renderImportHistory();
+                    }
+                };
+                historyList.appendChild(card);
+            });
+        }
+
+        function startPreview(backup) {
+            originalSessionData = {
+                plannerConfig: JSON.parse(JSON.stringify(window.plannerConfig)),
+                pageContent: JSON.parse(JSON.stringify(window.pageContent))
+            };
+            
+            historyModal.style.display = 'none';
+            previewBar.style.display = 'block';
+            
+            // Aplicar snapshot do backup para visualização
+            applySnapshot(backup.plannerConfig, backup.pageContent);
+            renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+            window.scrollTo(0,0);
+
+            document.getElementById('restorePreviewBtn').onclick = async () => {
+                if(confirm("Restore this version? Current data will be overwritten.")) {
+                    await importData({name: "Restored from History"}, currentUser); // Trigger backup of current
+                    applySnapshot(backup.plannerConfig, backup.pageContent);
+                    import('./storage.js').then(s => s.saveUserData(currentUser));
+                    window.location.reload();
+                }
+            };
+        }
+
+        document.getElementById('exitPreviewBtn').onclick = () => {
+            previewBar.style.display = 'none';
+            applySnapshot(originalSessionData.plannerConfig, originalSessionData.pageContent);
+            renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+        };
         
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
