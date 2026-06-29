@@ -13,6 +13,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("planner").style.display = "block";
         
         const userData = await loadUserData(currentUser);
+        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
         
         // --- BOTÕES DA TOPBAR ---
@@ -23,27 +24,29 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-        editCoverBtn.onclick = () => {
+       editCoverBtn.onclick = () => {
             const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+            const colorInput1 = document.getElementById('coverColorInput');
+            const colorInput2 = document.getElementById('coverColorInput2');
             
             if (mode) {
-                // Modo Cor Sólida: Abre o seletor nativo
-                const colorInput = document.getElementById('coverColorInput');
-                colorInput.click();
-                colorInput.oninput = (e) => {
+                colorInput1.oninput = (e) => {
                     const color = e.target.value;
                     cover.style.background = color;
                     saveCoverSettings(color);
                 };
+                colorInput1.click();
             } else {
-                // Modo Degradê
-                const color1 = prompt("Digite a primeira cor (Hex ou nome, ex: #ff7e5f):", "#ff7e5f");
-                const color2 = prompt("Digite a segunda cor (Hex ou nome, ex: #feb47b):", "#feb47b");
-                if (color1 && color2) {
-                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
-                    cover.style.background = gradient;
-                    saveCoverSettings(gradient);
-                }
+                alert("Selecione a primeira cor e depois a segunda cor para o degradê.");
+                colorInput1.oninput = () => {
+                    colorInput2.oninput = () => {
+                        const gradient = `linear-gradient(135deg, ${colorInput1.value}, ${colorInput2.value})`;
+                        cover.style.background = gradient;
+                        saveCoverSettings(gradient);
+                    };
+                    colorInput2.click();
+                };
+                colorInput1.click();
             }
         };
 
