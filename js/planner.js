@@ -2,12 +2,14 @@ import { updateState, saveUserData, state, plannerConfig, addHistoryEntry } from
 import { updateProgressBar } from './ui.js';
 
 let isEditMode = false;
-let undoStack = []; // Pilha de desfazer local
+let undoStack = []; 
+let sessionInitialConfig = null; // Backup para cancelamento
+let sessionInitialContent = null; // Backup para cancelamento
+
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
 
-// Função para salvar estado atual na pilha de Undo
 function pushToUndo() {
     undoStack.push({
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
@@ -21,63 +23,86 @@ export function performUndo(uid) {
     const lastState = undoStack.pop();
     window.plannerConfig = lastState.config;
     window.pageContent = lastState.content;
-    
-    // Atualiza a interface
-    Object.keys(window.pageContent).forEach(id => {
+    refreshGlobalTexts();
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    refreshCurrentWeek(uid);
+}
+
+// Restaura os textos globais na tela
+function refreshGlobalTexts() {
+    Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = window.pageContent[id];
     });
-    
-    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
-    
-    const active = document.querySelector('.mpanel.on .wpanel.on');
-    if (active) {
-        const [m, w] = active.id.replace('wp', '').split('-');
-        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
-    }
 }
 
-export function toggleEditMode(uid) {
-    const openDays = Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''));
-    
-    if (!isEditMode) {
-        // Entrando no modo edição: Guarda estado inicial no histórico caso queira reverter a sessão inteira depois
-        addHistoryEntry("Before Edit Session", window.plannerConfig, window.pageContent);
-        undoStack = []; 
-        document.getElementById('undoBtn').style.display = 'none';
-    } else {
-        // Saindo do modo edição: Salva no histórico que uma sessão foi concluída
-        addHistoryEntry("Saved Edit Session", window.plannerConfig, window.pageContent);
-        document.getElementById('undoBtn').style.display = 'none';
-    }
+// Cancela todas as edições da sessão atual
+export function cancelEdit(uid) {
+    if (!confirm("Discard all changes made in this session?")) return;
+    window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
+    window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
+    isEditMode = false;
+    refreshGlobalTexts();
+    updateUIEditMode();
+    refreshCurrentWeek(uid);
+}
 
-    isEditMode = !isEditMode;
-
-    document.querySelectorAll('.editable-global').forEach(el => {
-        el.contentEditable = isEditMode;
-        if (isEditMode) {
-            el.onfocus = () => pushToUndo(); // Salva antes de mudar
-            el.onblur = () => {
-                if (!uid) return;
-                if (!window.pageContent) window.pageContent = {};
-                window.pageContent[el.id] = el.innerHTML;
-                saveUserData(uid);
-            };
-        }
-    });
-
+function updateUIEditMode() {
     const btn = document.getElementById('editModeBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    
     btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
+    cancelBtn.style.display = isEditMode ? "block" : "none";
+    if (!isEditMode) undoBtn.style.display = "none";
+}
+
+export function toggleEditMode(uid) {
+    if (!isEditMode) {
+        // INICIANDO EDIÇÃO: Tira "foto" do estado atual
+        sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
+        sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
+        undoStack = [];
+        isEditMode = true;
+    } else {
+        // SALVANDO: Verifica se algo mudou de verdade
+        const currentConfigStr = JSON.stringify(window.plannerConfig);
+        const initialConfigStr = JSON.stringify(sessionInitialConfig);
+        const currentContentStr = JSON.stringify(window.pageContent);
+        const initialContentStr = JSON.stringify(sessionInitialContent);
+
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
+            // Só cria histórico se houver mudança. O histórico guarda como estava ANTES.
+            addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
+            saveUserData(uid);
+        }
+        isEditMode = false;
+    }
+
+    updateUIEditMode();
     
-    saveUserData(uid);
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = isEditMode;
+        if (isEditMode) {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML;
+            };
+        }
+    });
     
+    refreshCurrentWeek(uid);
+}
+
+function refreshCurrentWeek(uid) {
     builtWeeks.clear();
-    const activeWeekPanel = document.querySelector('.mpanel.on .wpanel.on');
-    if (activeWeekPanel) {
-        const idParts = activeWeekPanel.id.replace('wp', '').split('-');
-        buildWeek(idParts[0], idParts[1], uid, openDays);
+    const active = document.querySelector('.mpanel.on .wpanel.on');
+    if (active) {
+        const idParts = active.id.replace('wp', '').split('-');
+        buildWeek(idParts[0], idParts[1], uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
     }
 }
 
@@ -148,7 +173,6 @@ export function buildWeek(m, w, uid, openDays = []) {
                         titleEl.innerText = ICON_MAP[emoji];
                         window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
                     }
-                    saveUserData(uid);
                 };
             });
         }
@@ -167,7 +191,6 @@ export function buildWeek(m, w, uid, openDays = []) {
                 } else if (type === 'theme') {
                     window.plannerConfig[e.target.dataset.week].theme = e.target.innerText;
                 }
-                saveUserData(uid);
             };
         });
 
@@ -175,7 +198,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         if (addBtn) addBtn.onclick = () => {
             pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-            saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
         };
 
         card.querySelectorAll('.del-act').forEach(btn => {
@@ -183,7 +206,7 @@ export function buildWeek(m, w, uid, openDays = []) {
                 if(confirm("Delete?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    saveUserData(uid).then(() => buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', ''))));
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
                 }
             };
         });
@@ -211,7 +234,8 @@ export function buildWeek(m, w, uid, openDays = []) {
 }
 
 export function addNewMonth(uid) {
-    addHistoryEntry("Before Add Month", window.plannerConfig, window.pageContent);
+    // Salva estado antes da mudança estrutural
+    addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
@@ -232,7 +256,7 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    addHistoryEntry(`Before Restructure Month ${m}`, window.plannerConfig, window.pageContent);
+    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
     if (isNaN(dayCount)) return;
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
@@ -252,7 +276,7 @@ export function editMonthStructure(m, uid) {
 
 export function deleteMonth(m, uid) {
     if (confirm(`Delete Month ${m}?`)) {
-        addHistoryEntry(`Before Delete Month ${m}`, window.plannerConfig, window.pageContent);
+        addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
         saveUserData(uid).then(() => refreshUI(uid));
     }
