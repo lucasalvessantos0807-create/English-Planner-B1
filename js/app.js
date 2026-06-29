@@ -14,15 +14,6 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
-        if (userData.pageContent && userData.pageContent.dynamicOverviewIds) {
-            import('./planner.js').then(mod => {
-                userData.pageContent.dynamicOverviewIds.forEach(id => {
-                    const title = userData.pageContent[`${id}-title`] || "New Phase";
-                    const body = userData.pageContent[`${id}-body`] || "Edit content...";
-                    mod.renderSingleOverviewBlock(id, title, body, false, currentUser);
-                });
-            });
-        }
         
         // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
@@ -32,9 +23,11 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-       editCoverBtn.onclick = () => {
-            const mode = confirm("OK para Seletor de Cores (Sólida) ou CANCELAR para Gradiente.");
+        editCoverBtn.onclick = () => {
+            const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+            
             if (mode) {
+                // Modo Cor Sólida: Abre o seletor nativo
                 const colorInput = document.getElementById('coverColorInput');
                 colorInput.click();
                 colorInput.oninput = (e) => {
@@ -43,15 +36,6 @@ onAuthStateChanged(auth, async (user) => {
                     saveCoverSettings(color);
                 };
             } else {
-                const color1 = prompt("Cor 1 (ex: #ff7e5f):", "#ff7e5f");
-                const color2 = prompt("Cor 2 (ex: #feb47b):", "#feb47b");
-                if (color1 && color2) {
-                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
-                    cover.style.background = gradient;
-                    saveCoverSettings(gradient);
-                }
-            }
-        };
                 // Modo Degradê
                 const color1 = prompt("Digite a primeira cor (Hex ou nome, ex: #ff7e5f):", "#ff7e5f");
                 const color2 = prompt("Digite a segunda cor (Hex ou nome, ex: #feb47b):", "#feb47b");
