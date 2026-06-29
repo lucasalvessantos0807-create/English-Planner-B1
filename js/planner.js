@@ -73,27 +73,29 @@ function updateUIEditMode() {
     btn.style.background = isEditMode ? "var(--green-light)" : "none";
     btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
     cancelBtn.style.display = isEditMode ? "block" : "none";
-    const addOvBtn = document.getElementById('addOverviewBlockBtn');
-    if (addOvBtn) addOvBtn.style.display = isEditMode ? 'block' : 'none';
-    document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = isEditMode ? 'block' : 'none');
     if (!isEditMode) undoBtn.style.display = "none";
 }
 
 export function toggleEditMode(uid) {
     if (!isEditMode) {
+        // INÍCIO DA SESSÃO: Salva estados e tira "foto" visual
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
+        
         sessionInitialDOMSnapshot = {};
         document.querySelectorAll('.editable-global').forEach(el => {
             sessionInitialDOMSnapshot[el.id] = el.innerHTML;
         });
+
         undoStack = [];
         isEditMode = true;
     } else {
+        // SALVAMENTO: Verifica se houve mudança real para registrar histórico
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
         const currentContentStr = JSON.stringify(window.pageContent);
         const initialContentStr = JSON.stringify(sessionInitialContent);
+
         if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
             addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
             saveUserData(uid);
@@ -311,40 +313,30 @@ function refreshUI(uid) {
 }
 
 export function addOverviewBlock(uid) {
-    const blockId = 'ov-custom-' + Date.now();
-    if (!window.pageContent) window.pageContent = {};
-    if (!window.pageContent.dynamicOverviewIds) window.pageContent.dynamicOverviewIds = [];
-    window.pageContent.dynamicOverviewIds.push(blockId);
-    renderSingleOverviewBlock(blockId, "New Phase", "Edit content...", true, uid);
-    saveUserData(uid);
-}
-
-export function renderSingleOverviewBlock(id, title, body, editable, uid) {
     const grid = document.getElementById('dynamic-ov-grid');
-    if (!grid) return;
-    const div = document.createElement('div');
-    div.className = 'ov-card ca';
-    div.id = 'container-' + id;
-    div.innerHTML = `
-        <button class="del-ov-btn" style="display:${isEditMode ? 'block' : 'none'}; position:absolute; top:5px; right:5px; background:none; border:none; color:#cc0000; cursor:pointer; font-size:12px;">✕</button>
-        <div class="ov-label editable-global" id="${id}-title" contenteditable="${isEditMode}">${title}</div>
-        <div class="ov-body editable-global" id="${id}-body" contenteditable="${isEditMode}">${body}</div>
+    const blockId = 'ov-block-' + Date.now();
+    const newBlock = document.createElement('div');
+    newBlock.className = 'ov-card ca'; // Por padrão usa a cor laranja
+    newBlock.innerHTML = `
+        <div class="ov-label editable-global" id="${blockId}-title" contenteditable="true">New Phase</div>
+        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit your goals here...</div>
+        <button class="del-ov-block" style="position:absolute; top:5px; right:5px; background:none; border:none; cursor:pointer; font-size:10px; opacity:0.3;">✕</button>
     `;
-    div.querySelector('.del-ov-btn').onclick = () => {
-        if (confirm("Delete this block?")) {
-            div.remove();
-            window.pageContent.dynamicOverviewIds = window.pageContent.dynamicOverviewIds.filter(i => i !== id);
-            delete window.pageContent[`${id}-title`];
-            delete window.pageContent[`${id}-body`];
+    
+    newBlock.querySelector('.del-ov-block').onclick = () => {
+        if(confirm("Delete this block?")) {
+            newBlock.remove();
             saveUserData(uid);
         }
     };
-    div.querySelectorAll('.editable-global').forEach(el => {
+    
+    grid.appendChild(newBlock);
+    // Reativa o monitoramento de edição para o novo bloco
+    newBlock.querySelectorAll('.editable-global').forEach(el => {
         el.onblur = () => {
             if (!window.pageContent) window.pageContent = {};
             window.pageContent[el.id] = el.innerHTML;
             saveUserData(uid);
         };
     });
-    grid.appendChild(div);
 }
