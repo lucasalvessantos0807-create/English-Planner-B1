@@ -14,7 +14,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-        renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
+        renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
         // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
@@ -78,6 +78,11 @@ onAuthStateChanged(auth, async (user) => {
                 menu.style.display = 'none';
             }
         });
+
+        // Fecha o menu ao rolar a página
+        window.addEventListener('scroll', () => {
+            menu.style.display = 'none';
+        }, { passive: true });
 
         function openPicker() {
             renderHistoryUI();
