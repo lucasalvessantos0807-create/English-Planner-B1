@@ -5,7 +5,7 @@ let isEditMode = false;
 let undoStack = []; 
 let sessionInitialConfig = null; 
 let sessionInitialContent = null; 
-let sessionInitialDOMSnapshot = {}; // "Foto" visual de todos os títulos da tela
+let sessionInitialDOMSnapshot = {}; 
 
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
@@ -36,29 +36,32 @@ function refreshGlobalTexts() {
     });
 }
 
-// CORREÇÃO: Cancelar agora usa o Snapshot do DOM para restaurar o visual 100%
+// CORREÇÃO DEFINITIVA: Cancelar restaura os dados e força o Redraw completo da UI
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     
-    // 1. Restaura as variáveis lógicas de backup
+    // 1. Restaura os dados originais na memória
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
     
-    // 2. Restaura o visual de TODOS os elementos baseando-se na "foto" tirada no início
-    Object.keys(sessionInitialDOMSnapshot).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = sessionInitialDOMSnapshot[id];
-    });
-
+    // 2. Desativa o modo de edição
     isEditMode = false;
-    
-    // Desativa edição visualmente
+
+    // 3. Limpa o atributo contentEditable de TODOS os campos editáveis
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = "false";
+        // Restaura o texto original do snapshot DOM para garantir que nada "vaze"
+        if (sessionInitialDOMSnapshot[el.id] !== undefined) {
+            el.innerHTML = sessionInitialDOMSnapshot[el.id];
+        }
     });
 
+    // 4. Atualiza os botões da Topbar
     updateUIEditMode();
-    refreshCurrentWeek(uid);
+
+    // 5. RECONSTRUÇÃO TOTAL: Redesenha os meses e a semana atual do zero
+    // Isso garante que mudanças em atividades e estrutura desapareçam visualmente
+    refreshUI(uid);
 }
 
 function updateUIEditMode() {
@@ -75,7 +78,7 @@ function updateUIEditMode() {
 
 export function toggleEditMode(uid) {
     if (!isEditMode) {
-        // INÍCIO DA SESSÃO: Backup dos dados e Snapshot visual da tela
+        // INÍCIO DA SESSÃO: Salva estados e tira "foto" visual
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
         
@@ -87,7 +90,7 @@ export function toggleEditMode(uid) {
         undoStack = [];
         isEditMode = true;
     } else {
-        // SALVAMENTO: Verifica mudanças reais
+        // SALVAMENTO: Verifica se houve mudança real para registrar histórico
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
         const currentContentStr = JSON.stringify(window.pageContent);
