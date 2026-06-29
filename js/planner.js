@@ -173,12 +173,18 @@ export function buildWeek(m, w, uid, openDays = []) {
 
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = (e) => {
-                e.stopPropagation();
+               icon.onclick = (e) => {
+                e.stopPropagation(); // Evita que o clique global feche o seletor imediatamente
                 const wrapper = icon.closest('.aico-wrapper');
                 const wasOpen = wrapper.classList.contains('show-suggestions');
+                
+                // Fecha todos os seletores abertos antes de decidir se abre este
                 document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                if (!wasOpen) wrapper.classList.add('show-suggestions');
+                
+                // Se ele não estava aberto, abra-o agora
+                if (!wasOpen) {
+                    wrapper.classList.add('show-suggestions');
+                }
             };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
