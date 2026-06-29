@@ -303,7 +303,7 @@ export function deleteMonth(m, uid) {
 
 function refreshUI(uid) {
     import('./ui.js').then(mod => {
-        mod.renderStructure(window.plannerConfig, (m, w) => buildWeek(m, w, uid));
+        mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
         const first = Object.keys(window.plannerConfig).sort()[0];
         if (first) { const [m, w] = first.split('-'); buildWeek(m, w, uid); }
         mod.updateProgressBar();
