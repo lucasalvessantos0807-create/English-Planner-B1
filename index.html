@@ -8,31 +8,31 @@
 </head>
 <body>
 
-<!-- ── LOGIN SCREEN ── -->
+<!-- ── TELA DE LOGIN ── -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">📖</div>
     <div class="login-title">Study Planner</div>
-    <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your personal progress</div>
+    <div class="login-sub">A2+ to B1 &nbsp;·&nbsp; 3 months &nbsp;·&nbsp; Your progress</div>
     <button class="login-btn" id="googleLoginBtn">Continue with Google</button>
-    <div class="login-note">Seu progresso é salvo automaticamente na sua conta Google.</div>
+    <div class="login-note">Seu progresso é salvo automaticamente na nuvem.</div>
   </div>
 </div>
 
 <!-- ── PLANNER ── -->
-<div id="planner">
+<div id="planner" style="display:none;">
   <div class="topbar">
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <div style="display: flex; gap: 8px;">
       <button id="editModeBtn">✎ Edit Mode</button>
-      <button id="cancelEditBtn" style="display:none; color: #cc0000; border-color: #ffcccc;">✕ Cancel</button>
+      <button id="cancelEditBtn" style="display:none; color:#cc0000; border-color:#ffcccc;">✕ Cancel</button>
       <button id="undoBtn" style="display:none;">↶ Undo</button>
       <button id="personalizeBtn">🎨 Personalize</button>
       <button id="settingsBtn">⚙️ Settings</button>
     </div>
   </div>
 
-  <!-- Capa Full Screen -->
+  <!-- Capa Full Screen (Estilo Notion) -->
   <div id="page-cover-container">
     <div id="page-cover"></div>
     <button id="editCoverBtn">📷 Change Cover</button>
@@ -42,73 +42,58 @@
     <div class="cover">
       <div class="cover-eye editable-global" id="global-cover-eye">Personal English Study Planner</div>
       <div class="cover-title editable-global" id="global-cover-title">A2+ to B1 Roadmap</div>
-      <div class="cover-sub editable-global" id="global-cover-sub">3 months &nbsp;·&nbsp; Every day &nbsp;·&nbsp; 1.5–2+ hours &nbsp;·&nbsp; Full fluency focus</div>
+      <div class="cover-sub editable-global" id="global-cover-sub">3 months &nbsp;·&nbsp; Every day &nbsp;·&nbsp; 1.5–2+ hours</div>
     </div>
 
     <div class="goal-box">
       <strong class="editable-global" id="global-goal-strong">🎯 Your Goal</strong>
-      <div class="editable-global" id="global-goal-text">Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.</div>
+      <div class="editable-global" id="global-goal-text">Reach B1 level — describe experiences and plans with detail.</div>
     </div>
 
     <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
     
     <div id="overview-container">
       <div class="ov-grid" id="dynamic-ov-grid">
-        <!-- Os blocos iniciais e novos entrarão aqui via JS ou podem ser mantidos fixos -->
+        <!-- Bloco 1 -->
         <div class="ov-card ca">
           <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
-          <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect · Used to · Have/have got · A few/a little · Although/despite<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte's Web</div>
+          <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect · Used to · Have/have got · A few/a little · Although/despite<br><br>📖 Charlotte's Web</div>
         </div>
+        <!-- Bloco 2 -->
         <div class="ov-card cb">
           <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-          <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
+          <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I<br><br>📖 Eleanor & Grey</div>
         </div>
+        <!-- Bloco 3 -->
         <div class="ov-card cg">
           <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-          <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
+          <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Perfect tenses · Question tags<br><br>📖 Moby Dick</div>
+        </div>
       </div>
-    </div>
-    <button id="addOverviewBlockBtn" class="add-act-btn">+ Add Overview Block</button>
-  </div>
-
-    <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
-    <div class="tpl">
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t1">0–15 min</div><div class="tpl-act editable-global" id="tpl-a1">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t2">15–35 min</div><div class="tpl-act editable-global" id="tpl-a2">📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t3">35–55 min</div><div class="tpl-act editable-global" id="tpl-a3">🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t4">55–75 min</div><div class="tpl-act editable-global" id="tpl-a4">🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t5">75–95 min</div><div class="tpl-act editable-global" id="tpl-a5">📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t6">95–115 min</div><div class="tpl-act editable-global" id="tpl-a6">🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.</div></div>
-      <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t7">Sunday</div><div class="tpl-act editable-global" id="tpl-a7">🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.</div></div>
+      <button id="addOverviewBlockBtn" class="add-act-btn">+ Add Overview Block</button>
     </div>
 
     <div class="sec editable-global" id="global-sec-progress">Your Progress</div>
     <div class="prog-box">
-      <div class="prog-lbl editable-global" id="global-prog-lbl">Days completed</div>
+      <div class="prog-lbl">Days completed</div>
       <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
       <div class="prog-stats">
-        <span><strong id="dcnt">0</strong> / 0 days</span>
+        <span><strong id="dcnt">0</strong> days</span>
         <span><strong id="pct">0%</strong> complete</span>
-        <span class="editable-global" id="global-mstat">Learning Progress</span>
       </div>
     </div>
 
     <div class="sec editable-global" id="global-sec-monthly">Monthly Plans</div>
     <div class="month-nav" id="monthNav">
-        <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
+        <button class="mbtn" id="addMonthBtn" style="border-style: dashed;">+ Add Month</button>
     </div>
-
     <div id="monthPanels"></div>
-  </div> 
+  </div>
 
-  <!-- Drawers (Personalização e Settings) -->
+  <!-- Drawer de Personalização -->
   <div id="customDrawer" class="custom-drawer">
       <div class="drawer-header"><span>Personalization</span><button id="closeDrawer">✕</button></div>
       <div class="drawer-body">
-        <div class="control-group">
-          <div id="fontStyleToggle">Font Style <span id="fontArrow">▼</span></div>
-          <div id="fontPickerWrapper" style="display:none;"><div class="font-search-container"><input type="text" id="fontSearchInput" placeholder="Search fonts..."><div id="fontList" class="font-list-results"></div></div></div>
-        </div>
         <div class="control-group">
           <label>Font Size <span id="fontSizeVal">15px</span></label>
           <input type="range" id="fontSizeSlider" min="12" max="24" value="15">
@@ -116,16 +101,17 @@
       </div>
   </div>
 
+  <!-- Drawer de Configurações -->
   <div id="settingsDrawer" class="custom-drawer">
-      <div class="drawer-header"><span>Settings & History</span><button id="closeSettings">✕</button></div>
+      <div class="drawer-header"><span>Settings</span><button id="closeSettings">✕</button></div>
       <div class="drawer-body">
           <div id="historyList"></div>
-          <button class="topbar-logout" id="logoutBtn" style="width:100%; margin-top:20px;">Logout</button>
+          <button id="logoutBtn" style="width:100%; color:red; margin-top:20px;">Logout</button>
       </div>
   </div>
 </div>
 
-<!-- Seletor de cores escondido -->
+<!-- Input de cor escondido para o painel de cores -->
 <input type="color" id="colorPicker" style="display:none;">
 
 <script type="module" src="js/app.js"></script>
