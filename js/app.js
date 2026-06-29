@@ -24,27 +24,36 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-       editCoverBtn.onclick = () => {
-            const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+       eeditCoverBtn.onclick = () => {
+            const isGradient = !confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
             const colorInput1 = document.getElementById('coverColorInput');
             const colorInput2 = document.getElementById('coverColorInput2');
-            
-            if (mode) {
-                colorInput1.oninput = (e) => {
+
+            if (!isGradient) {
+                // MODO COR SÓLIDA
+                colorInput1.onchange = (e) => {
                     const color = e.target.value;
                     cover.style.background = color;
                     saveCoverSettings(color);
                 };
                 colorInput1.click();
             } else {
-                alert("Selecione a primeira cor e depois a segunda cor para o degradê.");
-                colorInput1.oninput = () => {
-                    colorInput2.oninput = () => {
-                        const gradient = `linear-gradient(135deg, ${colorInput1.value}, ${colorInput2.value})`;
-                        cover.style.background = gradient;
-                        saveCoverSettings(gradient);
-                    };
-                    colorInput2.click();
+                // MODO DEGRADÊ
+                alert("Primeiro, escolha a Cor 1. Depois que fechar o seletor, abriremos a Cor 2.");
+                
+                colorInput1.onchange = (e1) => {
+                    const c1 = e1.target.value;
+                    
+                    // Pequeno atraso para o navegador processar a primeira escolha antes de abrir a segunda
+                    setTimeout(() => {
+                        colorInput2.onchange = (e2) => {
+                            const c2 = e2.target.value;
+                            const gradient = `linear-gradient(135deg, ${c1}, ${c2})`;
+                            cover.style.background = gradient;
+                            saveCoverSettings(gradient);
+                        };
+                        colorInput2.click();
+                    }, 500);
                 };
                 colorInput1.click();
             }
