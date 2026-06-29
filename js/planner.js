@@ -180,7 +180,6 @@ export function buildWeek(m, w, uid, openDays = []) {
                 document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
                 if (!wasOpen) wrapper.classList.add('show-suggestions');
             };
-                };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
