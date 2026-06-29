@@ -34,6 +34,8 @@ export async function loadUserData(uid) {
             plannerConfig = data.plannerConfig || initialWeeksData;
             pageContent = data.pageContent || {};
             history = data.history || [];
+            // Garante que o array de blocos dinâmicos exista se não houver dados
+            if(!pageContent.dynamicBlocks) pageContent.dynamicBlocks = [];
 
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             const initialLength = history.length;
