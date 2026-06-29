@@ -173,10 +173,13 @@ export function buildWeek(m, w, uid, openDays = []) {
 
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = () => {
-                    const wrapper = icon.closest('.aico-wrapper');
-                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    wrapper.classList.add('show-suggestions');
+                icon.onclick = (e) => {
+                e.stopPropagation();
+                const wrapper = icon.closest('.aico-wrapper');
+                const wasOpen = wrapper.classList.contains('show-suggestions');
+                document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                if (!wasOpen) wrapper.classList.add('show-suggestions');
+            };
                 };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
