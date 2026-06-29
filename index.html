@@ -24,19 +24,20 @@
   <div class="topbar">
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <div style="display: flex; gap: 8px;">
-      <!-- Botões de Controle -->
-      <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
-      <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
-      <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
-      <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">🎨 Personalize</button>
-      <button id="settingsBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">⚙️ Settings</button>
+      <button id="editModeBtn">✎ Edit Mode</button>
+      <button id="cancelEditBtn" style="display:none; color: #cc0000; border-color: #ffcccc;">✕ Cancel</button>
+      <button id="undoBtn" style="display:none;">↶ Undo</button>
+      <button id="personalizeBtn">🎨 Personalize</button>
+      <button id="settingsBtn">⚙️ Settings</button>
     </div>
   </div>
 
-    <div id="page-cover-container" style="position: relative;">
-  <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
-  <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
-</div>
+  <!-- Capa Full Screen -->
+  <div id="page-cover-container">
+    <div id="page-cover"></div>
+    <button id="editCoverBtn">📷 Change Cover</button>
+  </div>
+
   <div class="page">
     <div class="cover">
       <div class="cover-eye editable-global" id="global-cover-eye">Personal English Study Planner</div>
@@ -50,25 +51,25 @@
     </div>
 
     <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
+    
     <div id="overview-container">
-    <div class="ov-grid" id="dynamic-ov-grid">
-      <!-- Blocos iniciais serão movidos para o JS ou gerados aqui -->
-      <div class="ov-card ca">
-        <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
-        <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect...</div>
+      <div class="ov-grid" id="dynamic-ov-grid">
+        <!-- Os blocos iniciais e novos entrarão aqui via JS ou podem ser mantidos fixos -->
+        <div class="ov-card ca">
+          <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
+          <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect · Used to · Have/have got · A few/a little · Although/despite<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte's Web</div>
+        </div>
+        <div class="ov-card cb">
+          <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
+          <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
+        </div>
+        <div class="ov-card cg">
+          <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
+          <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
       </div>
     </div>
-    <button id="addOverviewBlockBtn" style="width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
-</div>
-      <div class="ov-card cb">
-        <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-        <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
-      </div>
-      <div class="ov-card cg">
-        <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-        <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
-      </div>
-    </div>
+    <button id="addOverviewBlockBtn" class="add-act-btn">+ Add Overview Block</button>
+  </div>
 
     <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
     <div class="tpl">
@@ -98,58 +99,34 @@
     </div>
 
     <div id="monthPanels"></div>
-    
-    <!-- Personalization Drawer -->
-    <div id="customDrawer" class="custom-drawer">
-      <div class="drawer-header">
-        <span>Personalization</span>
-        <button id="closeDrawer">✕</button>
-      </div>
+  </div> 
+
+  <!-- Drawers (Personalização e Settings) -->
+  <div id="customDrawer" class="custom-drawer">
+      <div class="drawer-header"><span>Personalization</span><button id="closeDrawer">✕</button></div>
       <div class="drawer-body">
         <div class="control-group">
-          <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
-            Font Style <span id="fontArrow">▼</span>
-          </div>
-          <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
-            <div class="font-search-container">
-              <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
-              <div id="fontList" class="font-list-results"></div>
-            </div>
-          </div>
+          <div id="fontStyleToggle">Font Style <span id="fontArrow">▼</span></div>
+          <div id="fontPickerWrapper" style="display:none;"><div class="font-search-container"><input type="text" id="fontSearchInput" placeholder="Search fonts..."><div id="fontList" class="font-list-results"></div></div></div>
         </div>
-        <div class="control-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
-          <label style="display:flex; justify-content:space-between; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
-            Font Size <span id="fontSizeVal">15px</span>
-          </label>
-          <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
-        </div>
-      </div>
-    </div>
-
-    <!-- Settings & History Drawer -->
-    <div id="settingsDrawer" class="custom-drawer">
-      <div class="drawer-header">
-        <span>Settings & History</span>
-        <button id="closeSettings">✕</button>
-      </div>
-      <div class="drawer-body">
         <div class="control-group">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="margin:0;">Change History (30 days)</label>
-            <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
-          </div>
-          <div id="historyList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
-            <!-- Itens preenchidos via JS -->
-          </div>
-        </div>
-        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
-          <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout / Sair</button>
+          <label>Font Size <span id="fontSizeVal">15px</span></label>
+          <input type="range" id="fontSizeSlider" min="12" max="24" value="15">
         </div>
       </div>
-    </div>
+  </div>
 
-  </div> <!-- Fim da Page -->
-</div> <!-- Fim do Planner -->
+  <div id="settingsDrawer" class="custom-drawer">
+      <div class="drawer-header"><span>Settings & History</span><button id="closeSettings">✕</button></div>
+      <div class="drawer-body">
+          <div id="historyList"></div>
+          <button class="topbar-logout" id="logoutBtn" style="width:100%; margin-top:20px;">Logout</button>
+      </div>
+  </div>
+</div>
+
+<!-- Seletor de cores escondido -->
+<input type="color" id="colorPicker" style="display:none;">
 
 <script type="module" src="js/app.js"></script>
 </body>
