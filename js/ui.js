@@ -55,7 +55,7 @@ export function renderStructure(plannerConfig, onWeekChange) {
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
         
-       mPanel.innerHTML = `
+      mPanel.innerHTML = `
     <div class="mheader">
         <h2>Month ${m}</h2>
         <p class="editable-global" id="m-desc-${m}" contenteditable="true">English Study Plan — Continuous Progress</p>
