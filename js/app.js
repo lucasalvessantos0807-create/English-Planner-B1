@@ -25,9 +25,18 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-       // Inicializa o seletor iro.js
+        // --- LÓGICA DE CORES PERSONALIZADA ---
+
+        // Configurações do Histórico (Carregar do Firebase ou iniciar vazio)
+        let colorHistory = userData.state.colorHistory || {
+            solids: [],
+            gradients: [],
+            pinned: []
+        };
+
+        // Inicializa o seletor iro.js
         const iroPicker = new iro.ColorPicker("#iroPicker", {
-            width: 200,
+            width: 180,
             layout: [
                 { component: iro.ui.Wheel },
                 { component: iro.ui.Slider, options: { sliderType: 'value' } },
@@ -36,15 +45,42 @@ onAuthStateChanged(auth, async (user) => {
 
         let pickingGradient = false;
         let color1 = null;
+        const menu = document.getElementById('colorChoiceMenu');
 
-        editCoverBtn.onclick = () => {
-            pickingGradient = confirm("Deseja criar um DEGRADÊ? \n(OK para Degradê / Cancelar para Cor Sólida)");
+        // Abre o menu sutil perto do botão (sem alert de navegador)
+        editCoverBtn.onclick = (e) => {
+            e.stopPropagation();
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        };
+
+        // Opções do Menu Sutil
+        document.getElementById('choiceSolid').onclick = () => {
+            pickingGradient = false;
             color1 = null;
-            document.getElementById('pickerActionTitle').textContent = pickingGradient ? "Select Color 1" : "Select Cover Color";
+            document.getElementById('pickerActionTitle').textContent = "Select Cover Color";
+            menu.style.display = 'none';
             openPicker();
         };
 
+        document.getElementById('choiceGradient').onclick = () => {
+            pickingGradient = true;
+            color1 = null;
+            document.getElementById('pickerActionTitle').textContent = "Select Color 1";
+            menu.style.display = 'none';
+            openPicker();
+        };
+
+        document.getElementById('choiceCancel').onclick = () => menu.style.display = 'none';
+        
+        // Fecha o menu ao clicar fora dele
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target) && e.target !== editCoverBtn) {
+                menu.style.display = 'none';
+            }
+        });
+
         function openPicker() {
+            renderHistoryUI();
             document.getElementById('colorPickerContainer').classList.add('open');
             document.getElementById('pickerOverlay').classList.add('open');
         }
@@ -57,41 +93,118 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('btnCancelPicker').onclick = closePicker;
         document.getElementById('pickerOverlay').onclick = closePicker;
 
+        // Botão Confirmar no Seletor
         document.getElementById('btnApplyPicker').onclick = () => {
             const selectedColor = iroPicker.color.hexString;
 
             if (!pickingGradient) {
-                // Cor Sólida
-                cover.style.background = selectedColor;
-                saveCoverSettings(selectedColor);
-                closePicker();
+                applySolid(selectedColor);
             } else {
-                // Degradê
                 if (color1 === null) {
                     color1 = selectedColor;
                     document.getElementById('pickerActionTitle').textContent = "Select Color 2";
-                    // Feedback visual rápido
-                    cover.style.background = color1;
+                    cover.style.background = color1; // Feedback visual
                 } else {
-                    const color2 = selectedColor;
-                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
-                    cover.style.background = gradient;
-                    saveCoverSettings(gradient);
-                    closePicker();
+                    applyGradient(color1, selectedColor);
                 }
             }
         };
 
-        function saveCoverSettings(value) {
+        function applySolid(color) {
+            cover.style.background = color;
+            // Lógica de Histórico FIFO (Máximo 3)
+            if (!colorHistory.solids.includes(color)) {
+                colorHistory.solids.unshift(color);
+                if (colorHistory.solids.length > 3) colorHistory.solids.pop();
+            }
+            saveAllColorData(color);
+            closePicker();
+        }
+
+        function applyGradient(c1, c2) {
+            const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
+            cover.style.background = grad;
+            // Histórico de degradês FIFO (Máximo 3)
+            const exists = colorHistory.gradients.some(g => g.c1 === c1 && g.c2 === c2);
+            if (!exists) {
+                colorHistory.gradients.unshift({ c1, c2 });
+                if (colorHistory.gradients.length > 3) colorHistory.gradients.pop();
+            }
+            saveAllColorData(grad);
+            closePicker();
+        }
+
+        function saveAllColorData(lastValue) {
             import('./storage.js').then(store => {
                 if(!store.state.settings) store.state.settings = {};
-                store.state.settings.coverColor = value;
+                store.state.settings.coverColor = lastValue;
+                store.state.colorHistory = colorHistory; // Salva o histórico completo
                 store.saveUserData(currentUser);
             });
         }
+
+        // Renderização dos itens salvos dentro do seletor
+        function renderHistoryUI() {
+            const solidContainer = document.getElementById('historySolids');
+            const gradContainer = document.getElementById('historyGradients');
+            const pinnedContainer = document.getElementById('pinnedGradients');
+
+            solidContainer.innerHTML = '';
+            colorHistory.solids.forEach(color => {
+                const div = document.createElement('div');
+                div.style = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);`;
+                div.onclick = () => applySolid(color);
+                solidContainer.appendChild(div);
+            });
+
+            gradContainer.innerHTML = '';
+            colorHistory.gradients.forEach((g) => {
+                const row = document.createElement('div');
+                row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                row.innerHTML = `
+                    <div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div>
+                    <span title="Pin Gradient" style="cursor:pointer; font-size:12px;">📌</span>
+                `;
+                row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
+                row.querySelector('span').onclick = () => pinGradient(g);
+                gradContainer.appendChild(row);
+            });
+
+            pinnedContainer.innerHTML = '';
+            colorHistory.pinned.forEach((g, idx) => {
+                const row = document.createElement('div');
+                row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                row.innerHTML = `
+                    <div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div>
+                    <span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>
+                `;
+                row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
+                row.querySelector('span').onclick = () => {
+                    colorHistory.pinned.splice(idx, 1);
+                    saveAllColorData(cover.style.background);
+                    renderHistoryUI();
+                };
+                pinnedContainer.appendChild(row);
+            });
+        }
+
+        function pinGradient(g) {
+            const isPinned = colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2);
+            if (!isPinned && colorHistory.pinned.length < 2) {
+                colorHistory.pinned.push(g);
+                saveAllColorData(cover.style.background);
+                renderHistoryUI();
+            } else if (colorHistory.pinned.length >= 2) {
+                alert("Maximum of 2 pinned gradients. Remove one to add a new one.");
+            }
+        }
+
+        // Aplica cor inicial salva
         if(userData.state.settings && userData.state.settings.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
         }
+
+        // --- RESTO DAS FUNÇÕES ORIGINAIS ---
 
         document.getElementById('addOverviewBlockBtn').onclick = () => {
             import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
