@@ -390,3 +390,7 @@ button, input, select, textarea {
     align-self: flex-end;
 }
 .history-restore:hover { background: var(--accent-light); color: var(--accent); }
+.settings-row button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
