@@ -79,10 +79,11 @@ export function toggleEditMode(uid) {
 
         undoStack = [];
         isEditMode = true;
-        
-        // Mostrar botões de controle de blocos
+
+        // Gerenciamento dos botões de blocos
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'flex');
+
     } else {
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
@@ -94,8 +95,7 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
-        
-        // Esconder botões de controle de blocos
+
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'none');
     }
@@ -114,6 +114,7 @@ export function toggleEditMode(uid) {
     });
     
     refreshCurrentWeek(uid);
+    renderDynamicOverviewBlocks(uid); // Re-renderiza para aplicar travas de edição
 }
 
 function refreshCurrentWeek(uid) {
