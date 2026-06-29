@@ -74,7 +74,16 @@
 
   <div id="page-cover-container" style="position: relative;">
     <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
-    <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+   <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+    
+    <!-- Menu de Escolha Sutil (Posicionado abaixo do botão) -->
+    <div id="colorChoiceMenu" style="display:none; position: absolute; top: 175px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; z-index: 1500; flex-direction: column; gap: 4px; min-width: 140px;">
+      <button class="mbtn" id="choiceSolid" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🎨 Cor Sólida</button>
+      <button class="mbtn" id="choiceGradient" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🌈 Degradê</button>
+      <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
+      <button id="choiceCancel" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; color: #cc0000;">✕ Cancelar</button>
+    </div>
+
     <input type="color" id="coverColorInput" style="opacity:0; position:absolute; pointer-events:none;">
     <input type="color" id="coverColorInput2" style="opacity:0; position:absolute; pointer-events:none;">
   </div>
