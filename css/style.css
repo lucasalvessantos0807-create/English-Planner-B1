@@ -97,7 +97,8 @@ button, input, select, textarea {
 }
 
 /* ── PLANNER ── */
-#page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
+#page-cover-container:hover #editCoverBtn, 
+#page-cover-container:hover #editGradientBtn { opacity: 1 !important; }
 .page { margin-top: 0 !important; } /* Ajuste para o banner colar no topo */
 #planner{display:none}
 .page{max-width:950px;margin:0 auto;padding:2rem 1.5rem 5rem; width: 100%;}
