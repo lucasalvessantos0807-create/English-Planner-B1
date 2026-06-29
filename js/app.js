@@ -13,9 +13,9 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- LÓGICA DE NOME DE USUÁRIO (STUDYING AS...) ---
+        // --- USERNAME LOGIC ---
         if (!userData.state.customName && !userData.state.namePrompted) {
-            const nameInput = prompt("Como você gostaria de ser chamado?");
+            const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
             userData.state.namePrompted = true;
             import('./storage.js').then(store => store.saveUserData(currentUser));
@@ -23,8 +23,8 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById("topbarName").textContent = userData.state.customName || user.email;
 
         document.getElementById('changeNameBtn').onclick = () => {
-            const currentDisplayName = document.getElementById("topbarName").textContent;
-            const newName = prompt("Digite o novo nome de exibição:", currentDisplayName);
+            const currentName = document.getElementById("topbarName").textContent;
+            const newName = prompt("Enter your new display name:", currentName);
             if (newName && newName.trim() !== "") {
                 userData.state.customName = newName;
                 document.getElementById("topbarName").textContent = newName;
@@ -32,10 +32,24 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
+        // --- LANGUAGE ACCORDION LOGIC ---
+        document.getElementById('langToggle').onclick = () => {
+            const wrapper = document.getElementById('langWrapper');
+            const arrow = document.getElementById('langArrow');
+            const isHidden = wrapper.style.display === 'none';
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
+
+        // Language buttons (noop for now as requested)
+        document.querySelectorAll('.lang-opt').forEach(btn => {
+            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
+        });
+
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
-        // --- BOTÕES DA TOPBAR ---
+        // --- TOPBAR BUTTONS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
@@ -45,19 +59,11 @@ onAuthStateChanged(auth, async (user) => {
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         
-        // --- LÓGICA DE CORES PERSONALIZADA ---
-        let colorHistory = userData.state.colorHistory || {
-            solids: [],
-            gradients: [],
-            pinned: []
-        };
-
+        // --- COLOR PICKER LOGIC ---
+        let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
         const iroPicker = new iro.ColorPicker("#iroPicker", {
             width: 180,
-            layout: [
-                { component: iro.ui.Wheel },
-                { component: iro.ui.Slider, options: { sliderType: 'value' } },
-            ]
+            layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } }]
         });
 
         let pickingGradient = false;
@@ -69,39 +75,29 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false;
-            color1 = null;
+            pickingGradient = false; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Cover Color";
-            menu.style.display = 'none';
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
         document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true;
-            color1 = null;
+            pickingGradient = true; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            menu.style.display = 'none';
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
         document.getElementById('choiceCancel').onclick = () => { menu.style.display = 'none'; };
         
-        // FECHAR MENUS AO CLICAR FORA
         document.addEventListener('click', (e) => {
-            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) {
-                menu.style.display = 'none';
-            }
-            // Fecha seletor de ícones de atividade ao clicar fora
+            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) menu.style.display = 'none';
             if (!e.target.closest('.aico-wrapper')) {
-                document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
             }
         });
 
-        // FECHAR MENUS AO ROLAR A PÁGINA
         window.addEventListener('scroll', () => {
             if (menu) menu.style.display = 'none';
-            // Fecha seletor de ícones de atividade ao rolar
-            document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+            document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
         }, { passive: true });
 
         function openPicker() {
@@ -171,14 +167,14 @@ onAuthStateChanged(auth, async (user) => {
             solidContainer.innerHTML = '';
             colorHistory.solids.forEach(color => {
                 const div = document.createElement('div');
-                div.style = "width:22px; height:22px; border-radius:50%; background:" + color + "; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);";
+                div.style.cssText = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);`;
                 div.onclick = () => applySolid(color);
                 solidContainer.appendChild(div);
             });
             gradContainer.innerHTML = '';
             colorHistory.gradients.forEach((g) => {
                 const row = document.createElement('div');
-                row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
                 row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => pinGradient(g);
@@ -187,7 +183,7 @@ onAuthStateChanged(auth, async (user) => {
             pinnedContainer.innerHTML = '';
             colorHistory.pinned.forEach((g, idx) => {
                 const row = document.createElement('div');
-                row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
                 row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => {
@@ -214,7 +210,6 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- RESTO DAS FUNÇÕES ORIGINAIS ---
         document.getElementById('addOverviewBlockBtn').onclick = () => {
             import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         };
@@ -273,7 +268,7 @@ onAuthStateChanged(auth, async (user) => {
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
                 link.id = id; link.rel = 'stylesheet';
-                link.href = "https://fonts.googleapis.com/css2?family=" + fontName.replace(/ /g, '+') + "&display=swap";
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
                 document.head.appendChild(link);
             }
         }
@@ -285,9 +280,9 @@ onAuthStateChanged(auth, async (user) => {
                 div.className = 'font-item';
                 div.textContent = font;
                 loadGoogleFont(font);
-                div.style.fontFamily = '"' + font + '", sans-serif';
+                div.style.fontFamily = `"${font}", sans-serif`;
                 div.onclick = () => {
-                    document.documentElement.style.setProperty('--main-font', '"' + font + '", sans-serif');
+                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
                     import('./storage.js').then(store => {
                         if (!store.state.settings) store.state.settings = {};
                         store.state.settings.font = font;
@@ -304,7 +299,7 @@ onAuthStateChanged(auth, async (user) => {
         const settings = userData.state.settings || {};
         if (settings.font) {
             loadGoogleFont(settings.font);
-            document.documentElement.style.setProperty('--main-font', '"' + settings.font + '", sans-serif');
+            document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
         }
         fontSizeSlider.value = settings.fontSize || "15";
         document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
