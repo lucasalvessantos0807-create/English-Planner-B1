@@ -21,16 +21,16 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-       eeditCoverBtn.onclick = () => {
-            const isGradient = !confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+        editCoverBtn.onclick = () => {
+            const isSolid = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
             const colorInput1 = document.getElementById('coverColorInput');
             const colorInput2 = document.getElementById('coverColorInput2');
 
-            if (!isGradient) {
-                // MODO COR SÓLIDA
+            if (isSolid) {
                 colorInput1.onchange = (e) => {
                     const color = e.target.value;
                     cover.style.background = color;
@@ -38,19 +38,15 @@ onAuthStateChanged(auth, async (user) => {
                 };
                 colorInput1.click();
             } else {
-                // MODO DEGRADÊ
-                alert("Primeiro, escolha a Cor 1. Depois que fechar o seletor, abriremos a Cor 2.");
-                
-                colorInput1.onchange = (e1) => {
-                    const c1 = e1.target.value;
-                    
-                    // Pequeno atraso para o navegador processar a primeira escolha antes de abrir a segunda
+                alert("Escolha a Cor 1 e, em seguida, feche o seletor. Abriremos a Cor 2 logo depois.");
+                colorInput1.onchange = () => {
+                    const c1 = colorInput1.value;
                     setTimeout(() => {
-                        colorInput2.onchange = (e2) => {
-                            const c2 = e2.target.value;
-                            const gradient = `linear-gradient(135deg, ${c1}, ${c2})`;
-                            cover.style.background = gradient;
-                            saveCoverSettings(gradient);
+                        colorInput2.onchange = () => {
+                            const c2 = colorInput2.value;
+                            const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
+                            cover.style.background = grad;
+                            saveCoverSettings(grad);
                         };
                         colorInput2.click();
                     }, 500);
@@ -59,7 +55,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // Função auxiliar para salvar a escolha
         function saveCoverSettings(value) {
             import('./storage.js').then(store => {
                 if(!store.state.settings) store.state.settings = {};
@@ -76,7 +71,6 @@ onAuthStateChanged(auth, async (user) => {
             import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         };
         
-        // --- BOTÃO LIMPAR HISTÓRICO COMPLETO ---
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history? This cannot be undone.")){
                 await clearAllHistory(currentUser);
@@ -84,7 +78,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- DRAWERS (Configurações e Personalização) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -106,12 +99,10 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
-        // --- LÓGICA DO HISTÓRICO (Restauração e Exclusão Individual) ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
                 container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
-                
                 store.history.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'history-item';
@@ -124,35 +115,24 @@ onAuthStateChanged(auth, async (user) => {
                             <button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button>
                         </div>
                     `;
-
-                    // --- RESTAURAR VERSÃO ESPECÍFICA ---
                     div.querySelector('.history-restore').onclick = async () => {
                         if(confirm("Restore this version? This will overwrite your current months and texts.")){
-                            // SINCRONIZAÇÃO CRUCIAL: Atualiza as variáveis internas do storage.js antes de salvar
                             store.applySnapshot(item.plannerConfig, item.pageContent);
-                            
-                            // Aguarda o salvamento oficial no Firebase baseado nos dados restaurados
                             await store.saveUserData(currentUser);
-                            
-                            // Recarrega a página para limpar o cache visual e aplicar tudo
                             window.location.reload();
                         }
                     };
-
-                    // Deletar Entrada Única
                     div.querySelector('.history-del').onclick = async () => {
                         if(confirm("Delete this entry?")){
                             await deleteHistoryEntry(currentUser, item.id);
                             renderHistory();
                         }
                     };
-
                     container.appendChild(div);
                 });
             });
         }
 
-        // --- GERENCIAMENTO DE FONTES ---
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
         const fontSearchInput = document.getElementById('fontSearchInput');
@@ -190,7 +170,6 @@ onAuthStateChanged(auth, async (user) => {
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
-        // --- TAMANHO DA FONTE ---
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const settings = userData.state.settings || {};
         if (settings.font) {
@@ -213,7 +192,6 @@ onAuthStateChanged(auth, async (user) => {
             });
         };
 
-        // --- ACCORDION DE FONTES ---
         document.getElementById('fontStyleToggle').onclick = () => {
             const wrapper = document.getElementById('fontPickerWrapper');
             const arrow = document.getElementById('fontArrow');
@@ -222,12 +200,10 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- INICIALIZAÇÃO FINAL ---
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
         updateProgressBar();
         
     } else {
-        // Logout: Limpa a sessão e volta para o login
         if (currentUser) window.location.reload();
         document.getElementById("planner").style.display = "none";
         document.getElementById("login-screen").style.display = "flex";
@@ -235,5 +211,4 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Botão de Login do Google
 document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
