@@ -36,6 +36,7 @@
     <div id="page-cover-container" style="position: relative;">
   <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
   <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+<input type="color" id="coverColorInput" style="display:none;">
 </div>
   <div class="page">
     <div class="cover">
@@ -52,24 +53,12 @@
     <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
     <div id="overview-container">
     <div class="ov-grid" id="dynamic-ov-grid">
-      <!-- Blocos iniciais serão movidos para o JS ou gerados aqui -->
+      <!-- Mês 1 -->
       <div class="ov-card ca">
         <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
         <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect...</div>
       </div>
-    </div>
-    <button id="addOverviewBlockBtn" style="width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
-</div>
-      <div class="ov-card cb">
-        <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-        <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make &amp; Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor &amp; Grey</div>
-      </div>
-      <div class="ov-card cg">
-        <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-        <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo &amp; Juliet / Moby Dick</div>
-      </div>
-    </div>
-
+     
     <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
     <div class="tpl">
       <div class="tpl-row"><div class="tpl-time editable-global" id="tpl-t1">0–15 min</div><div class="tpl-act editable-global" id="tpl-a1">📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.</div></div>
