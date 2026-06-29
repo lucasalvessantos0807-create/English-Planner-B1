@@ -379,6 +379,27 @@ button, input, select, textarea {
     gap: 4px;
 }
 .history-item:last-child { border-bottom: none; }
+.import-backup-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s;
+}
+.import-backup-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.backup-info { display: flex; flex-direction: column; gap: 4px; }
+.backup-date { font-weight: 600; font-size: 0.9rem; }
+.backup-meta { font-size: 0.75rem; color: var(--muted); }
+.backup-actions { display: flex; gap: 8px; }
+.btn-preview { background: var(--bg); border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+.btn-delete-backup { background: #ffeeee; color: #cc0000; border: 1px solid #ffcccc; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
 .history-date { color: var(--muted); font-size: 0.7rem; }
 .history-restore {
     background: var(--bg);
