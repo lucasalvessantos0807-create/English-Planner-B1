@@ -14,6 +14,17 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
+
+        // --- CARREGAR BLOCOS DINÂMICOS DO OVERVIEW SALVOS ---
+        if (userData.pageContent && userData.pageContent.dynamicOverviewIds) {
+            import('./planner.js').then(mod => {
+                userData.pageContent.dynamicOverviewIds.forEach(id => {
+                    const title = userData.pageContent[`${id}-title`] || "New Phase";
+                    const body = userData.pageContent[`${id}-body`] || "Edit content...";
+                    mod.renderSingleOverviewBlock(id, title, body, false, currentUser);
+                });
+            });
+        }
         
         // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
@@ -24,8 +35,7 @@ onAuthStateChanged(auth, async (user) => {
         const editCoverBtn = document.getElementById('editCoverBtn');
         
         editCoverBtn.onclick = () => {
-            const mode = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
-            
+            const mode = confirm("OK para abrir o Seletor de Cores (Sólida) ou CANCELAR para digitar um Gradiente.");
             if (mode) {
                 // Modo Cor Sólida: Abre o seletor nativo
                 const colorInput = document.getElementById('coverColorInput');
@@ -37,8 +47,8 @@ onAuthStateChanged(auth, async (user) => {
                 };
             } else {
                 // Modo Degradê
-                const color1 = prompt("Digite a primeira cor (Hex ou nome, ex: #ff7e5f):", "#ff7e5f");
-                const color2 = prompt("Digite a segunda cor (Hex ou nome, ex: #feb47b):", "#feb47b");
+                const color1 = prompt("Digite a primeira cor (Hex, ex: #ff7e5f):", "#ff7e5f");
+                const color2 = prompt("Digite a segunda cor (Hex, ex: #feb47b):", "#feb47b");
                 if (color1 && color2) {
                     const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
                     cover.style.background = gradient;
@@ -94,7 +104,7 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
-        // --- LÓGICA DO HISTÓRICO (Restauração e Exclusão Individual) ---
+        // --- LÓGICA DO HISTÓRICO ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
@@ -113,21 +123,14 @@ onAuthStateChanged(auth, async (user) => {
                         </div>
                     `;
 
-                    // --- RESTAURAR VERSÃO ESPECÍFICA ---
                     div.querySelector('.history-restore').onclick = async () => {
                         if(confirm("Restore this version? This will overwrite your current months and texts.")){
-                            // SINCRONIZAÇÃO CRUCIAL: Atualiza as variáveis internas do storage.js antes de salvar
                             store.applySnapshot(item.plannerConfig, item.pageContent);
-                            
-                            // Aguarda o salvamento oficial no Firebase baseado nos dados restaurados
                             await store.saveUserData(currentUser);
-                            
-                            // Recarrega a página para limpar o cache visual e aplicar tudo
                             window.location.reload();
                         }
                     };
 
-                    // Deletar Entrada Única
                     div.querySelector('.history-del').onclick = async () => {
                         if(confirm("Delete this entry?")){
                             await deleteHistoryEntry(currentUser, item.id);
@@ -215,7 +218,6 @@ onAuthStateChanged(auth, async (user) => {
         updateProgressBar();
         
     } else {
-        // Logout: Limpa a sessão e volta para o login
         if (currentUser) window.location.reload();
         document.getElementById("planner").style.display = "none";
         document.getElementById("login-screen").style.display = "flex";
@@ -223,5 +225,4 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Botão de Login do Google
 document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
