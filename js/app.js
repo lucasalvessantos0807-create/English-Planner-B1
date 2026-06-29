@@ -70,15 +70,16 @@ onAuthStateChanged(auth, async (user) => {
                         </div>
                     `;
 
-                    // Restaurar Versão Específica
+                    // --- RESTAURAR VERSÃO ESPECÍFICA ---
                     div.querySelector('.history-restore').onclick = async () => {
                         if(confirm("Restore this version? This will overwrite your current months and texts.")){
-                            // Cria uma cópia profunda para garantir que o sistema reconheça a mudança estrutural
-                            window.plannerConfig = JSON.parse(JSON.stringify(item.plannerConfig));
-                            window.pageContent = JSON.parse(JSON.stringify(item.pageContent));
+                            // SINCRONIZAÇÃO CRUCIAL: Atualiza as variáveis internas do storage.js antes de salvar
+                            store.applySnapshot(item.plannerConfig, item.pageContent);
                             
-                            // Aguarda salvar no Firebase antes de recarregar
+                            // Aguarda o salvamento oficial no Firebase baseado nos dados restaurados
                             await store.saveUserData(currentUser);
+                            
+                            // Recarrega a página para limpar o cache visual e aplicar tudo
                             window.location.reload();
                         }
                     };
