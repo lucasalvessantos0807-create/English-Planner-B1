@@ -24,14 +24,32 @@ onAuthStateChanged(auth, async (user) => {
         const editCoverBtn = document.getElementById('editCoverBtn');
         
         editCoverBtn.onclick = () => {
-            const color = prompt("Enter a Hex color (e.g., #f4f1ea):", "#f4f1ea");
-            if(color) {
-                cover.style.background = color;
-                import('./storage.js').then(store => {
-                    if(!store.state.settings) store.state.settings = {};
-                    store.state.settings.coverColor = color;
-                    store.saveUserData(currentUser);
-                });
+            const mode = confirm("Clique em OK para abrir o SELETOR DE CORES (Sólido) ou CANCELAR para criar um GRADIENTE.");
+            const picker = document.getElementById('colorPicker');
+            
+            if (mode) {
+                picker.oninput = (e) => {
+                    const color = e.target.value;
+                    cover.style.background = color;
+                    import('./storage.js').then(store => {
+                        if(!store.state.settings) store.state.settings = {};
+                        store.state.settings.coverColor = color;
+                        store.saveUserData(currentUser);
+                    });
+                };
+                picker.click();
+            } else {
+                const color1 = prompt("Digite a primeira cor (Ex: #c85a2a ou orange):", "#c85a2a");
+                const color2 = prompt("Digite a segunda cor (Ex: #f7f5f0 ou white):", "#f7f5f0");
+                if(color1 && color2) {
+                    const gradient = `linear-gradient(135deg, ${color1}, ${color2})`;
+                    cover.style.background = gradient;
+                    import('./storage.js').then(store => {
+                        if(!store.state.settings) store.state.settings = {};
+                        store.state.settings.coverColor = gradient;
+                        store.saveUserData(currentUser);
+                    });
+                }
             }
         };
 
