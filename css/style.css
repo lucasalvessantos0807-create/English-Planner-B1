@@ -207,7 +207,7 @@ button, input, select, textarea {
 
 @media(max-width:600px){.ov-grid{grid-template-columns:1fr}}
 .del-ov-btn {
-  display: none;
+  display: none !important;
   position: absolute;
   top: 5px;
   right: 5px;
@@ -223,7 +223,7 @@ button, input, select, textarea {
   justify-content: center;
   z-index: 10;
 }
-.ov-card:hover .del-ov-btn { opacity: 1; }
+.edit-active .del-ov-btn { display: flex !important; }
 
 /* --- Ajustes de Posicionamento --- */
 .week-nav {
@@ -399,7 +399,17 @@ button, input, select, textarea {
 .backup-meta { font-size: 0.75rem; color: var(--muted); }
 .backup-actions { display: flex; gap: 8px; }
 .btn-preview { background: var(--bg); border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
-.btn-delete-backup { background: #ffeeee; color: #cc0000; border: 1px solid #ffcccc; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+.btn-delete-backup { background: #ffeeee; color: #cc0000; border: 1px solid #ffcccc; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+.btn-undo-import {
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid var(--green);
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 .history-date { color: var(--muted); font-size: 0.7rem; }
 .history-restore {
     background: var(--bg);
