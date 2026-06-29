@@ -25,28 +25,35 @@ onAuthStateChanged(auth, async (user) => {
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         
-        editCoverBtn.onclick = () => {
-            const isSolid = confirm("Clique em OK para Cor Sólida ou CANCELAR para Degradê (Gradient)");
+       editCoverBtn.onclick = () => {
             const colorInput1 = document.getElementById('coverColorInput');
             const colorInput2 = document.getElementById('coverColorInput2');
+            
+            const isGradient = confirm("Deseja criar um DEGRADÊ? \n(OK para Degradê / Cancelar para Cor Sólida)");
 
-            if (isSolid) {
+            if (!isGradient) {
+                // MODO COR SÓLIDA
+                colorInput1.oninput = (e) => {
+                    cover.style.background = e.target.value;
+                };
                 colorInput1.onchange = (e) => {
-                    const color = e.target.value;
-                    cover.style.background = color;
-                    saveCoverSettings(color);
+                    saveCoverSettings(e.target.value);
                 };
                 colorInput1.click();
             } else {
-                alert("Escolha a Cor 1 e, em seguida, feche o seletor. Abriremos a Cor 2 logo depois.");
+                // MODO DEGRADÊ
+                alert("Selecione a PRIMEIRA cor.");
                 colorInput1.onchange = () => {
                     const c1 = colorInput1.value;
+                    
+                    // Pequena pausa para o navegador permitir o segundo clique
                     setTimeout(() => {
+                        alert("Agora selecione a SEGUNDA cor.");
                         colorInput2.onchange = () => {
                             const c2 = colorInput2.value;
-                            const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
-                            cover.style.background = grad;
-                            saveCoverSettings(grad);
+                            const gradient = `linear-gradient(135deg, ${c1}, ${c2})`;
+                            cover.style.background = gradient;
+                            saveCoverSettings(gradient);
                         };
                         colorInput2.click();
                     }, 500);
@@ -62,7 +69,6 @@ onAuthStateChanged(auth, async (user) => {
                 store.saveUserData(currentUser);
             });
         }
-
         if(userData.state.settings && userData.state.settings.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
         }
