@@ -36,31 +36,22 @@ function refreshGlobalTexts() {
     });
 }
 
-// CORREÇÃO DEFINITIVA: Cancelar restaura os dados e força o Redraw completo da UI
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     
-    // 1. Restaura os dados originais na memória
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
     
-    // 2. Desativa o modo de edição
     isEditMode = false;
 
-    // 3. Limpa o atributo contentEditable de TODOS os campos editáveis
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = "false";
-        // Restaura o texto original do snapshot DOM para garantir que nada "vaze"
         if (sessionInitialDOMSnapshot[el.id] !== undefined) {
             el.innerHTML = sessionInitialDOMSnapshot[el.id];
         }
     });
 
-    // 4. Atualiza os botões da Topbar
     updateUIEditMode();
-
-    // 5. RECONSTRUÇÃO TOTAL: Redesenha os meses e a semana atual do zero
-    // Isso garante que mudanças em atividades e estrutura desapareçam visualmente
     refreshUI(uid);
 }
 
@@ -78,7 +69,6 @@ function updateUIEditMode() {
 
 export function toggleEditMode(uid) {
     if (!isEditMode) {
-        // INÍCIO DA SESSÃO: Salva estados e tira "foto" visual
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
         
@@ -89,10 +79,11 @@ export function toggleEditMode(uid) {
 
         undoStack = [];
         isEditMode = true;
+        
+        // Mostrar botões de controle de blocos
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'flex');
     } else {
-        // SALVAMENTO: Verifica se houve mudança real para registrar histórico
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
         const currentContentStr = JSON.stringify(window.pageContent);
@@ -103,6 +94,8 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
+        
+        // Esconder botões de controle de blocos
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'none');
     }
@@ -320,7 +313,6 @@ export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     const blockId = 'ov-' + Date.now();
     
-    // Adiciona ao registro de blocos dinâmicos para persistência
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
 
@@ -333,7 +325,7 @@ export function addOverviewBlock(uid) {
         <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit description...</div>
     `;
     
-newBlock.querySelector('.del-ov-btn').onclick = (e) => {
+    newBlock.querySelector('.del-ov-btn').onclick = (e) => {
         e.stopPropagation();
         if(confirm("Delete this block?")) {
             newBlock.remove();
@@ -346,9 +338,8 @@ newBlock.querySelector('.del-ov-btn').onclick = (e) => {
 
     grid.appendChild(newBlock);
     
-    // Configura a edição baseada no modo atual
     newBlock.querySelectorAll('.editable-global').forEach(el => {
-        el.contentEditable = isEditMode; // Usa a variável global do arquivo
+        el.contentEditable = isEditMode;
         el.onblur = () => {
             window.pageContent[el.id] = el.innerHTML;
             saveUserData(uid);
@@ -360,13 +351,14 @@ newBlock.querySelector('.del-ov-btn').onclick = (e) => {
 export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     
-    // Adiciona botões de deletar nos blocos estáticos (os 3 primeiros)
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
             const delBtn = document.createElement('button');
             delBtn.className = 'del-ov-btn';
             delBtn.innerHTML = '✕';
-            delBtn.onclick = () => {
+            delBtn.style.display = isEditMode ? 'flex' : 'none';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
                 if(confirm("Deseja ocultar este bloco padrão?")) {
                     card.style.display = 'none';
                     window.pageContent[`hide-static-ov-${index}`] = true;
@@ -382,9 +374,8 @@ export function renderDynamicOverviewBlocks(uid) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
             const newBlock = document.createElement('div');
-           newBlock.className = 'ov-card cg';
+            newBlock.className = 'ov-card cg';
             newBlock.id = `container-${blockId}`;
-            // Define se os botões X aparecem baseado no Edit Mode atual
             const displayDel = isEditMode ? 'flex' : 'none';
             newBlock.innerHTML = `
                 <button class="del-ov-btn" style="display:${displayDel};">✕</button>
@@ -401,3 +392,7 @@ export function renderDynamicOverviewBlocks(uid) {
                     saveUserData(uid);
                 }
             };
+            grid.appendChild(newBlock);
+        });
+    }
+}
