@@ -99,3 +99,56 @@ export async function clearAllHistory(uid) {
 export function updateState(dayKey, data) {
     state[dayKey] = { ...state[dayKey], ...data };
 }
+
+export function exportData() {
+    const dataToExport = {
+        state: window.appState,
+        plannerConfig: window.plannerConfig,
+        pageContent: window.pageContent,
+        history: history,
+        exportDate: new Date().toISOString(),
+        version: "1.0"
+    };
+    
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `planner_backup_${new Date().toLocaleDateString()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+export async function importData(file, uid) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (!imported.plannerConfig || !imported.state) {
+                    throw new Error("Invalid planner data file.");
+                }
+                
+                // Aplicar aos dados locais
+                state = imported.state;
+                plannerConfig = imported.plannerConfig;
+                pageContent = imported.pageContent || {};
+                history = imported.history || [];
+                
+                window.appState = state;
+                window.plannerConfig = plannerConfig;
+                window.pageContent = pageContent;
+
+                // Salvar no Firebase
+                await saveUserData(uid);
+                resolve(true);
+            } catch (err) {
+                console.error("Import error:", err);
+                reject(err);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
