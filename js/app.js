@@ -8,11 +8,29 @@ let currentUser = null;
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user.uid;
-        document.getElementById("topbarName").textContent = user.displayName;
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("planner").style.display = "block";
         
         const userData = await loadUserData(currentUser);
+
+        // --- LÓGICA DE NOME DE USUÁRIO (ESTUDANDO COMO...) ---
+        if (!userData.state.customName && !userData.state.namePrompted) {
+            const nameInput = prompt("Como você gostaria de ser chamado?");
+            userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
+            userData.state.namePrompted = true;
+            import('./storage.js').then(store => store.saveUserData(currentUser));
+        }
+        document.getElementById("topbarName").textContent = userData.state.customName || user.email;
+
+        document.getElementById('changeNameBtn').onclick = () => {
+            const newName = prompt("Digite o novo nome de exibição:", document.getElementById("topbarName").textContent);
+            if (newName && newName.trim() !== "") {
+                userData.state.customName = newName;
+                document.getElementById("topbarName").textContent = newName;
+                import('./storage.js').then(store => store.saveUserData(currentUser));
+            }
+        };
+
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
@@ -27,14 +45,12 @@ onAuthStateChanged(auth, async (user) => {
         
         // --- LÓGICA DE CORES PERSONALIZADA ---
 
-        // Configurações do Histórico (Carregar do Firebase ou iniciar vazio)
         let colorHistory = userData.state.colorHistory || {
             solids: [],
             gradients: [],
             pinned: []
         };
 
-        // Inicializa o seletor iro.js
         const iroPicker = new iro.ColorPicker("#iroPicker", {
             width: 180,
             layout: [
@@ -47,13 +63,11 @@ onAuthStateChanged(auth, async (user) => {
         let color1 = null;
         const menu = document.getElementById('colorChoiceMenu');
 
-        // Abre o menu sutil perto do botão (sem alert de navegador)
         editCoverBtn.onclick = (e) => {
             e.stopPropagation();
             menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
         };
 
-        // Opções do Menu Sutil
         document.getElementById('choiceSolid').onclick = () => {
             pickingGradient = false;
             color1 = null;
@@ -72,16 +86,22 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById('choiceCancel').onclick = () => menu.style.display = 'none';
         
-        // Fecha o menu ao clicar fora dele
+        // FECHAR MENUS AO CLICAR FORA
         document.addEventListener('click', (e) => {
             if (!menu.contains(e.target) && e.target !== editCoverBtn) {
                 menu.style.display = 'none';
             }
+            // Fecha seletor de ícones de atividade ao clicar fora
+            if (!e.target.closest('.aico-wrapper')) {
+                document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+            }
         });
 
-        // Fecha o menu ao rolar a página
+        // FECHAR MENUS AO ROLAR A PÁGINA
         window.addEventListener('scroll', () => {
             menu.style.display = 'none';
+            // Fecha seletor de ícones de atividade ao rolar
+            document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
         }, { passive: true });
 
         function openPicker() {
@@ -98,17 +118,15 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('btnCancelPicker').onclick = closePicker;
         document.getElementById('pickerOverlay').onclick = closePicker;
 
-        // Botão Confirmar no Seletor
         document.getElementById('btnApplyPicker').onclick = () => {
             const selectedColor = iroPicker.color.hexString;
-
             if (!pickingGradient) {
                 applySolid(selectedColor);
             } else {
                 if (color1 === null) {
                     color1 = selectedColor;
                     document.getElementById('pickerActionTitle').textContent = "Select Color 2";
-                    cover.style.background = color1; // Feedback visual
+                    cover.style.background = color1;
                 } else {
                     applyGradient(color1, selectedColor);
                 }
@@ -117,7 +135,6 @@ onAuthStateChanged(auth, async (user) => {
 
         function applySolid(color) {
             cover.style.background = color;
-            // Lógica de Histórico FIFO (Máximo 3)
             if (!colorHistory.solids.includes(color)) {
                 colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
@@ -129,7 +146,6 @@ onAuthStateChanged(auth, async (user) => {
         function applyGradient(c1, c2) {
             const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
             cover.style.background = grad;
-            // Histórico de degradês FIFO (Máximo 3)
             const exists = colorHistory.gradients.some(g => g.c1 === c1 && g.c2 === c2);
             if (!exists) {
                 colorHistory.gradients.unshift({ c1, c2 });
@@ -143,17 +159,15 @@ onAuthStateChanged(auth, async (user) => {
             import('./storage.js').then(store => {
                 if(!store.state.settings) store.state.settings = {};
                 store.state.settings.coverColor = lastValue;
-                store.state.colorHistory = colorHistory; // Salva o histórico completo
+                store.state.colorHistory = colorHistory;
                 store.saveUserData(currentUser);
             });
         }
 
-        // Renderização dos itens salvos dentro do seletor
         function renderHistoryUI() {
             const solidContainer = document.getElementById('historySolids');
             const gradContainer = document.getElementById('historyGradients');
             const pinnedContainer = document.getElementById('pinnedGradients');
-
             solidContainer.innerHTML = '';
             colorHistory.solids.forEach(color => {
                 const div = document.createElement('div');
@@ -161,28 +175,20 @@ onAuthStateChanged(auth, async (user) => {
                 div.onclick = () => applySolid(color);
                 solidContainer.appendChild(div);
             });
-
             gradContainer.innerHTML = '';
             colorHistory.gradients.forEach((g) => {
                 const row = document.createElement('div');
                 row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `
-                    <div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div>
-                    <span title="Pin Gradient" style="cursor:pointer; font-size:12px;">📌</span>
-                `;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin Gradient" style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => pinGradient(g);
                 gradContainer.appendChild(row);
             });
-
             pinnedContainer.innerHTML = '';
             colorHistory.pinned.forEach((g, idx) => {
                 const row = document.createElement('div');
                 row.style = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `
-                    <div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div>
-                    <span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>
-                `;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => {
                     colorHistory.pinned.splice(idx, 1);
@@ -204,17 +210,14 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
-        // Aplica cor inicial salva
         if(userData.state.settings && userData.state.settings.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
         }
 
         // --- RESTO DAS FUNÇÕES ORIGINAIS ---
-
         document.getElementById('addOverviewBlockBtn').onclick = () => {
             import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         };
-        
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history? This cannot be undone.")){
                 await clearAllHistory(currentUser);
@@ -228,18 +231,8 @@ onAuthStateChanged(auth, async (user) => {
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
-
-        personalizeBtn.onclick = () => { 
-            settingsDrawer.classList.remove('open'); 
-            customDrawer.classList.toggle('open'); 
-        };
-        
-        settingsBtn.onclick = () => { 
-            customDrawer.classList.remove('open'); 
-            settingsDrawer.classList.toggle('open'); 
-            renderHistory(); 
-        };
-        
+        personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
+        settingsBtn.onclick = () => { customDrawer.classList.remove('open'); settingsDrawer.classList.toggle('open'); renderHistory(); };
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
@@ -251,14 +244,7 @@ onAuthStateChanged(auth, async (user) => {
                     const div = document.createElement('div');
                     div.className = 'history-item';
                     const date = new Date(item.timestamp).toLocaleString();
-                    div.innerHTML = `
-                        <span class="history-date">${date}</span>
-                        <strong style="font-size:0.8rem">${item.label}</strong>
-                        <div style="display:flex; gap:5px; margin-top:5px;">
-                            <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
-                            <button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button>
-                        </div>
-                    `;
+                    div.innerHTML = `<span class="history-date">${date}</span><strong style="font-size:0.8rem">${item.label}</strong><div style="display:flex; gap:5px; margin-top:5px;"><button class="history-restore" style="flex:1; cursor:pointer;">Restore</button><button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button></div>`;
                     div.querySelector('.history-restore').onclick = async () => {
                         if(confirm("Restore this version? This will overwrite your current months and texts.")){
                             store.applySnapshot(item.plannerConfig, item.pageContent);
