@@ -4,6 +4,45 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>English Study Planner — A2+ to B1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+    <style>
+      #colorPickerContainer {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #1a1a1a;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 2000;
+        text-align: center;
+        color: white;
+        font-family: sans-serif;
+      }
+      #colorPickerContainer.open { display: block; }
+      .picker-btns { display: flex; gap: 10px; margin-top: 20px; justify-content: center; }
+      .picker-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 12px;
+      }
+      .btn-apply { background: #c85a2a; color: white; }
+      .btn-cancel { background: #333; color: #ccc; }
+      .picker-title { margin-bottom: 15px; font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+      #pickerOverlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 1999;
+      }
+      #pickerOverlay.open { display: block; }
+    </style>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -156,5 +195,14 @@
 </div> <!-- Fim do Planner -->
 
 <script type="module" src="js/app.js"></script>
+<div id="pickerOverlay"></div>
+<div id="colorPickerContainer">
+  <div class="picker-title" id="pickerActionTitle">Select Color</div>
+  <div id="iroPicker"></div>
+  <div class="picker-btns">
+    <button class="picker-btn btn-cancel" id="btnCancelPicker">Cancel</button>
+    <button class="picker-btn btn-apply" id="btnApplyPicker">Confirm</button>
+  </div>
+</div>
 </body>
 </html>
