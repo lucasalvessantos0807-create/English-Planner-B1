@@ -26,6 +26,7 @@
     <div style="display: flex; gap: 8px;">
       <!-- Botões de Controle -->
       <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+      <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
       <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
       <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">🎨 Personalize</button>
       <button id="settingsBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">⚙️ Settings</button>
@@ -124,8 +125,11 @@
       </div>
       <div class="drawer-body">
         <div class="control-group">
-          <label>Change History (Last 30 days)</label>
-          <div id="historyList" style="margin-top:10px; max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <label style="margin:0;">Change History (30 days)</label>
+            <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
+          </div>
+          <div id="historyList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
             <!-- Itens preenchidos via JS -->
           </div>
         </div>
