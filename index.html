@@ -185,19 +185,34 @@
         <button id="closeSettings">✕</button>
       </div>
       <div class="drawer-body">
+        
+        <!-- Accordion de Idioma -->
         <div class="control-group">
+          <div id="langToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
+            Language Settings <span id="langArrow">▼</span>
+          </div>
+          <div id="langWrapper" style="display:none; margin-top:10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);">
+            <div style="padding: 5px;">
+              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">English</button>
+              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Português (Brasil)</button>
+              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Español</button>
+              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Français</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <label style="margin:0;">Change History (30 days)</label>
             <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
-              </div>
-          <div style="margin-bottom: 20px;">
-            <button id="changeNameBtn" style="width:100%; padding: 8px; font-size: 0.8rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--muted); transition: all 0.2s;">✎ Alterar nome de usuário</button>
           </div>
-          <div id="historyList" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
+          <div id="historyList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
             <!-- Itens preenchidos via JS -->
           </div>
         </div>
-        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+
+        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <button class="topbar-logout" id="changeNameBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Change Username</button>
           <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout / Sair</button>
         </div>
       </div>
