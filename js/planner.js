@@ -3,8 +3,8 @@ import { updateProgressBar } from './ui.js';
 
 let isEditMode = false;
 let undoStack = []; 
-let sessionInitialConfig = null; // Backup para cancelamento
-let sessionInitialContent = null; // Backup para cancelamento
+let sessionInitialConfig = null; 
+let sessionInitialContent = null; 
 
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
@@ -28,7 +28,6 @@ export function performUndo(uid) {
     refreshCurrentWeek(uid);
 }
 
-// Restaura os textos globais na tela
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
@@ -36,12 +35,18 @@ function refreshGlobalTexts() {
     });
 }
 
-// Cancela todas as edições da sessão atual
+// CORREÇÃO PONTO 2: Cancelar agora desativa a edição de todos os campos
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
     isEditMode = false;
+    
+    // Desativa edição visualmente nos textos globais
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = "false";
+    });
+
     refreshGlobalTexts();
     updateUIEditMode();
     refreshCurrentWeek(uid);
@@ -61,20 +66,17 @@ function updateUIEditMode() {
 
 export function toggleEditMode(uid) {
     if (!isEditMode) {
-        // INICIANDO EDIÇÃO: Tira "foto" do estado atual
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
         undoStack = [];
         isEditMode = true;
     } else {
-        // SALVANDO: Verifica se algo mudou de verdade
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
         const currentContentStr = JSON.stringify(window.pageContent);
         const initialContentStr = JSON.stringify(sessionInitialContent);
 
         if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
-            // Só cria histórico se houver mudança. O histórico guarda como estava ANTES.
             addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
             saveUserData(uid);
         }
@@ -233,11 +235,14 @@ export function buildWeek(m, w, uid, openDays = []) {
     builtWeeks.add(key);
 }
 
+// CORREÇÃO PONTO 3: Histórico só é criado se o usuário não cancelar o prompt
 export function addNewMonth(uid) {
-    // Salva estado antes da mudança estrutural
-    addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
+
+    // Snapshot ANTES de mudar
+    addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
+
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
@@ -255,10 +260,14 @@ export function addNewMonth(uid) {
     saveUserData(uid).then(() => refreshUI(uid));
 }
 
+// CORREÇÃO PONTO 3: Histórico só é criado se o usuário não cancelar o prompt
 export function editMonthStructure(m, uid) {
-    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
     const dayCount = parseInt(prompt("Days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
     if (isNaN(dayCount)) return;
+
+    // Snapshot ANTES de mudar
+    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
+
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
     let currentDay = startDay;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
