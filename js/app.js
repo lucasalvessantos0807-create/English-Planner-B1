@@ -15,12 +15,13 @@ onAuthStateChanged(auth, async (user) => {
         const userData = await loadUserData(currentUser);
         renderStructure(userData.plannerConfig, (m, w) => buildWeek(m, w, currentUser));
         
-        // --- BOTÕES ---
+        // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
         
+        // --- BOTÃO LIMPAR HISTÓRICO COMPLETO ---
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history? This cannot be undone.")){
                 await clearAllHistory(currentUser);
@@ -28,7 +29,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- DRAWERS ---
+        // --- DRAWERS (Configurações e Personalização) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -36,15 +37,26 @@ onAuthStateChanged(auth, async (user) => {
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
 
-        personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
-        settingsBtn.onclick = () => { customDrawer.classList.remove('open'); settingsDrawer.classList.toggle('open'); renderHistory(); };
+        personalizeBtn.onclick = () => { 
+            settingsDrawer.classList.remove('open'); 
+            customDrawer.classList.toggle('open'); 
+        };
+        
+        settingsBtn.onclick = () => { 
+            customDrawer.classList.remove('open'); 
+            settingsDrawer.classList.toggle('open'); 
+            renderHistory(); 
+        };
+        
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
+        // --- LÓGICA DO HISTÓRICO (Restauração e Exclusão Individual) ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
                 container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
+                
                 store.history.forEach(item => {
                     const div = document.createElement('div');
                     div.className = 'history-item';
@@ -53,30 +65,39 @@ onAuthStateChanged(auth, async (user) => {
                         <span class="history-date">${date}</span>
                         <strong style="font-size:0.8rem">${item.label}</strong>
                         <div style="display:flex; gap:5px; margin-top:5px;">
-                            <button class="history-restore" style="flex:1">Restore</button>
+                            <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
                             <button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button>
                         </div>
                     `;
-                    div.querySelector('.history-restore').onclick = () => {
-                        if(confirm("Restore this version?")){
-                            window.plannerConfig = item.plannerConfig;
-                            window.pageContent = item.pageContent;
-                            store.saveUserData(currentUser).then(() => window.location.reload());
+
+                    // Restaurar Versão Específica
+                    div.querySelector('.history-restore').onclick = async () => {
+                        if(confirm("Restore this version? This will overwrite your current months and texts.")){
+                            // Cria uma cópia profunda para garantir que o sistema reconheça a mudança estrutural
+                            window.plannerConfig = JSON.parse(JSON.stringify(item.plannerConfig));
+                            window.pageContent = JSON.parse(JSON.stringify(item.pageContent));
+                            
+                            // Aguarda salvar no Firebase antes de recarregar
+                            await store.saveUserData(currentUser);
+                            window.location.reload();
                         }
                     };
+
+                    // Deletar Entrada Única
                     div.querySelector('.history-del').onclick = async () => {
                         if(confirm("Delete this entry?")){
                             await deleteHistoryEntry(currentUser, item.id);
                             renderHistory();
                         }
                     };
+
                     container.appendChild(div);
                 });
             });
         }
 
-        // --- FONTES (Mantida) ---
-        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display"];
+        // --- GERENCIAMENTO DE FONTES ---
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
         const fontSearchInput = document.getElementById('fontSearchInput');
 
@@ -113,6 +134,7 @@ onAuthStateChanged(auth, async (user) => {
         fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
+        // --- TAMANHO DA FONTE ---
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         const settings = userData.state.settings || {};
         if (settings.font) {
@@ -120,6 +142,7 @@ onAuthStateChanged(auth, async (user) => {
             document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
         }
         fontSizeSlider.value = settings.fontSize || "15";
+        document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
         document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
         fontSizeSlider.oninput = (e) => {
@@ -134,14 +157,21 @@ onAuthStateChanged(auth, async (user) => {
             });
         };
 
+        // --- ACCORDION DE FONTES ---
         document.getElementById('fontStyleToggle').onclick = () => {
             const wrapper = document.getElementById('fontPickerWrapper');
-            wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+            const arrow = document.getElementById('fontArrow');
+            const isHidden = wrapper.style.display === 'none';
+            wrapper.style.display = isHidden ? 'block' : 'none';
+            arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
+        // --- INICIALIZAÇÃO FINAL ---
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
         updateProgressBar();
+        
     } else {
+        // Logout: Limpa a sessão e volta para o login
         if (currentUser) window.location.reload();
         document.getElementById("planner").style.display = "none";
         document.getElementById("login-screen").style.display = "flex";
@@ -149,4 +179,5 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// Botão de Login do Google
 document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
