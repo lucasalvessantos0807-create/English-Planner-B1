@@ -5,18 +5,19 @@ export let state = {};
 export let plannerConfig = {};
 export let pageContent = {};
 export let history = [];
+export let importHistory = [];
 
 export function resetLocalData() {
     state = {};
     plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
     pageContent = {};
     history = [];
+    importHistory = [];
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
 }
 
-// FUNÇÃO CRUCIAL PARA A RESTAURAÇÃO FUNCIONAR
 export function applySnapshot(newConfig, newContent) {
     plannerConfig = JSON.parse(JSON.stringify(newConfig));
     pageContent = JSON.parse(JSON.stringify(newContent));
@@ -33,15 +34,18 @@ export async function loadUserData(uid) {
             state = data.state || {};
             plannerConfig = data.plannerConfig || initialWeeksData;
             pageContent = data.pageContent || {};
-            history = data.history || [];
-            // Garante que o array de blocos dinâmicos exista se não houver dados
-            if(!pageContent.dynamicBlocks) pageContent.dynamicBlocks = [];
-
-            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            const initialLength = history.length;
-            history = history.filter(item => item.timestamp > thirtyDaysAgo);
             
-            if (history.length !== initialLength) saveUserData(uid);
+            // Histórico comum (30 dias)
+            history = data.history || [];
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            history = history.filter(item => item.timestamp > thirtyDaysAgo);
+
+            // Histórico de Importação (6 meses / 180 dias)
+            importHistory = data.importHistory || [];
+            const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
+            importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
+
+            if (!pageContent.dynamicBlocks) pageContent.dynamicBlocks = [];
 
             window.appState = state;
             window.plannerConfig = plannerConfig;
@@ -52,12 +56,12 @@ export async function loadUserData(uid) {
                 if (el) el.innerHTML = pageContent[id];
             });
 
-            return { state, plannerConfig, pageContent, history };
+            return { state, plannerConfig, pageContent, history, importHistory };
         }
     } catch (e) {
-        console.error("Erro ao carregar dados individuais:", e);
+        console.error("Error loading user data:", e);
     }
-    return { state, plannerConfig, pageContent, history };
+    return { state, plannerConfig, pageContent, history, importHistory };
 }
 
 export async function saveUserData(uid) {
@@ -65,12 +69,13 @@ export async function saveUserData(uid) {
     try {
         await setDoc(doc(db, "users", uid), { 
             state: state,
-            plannerConfig: plannerConfig, // Salva a variável interna do módulo
-            pageContent: pageContent,     // Salva a variável interna do módulo
-            history: history 
+            plannerConfig: plannerConfig,
+            pageContent: pageContent,
+            history: history,
+            importHistory: importHistory
         });
     } catch (e) {
-        console.error("Erro ao salvar dados individuais:", e);
+        console.error("Error saving user data:", e);
     }
 }
 
@@ -96,6 +101,11 @@ export async function clearAllHistory(uid) {
     await saveUserData(uid);
 }
 
+export async function deleteImportBackup(uid, backupId) {
+    importHistory = importHistory.filter(b => b.id !== backupId);
+    await saveUserData(uid);
+}
+
 export function updateState(dayKey, data) {
     state[dayKey] = { ...state[dayKey], ...data };
 }
@@ -106,46 +116,51 @@ export function exportData() {
         plannerConfig: window.plannerConfig,
         pageContent: window.pageContent,
         history: history,
-        exportDate: new Date().toISOString(),
-        version: "1.0"
+        exportDate: new Date().toISOString()
     };
-    
     const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `planner_backup_${new Date().toLocaleDateString()}.json`;
+    a.download = `planner_export_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
 
-export async function importData(file, uid) {
+export async function importData(file, uid, isRestore = false) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (!imported.plannerConfig || !imported.state) {
-                    throw new Error("Invalid planner data file.");
+                if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file");
+
+                // SE NÃO FOR UMA RESTAURAÇÃO DE BACKUP, SALVA O ESTADO ATUAL NO HISTÓRICO DE IMPORTAÇÃO
+                if (!isRestore) {
+                    const backup = {
+                        id: "imp_" + Date.now(),
+                        timestamp: Date.now(),
+                        filename: file.name || "Manual Import",
+                        state: JSON.parse(JSON.stringify(state)),
+                        plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
+                        pageContent: JSON.parse(JSON.stringify(pageContent))
+                    };
+                    importHistory.unshift(backup);
                 }
-                
-                // Aplicar aos dados locais
+
                 state = imported.state;
                 plannerConfig = imported.plannerConfig;
                 pageContent = imported.pageContent || {};
-                history = imported.history || [];
                 
                 window.appState = state;
                 window.plannerConfig = plannerConfig;
                 window.pageContent = pageContent;
 
-                // Salvar no Firebase
                 await saveUserData(uid);
                 resolve(true);
             } catch (err) {
-                console.error("Import error:", err);
                 reject(err);
             }
         };
