@@ -89,6 +89,8 @@ export function toggleEditMode(uid) {
 
         undoStack = [];
         isEditMode = true;
+        document.getElementById('addOverviewBlockBtn').style.display = 'block';
+        document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'flex');
     } else {
         // SALVAMENTO: Verifica se houve mudança real para registrar histórico
         const currentConfigStr = JSON.stringify(window.plannerConfig);
@@ -101,6 +103,8 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
+        document.getElementById('addOverviewBlockBtn').style.display = 'none';
+        document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'none');
     }
 
     updateUIEditMode();
@@ -314,29 +318,84 @@ function refreshUI(uid) {
 
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
-    const blockId = 'ov-block-' + Date.now();
+    const blockId = 'ov-' + Date.now();
+    
+    // Adiciona ao registro de blocos dinâmicos para persistência
+    if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
+    window.pageContent.dynamicBlocks.push(blockId);
+
     const newBlock = document.createElement('div');
-    newBlock.className = 'ov-card ca'; // Por padrão usa a cor laranja
+    newBlock.className = 'ov-card cg';
+    newBlock.id = `container-${blockId}`;
     newBlock.innerHTML = `
+        <button class="del-ov-btn" style="display:flex;">✕</button>
         <div class="ov-label editable-global" id="${blockId}-title" contenteditable="true">New Phase</div>
-        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit your goals here...</div>
-        <button class="del-ov-block" style="position:absolute; top:5px; right:5px; background:none; border:none; cursor:pointer; font-size:10px; opacity:0.3;">✕</button>
+        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit description...</div>
     `;
     
-    newBlock.querySelector('.del-ov-block').onclick = () => {
+    newBlock.querySelector('.del-ov-btn').onclick = () => {
         if(confirm("Delete this block?")) {
             newBlock.remove();
+            window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
+            delete window.pageContent[`${blockId}-title`];
+            delete window.pageContent[`${blockId}-body`];
             saveUserData(uid);
         }
     };
-    
+
     grid.appendChild(newBlock);
-    // Reativa o monitoramento de edição para o novo bloco
+    
     newBlock.querySelectorAll('.editable-global').forEach(el => {
         el.onblur = () => {
-            if (!window.pageContent) window.pageContent = {};
             window.pageContent[el.id] = el.innerHTML;
             saveUserData(uid);
         };
     });
+    saveUserData(uid);
+}
+
+export function renderDynamicOverviewBlocks(uid) {
+    const grid = document.getElementById('dynamic-ov-grid');
+    
+    // Adiciona botões de deletar nos blocos estáticos (os 3 primeiros)
+    grid.querySelectorAll('.ov-card').forEach((card, index) => {
+        if (!card.querySelector('.del-ov-btn')) {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'del-ov-btn';
+            delBtn.innerHTML = '✕';
+            delBtn.onclick = () => {
+                if(confirm("Deseja ocultar este bloco padrão?")) {
+                    card.style.display = 'none';
+                    window.pageContent[`hide-static-ov-${index}`] = true;
+                    saveUserData(uid);
+                }
+            };
+            card.prepend(delBtn);
+            if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
+        }
+    });
+
+    if(window.pageContent && window.pageContent.dynamicBlocks) {
+        window.pageContent.dynamicBlocks.forEach(blockId => {
+            if(document.getElementById(`container-${blockId}`)) return;
+            const newBlock = document.createElement('div');
+            newBlock.className = 'ov-card cg';
+            newBlock.id = `container-${blockId}`;
+            newBlock.innerHTML = `
+                <button class="del-ov-btn">✕</button>
+                <div class="ov-label editable-global" id="${blockId}-title" contenteditable="false">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
+                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="false">${window.pageContent[`${blockId}-body`] || 'Edit description...'}</div>
+            `;
+            newBlock.querySelector('.del-ov-btn').onclick = () => {
+                if(confirm("Delete this block?")) {
+                    newBlock.remove();
+                    window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
+                    delete window.pageContent[`${blockId}-title`];
+                    delete window.pageContent[`${blockId}-body`];
+                    saveUserData(uid);
+                }
+            };
+            grid.appendChild(newBlock);
+        });
+    }
 }
