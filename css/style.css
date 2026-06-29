@@ -114,24 +114,12 @@ button, input, select, textarea {
 .goal-box strong{color:var(--accent);display:block;margin-bottom:.2rem}
 .sec{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;color:var(--muted);margin:2rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
 .ov-grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:15px;margin-bottom:1.5rem}
-
-/* --- AJUSTE: OV-CARD COM POSITION RELATIVE PARA O BOTÃO X --- */
-.ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow); position: relative;}
+.ov-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;box-shadow:var(--shadow)}
 .ov-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-family: var(--main-font);font-weight:600;margin-bottom:.3rem}
 .ov-body{font-size:.84rem;font-family: var(--main-font);line-height:1.5}
 .ov-card.ca{border-left:3px solid var(--accent)}.ov-card.ca .ov-label{color:var(--accent)}
 .ov-card.cb{border-left:3px solid var(--blue)}.ov-card.cb .ov-label{color:var(--blue)}
 .ov-card.cg{border-left:3px solid var(--green)}.ov-card.cg .ov-label{color:var(--green)}
-
-/* Estilo do Botão de Excluir blocos Overview */
-.del-ov-btn {
-  position: absolute; top: 5px; right: 5px; background: none; border: none;
-  color: #cc0000; cursor: pointer; font-size: 12px; opacity: 0;
-  transition: opacity 0.2s;
-}
-.ov-card:hover .del-ov-btn { opacity: 0.5; }
-.del-ov-btn:hover { opacity: 1 !important; }
-
 .tpl{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.2rem;box-shadow:var(--shadow);margin-bottom:1.5rem}
 .tpl-row{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-bottom:8px;font-family: var(--main-font);font-size:.87rem}
 .tpl-row:last-child{margin-bottom:0}
