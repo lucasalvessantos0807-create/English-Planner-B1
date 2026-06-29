@@ -333,7 +333,8 @@ export function addOverviewBlock(uid) {
         <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit description...</div>
     `;
     
-    newBlock.querySelector('.del-ov-btn').onclick = () => {
+newBlock.querySelector('.del-ov-btn').onclick = (e) => {
+        e.stopPropagation();
         if(confirm("Delete this block?")) {
             newBlock.remove();
             window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
@@ -345,7 +346,9 @@ export function addOverviewBlock(uid) {
 
     grid.appendChild(newBlock);
     
+    // Configura a edição baseada no modo atual
     newBlock.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = isEditMode; // Usa a variável global do arquivo
         el.onblur = () => {
             window.pageContent[el.id] = el.innerHTML;
             saveUserData(uid);
@@ -379,23 +382,22 @@ export function renderDynamicOverviewBlocks(uid) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
             const newBlock = document.createElement('div');
-            newBlock.className = 'ov-card cg';
+           newBlock.className = 'ov-card cg';
             newBlock.id = `container-${blockId}`;
+            // Define se os botões X aparecem baseado no Edit Mode atual
+            const displayDel = isEditMode ? 'flex' : 'none';
             newBlock.innerHTML = `
-                <button class="del-ov-btn">✕</button>
-                <div class="ov-label editable-global" id="${blockId}-title" contenteditable="false">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
-                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="false">${window.pageContent[`${blockId}-body`] || 'Edit description...'}</div>
+                <button class="del-ov-btn" style="display:${displayDel};">✕</button>
+                <div class="ov-label editable-global" id="${blockId}-title" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
+                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-body`] || 'Edit description...'}</div>
             `;
-            newBlock.querySelector('.del-ov-btn').onclick = () => {
+            newBlock.querySelector('.del-ov-btn').onclick = (e) => {
+                e.stopPropagation();
                 if(confirm("Delete this block?")) {
                     newBlock.remove();
-                    window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
+                    window.pageContent.dynamicBlocks = (window.pageContent.dynamicBlocks || []).filter(id => id !== blockId);
                     delete window.pageContent[`${blockId}-title`];
                     delete window.pageContent[`${blockId}-body`];
                     saveUserData(uid);
                 }
             };
-            grid.appendChild(newBlock);
-        });
-    }
-}
