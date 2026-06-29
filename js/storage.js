@@ -22,7 +22,7 @@ export function applySnapshot(newConfig, newContent) {
     plannerConfig = JSON.parse(JSON.stringify(newConfig));
     pageContent = JSON.parse(JSON.stringify(newContent));
     window.plannerConfig = plannerConfig;
-    window.pageContent = pageContent;
+    window.pageContent = window.pageContent;
 }
 
 export async function loadUserData(uid) {
@@ -34,14 +34,14 @@ export async function loadUserData(uid) {
             state = data.state || {};
             plannerConfig = data.plannerConfig || initialWeeksData;
             pageContent = data.pageContent || {};
-            
-            // Histórico comum (30 dias)
             history = data.history || [];
+            importHistory = data.importHistory || [];
+
+            // Limpeza de Histórico Comum (30 dias)
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             history = history.filter(item => item.timestamp > thirtyDaysAgo);
 
-            // Histórico de Importação (6 meses / 180 dias)
-            importHistory = data.importHistory || [];
+            // Limpeza de Histórico de Importação (6 meses / 180 dias)
             const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
             importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
 
@@ -75,7 +75,7 @@ export async function saveUserData(uid) {
             importHistory: importHistory
         });
     } catch (e) {
-        console.error("Error saving user data:", e);
+        console.error("Error saving data:", e);
     }
 }
 
@@ -122,7 +122,7 @@ export function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `planner_export_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `planner_backup_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -135,14 +135,14 @@ export async function importData(file, uid, isRestore = false) {
         reader.onload = async (e) => {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file");
+                if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file format");
 
-                // SE NÃO FOR UMA RESTAURAÇÃO DE BACKUP, SALVA O ESTADO ATUAL NO HISTÓRICO DE IMPORTAÇÃO
+                // CRIA BACKUP AUTOMÁTICO DO ESTADO ATUAL ANTES DE SOBREPOR
                 if (!isRestore) {
                     const backup = {
                         id: "imp_" + Date.now(),
                         timestamp: Date.now(),
-                        filename: file.name || "Manual Import",
+                        filename: file.name || "External Import",
                         state: JSON.parse(JSON.stringify(state)),
                         plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
                         pageContent: JSON.parse(JSON.stringify(pageContent))
