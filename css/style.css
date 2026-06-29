@@ -100,7 +100,11 @@ button, input, select, textarea {
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
 .page { margin-top: 0 !important; } /* Ajuste para o banner colar no topo */
 #planner{display:none}
-.page{max-width:900px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.page { max-width: 900px; margin: 2rem auto 5rem; padding: 0 1.5rem; }
+#page-cover-container { width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; overflow: hidden; }
+#dynamic-ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 10px; width: 100%; }
+.ov-card { position: relative; display: flex; flex-direction: column; min-height: 120px; height: 100%; }
+@media (max-width: 768px) { #dynamic-ov-grid { grid-template-columns: 1fr; } }
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;font-family: var(--main-font)}
 .topbar-name{font-size:.85rem;font-weight:600;color:var(--ink)}
 .topbar-name span{color:var(--muted);font-weight:400}
