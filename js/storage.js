@@ -107,9 +107,13 @@ export function updateState(dayKey, data) {
 }
 
 export function exportData() {
+    // Cópia para limpeza
     const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
+    
+    // REMOVE IDENTIDADE E HISTÓRICO DE CORES
     delete cleanState.customName;
     delete cleanState.namePrompted;
+    delete cleanState.colorHistory; // O histórico de cores não vai no arquivo
 
     const dataToExport = {
         state: cleanState,
@@ -138,7 +142,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
         imported = fileOrData;
     }
 
-    if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file format");
+    if (!imported.plannerConfig || !imported.state) throw new Error("Invalid format");
 
     if (!isRestore) {
         const backup = {
@@ -152,15 +156,19 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
-    const currentName = state.customName;
-    const currentPrompted = state.namePrompted;
+    // PRESERVAR IDENTIDADE E HISTÓRICO DE CORES LOCAL
+    const localName = state.customName;
+    const localPrompted = state.namePrompted;
+    const localColorHistory = state.colorHistory; // Salva o seu histórico de cores
 
     state = imported.state;
     plannerConfig = imported.plannerConfig;
     pageContent = imported.pageContent || {};
 
-    if (currentName) state.customName = currentName;
-    state.namePrompted = currentPrompted;
+    // Restaurar dados locais após a importação do estado
+    if (localName) state.customName = localName;
+    state.namePrompted = localPrompted || false;
+    if (localColorHistory) state.colorHistory = localColorHistory; // Devolve o seu histórico
 
     window.appState = state;
     window.plannerConfig = plannerConfig;
