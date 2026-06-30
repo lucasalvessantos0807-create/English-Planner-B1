@@ -220,7 +220,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
         if (addBtn) addBtn.onclick = () => {
             pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, customConfig, customState);
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, config, activeState);
         };
 
         card.querySelectorAll('.del-act').forEach(btn => {
@@ -228,7 +228,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
                 if(confirm("Delete this activity?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, customConfig, customState);
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, config, activeState);
                 }
             };
         });
@@ -259,18 +259,42 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
+    
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
-    const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
-    const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
-    const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
-    let currentDay = startDay;
-    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
-        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
-        window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${Object.keys(window.plannerConfig).length + 1}`, theme: "New Month",
-            days: Array.from({length: daysInW}, () => {
+    
+    const existingMonths = [...new Set(Object.keys(window.plannerConfig).map(k => parseInt(k.split('-')[0])))];
+    const nextMonth = existingMonths.length > 0 ? Math.max(...existingMonths) + 1 : 1;
+    
+    // Calcula o último dia absoluto para continuar a contagem
+    let lastDay = 0;
+    Object.values(window.plannerConfig).forEach(week => {
+        week.days.forEach(day => {
+            if (day.n > lastDay) lastDay = day.n;
+        });
+    });
+    
+    let currentDay = lastDay + 1;
+    const totalWeeks = Math.ceil(dayCount / 7);
+    
+    for (let w = 1; w <= totalWeeks; w++) {
+        const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
+        const weekKey = `${nextMonth}-${w}`;
+        
+        window.plannerConfig[weekKey] = {
+            label: `Week ${w}`,
+            theme: "New Month Focus",
+            days: Array.from({length: daysInThisWeek}, () => {
                 const d = currentDay++;
-                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
+                const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                // Calcula o dia da semana baseado no número global (assumindo que o dia 1 foi uma Segunda)
+                const dayName = weekDayNames[(d - 1) % 7];
+                
+                return {
+                    n: d,
+                    name: dayName,
+                    tag: "Act",
+                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit details...", time: "20m"}]
+                };
             })
         };
     }
@@ -344,11 +368,13 @@ export function addOverviewBlock(uid) {
     saveUserData(uid);
 }
 
-export function renderDynamicOverviewBlocks(uid) {
-    const grid = document.getElementById('dynamic-ov-grid');
+export function renderDynamicOverviewBlocks(uid, targetPrefix = "", customContent = null) {
+    const gridId = targetPrefix ? `${targetPrefix}dynamic-ov-grid` : 'dynamic-ov-grid';
+    const grid = document.getElementById(gridId);
     if (!grid) return;
 
-    // 1. Estrutura com Textos Padrão (Fallbacks)
+    const content = customContent || window.pageContent || {};
+
     const defaults = {
         'global-ov-ca-label': 'Month 1 — Foundation',
         'global-ov-ca-body': 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web',
@@ -358,33 +384,31 @@ export function renderDynamicOverviewBlocks(uid) {
         'global-ov-cg-body': 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick'
     };
 
-    // 2. Reconstrói a estrutura base
     grid.innerHTML = `
         <div class="ov-card ca">
-          <div class="ov-label editable-global" id="global-ov-ca-label"></div>
-          <div class="ov-body editable-global" id="global-ov-ca-body"></div>
+          <div class="ov-label" id="${targetPrefix}global-ov-ca-label"></div>
+          <div class="ov-body" id="${targetPrefix}global-ov-ca-body"></div>
         </div>
         <div class="ov-card cb">
-          <div class="ov-label editable-global" id="global-ov-cb-label"></div>
-          <div class="ov-body editable-global" id="global-ov-cb-body"></div>
+          <div class="ov-label" id="${targetPrefix}global-ov-cb-label"></div>
+          <div class="ov-body" id="${targetPrefix}global-ov-cb-body"></div>
         </div>
         <div class="ov-card cg">
-          <div class="ov-label editable-global" id="global-ov-cg-label"></div>
-          <div class="ov-body editable-global" id="global-ov-cg-body"></div>
+          <div class="ov-label" id="${targetPrefix}global-ov-cg-label"></div>
+          <div class="ov-body" id="${targetPrefix}global-ov-cg-body"></div>
         </div>
     `;
 
-    // 3. Aplica Texto: Prioridade para o salvo (ou backup), senão usa o padrão
-    Object.keys(defaults).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = (window.pageContent && window.pageContent[id]) ? window.pageContent[id] : defaults[id];
-        }
+    ['ca','cb','cg'].forEach(suffix => {
+        const id = `global-ov-${suffix}`;
+        const lbl = document.getElementById(`${targetPrefix}${id}-label`);
+        const bdy = document.getElementById(`${targetPrefix}${id}-body`);
+        if(lbl) lbl.innerHTML = content[`${id}-label`] || defaults[`${id}-label`];
+        if(bdy) bdy.innerHTML = content[`${id}-body`] || defaults[`${id}-body`];
     });
 
-    // 4. Botões de Ocultar/Excluir
-    grid.querySelectorAll('.ov-card').forEach((card, index) => {
-        if (!card.querySelector('.del-ov-btn')) {
+    if (!targetPrefix) {
+        grid.querySelectorAll('.ov-card').forEach((card, index) => {
             const delBtn = document.createElement('button');
             delBtn.className = 'del-ov-btn';
             delBtn.innerHTML = '✕';
@@ -398,33 +422,21 @@ export function renderDynamicOverviewBlocks(uid) {
                 }
             };
             card.prepend(delBtn);
-        }
-        if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
-    });
+            if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
+        });
+    }
 
-    // 5. Blocos Extras Dinâmicos
-    if(window.pageContent && window.pageContent.dynamicBlocks) {
-        window.pageContent.dynamicBlocks.forEach(blockId => {
-            if(document.getElementById(`container-${blockId}`)) return;
+    if(content.dynamicBlocks) {
+        content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
-            newBlock.id = `container-${blockId}`;
-            const displayDel = isEditMode ? 'flex' : 'none';
+            newBlock.id = `${targetPrefix}container-${blockId}`;
+            const displayDel = (isEditMode && !targetPrefix) ? 'flex' : 'none';
             newBlock.innerHTML = `
                 <button class="del-ov-btn" style="display:${displayDel};">✕</button>
-                <div class="ov-label editable-global" id="${blockId}-title" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
-                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-body`] || 'Edit...'}</div>
+                <div class="ov-label" id="${targetPrefix}${blockId}-title">${content[`${blockId}-title`] || 'New Phase'}</div>
+                <div class="ov-body" id="${targetPrefix}${blockId}-body">${content[`${blockId}-body`] || 'Edit...'}</div>
             `;
-            newBlock.querySelector('.del-ov-btn').onclick = (e) => {
-                e.stopPropagation();
-                if(confirm("Delete this block?")) {
-                    newBlock.remove();
-                    window.pageContent.dynamicBlocks = (window.pageContent.dynamicBlocks || []).filter(id => id !== blockId);
-                    delete window.pageContent[`${blockId}-title`];
-                    delete window.pageContent[`${blockId}-body`];
-                    saveUserData(uid);
-                }
-            };
             grid.appendChild(newBlock);
         });
     }
