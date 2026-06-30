@@ -1,15 +1,17 @@
 // --- PROGRESS FUNCTIONS ---
 export function updateProgressBar(targetPrefix = "", customConfig = null, customState = null) {
-    // Utiliza os parâmetros passados (Sandbox) ou os globais (Planner Principal)
+    // Utiliza os dados passados (Sandbox) ou os dados globais (Planner Principal)
     const state = customState || window.appState || {};
     const config = customConfig || window.plannerConfig || {};
     
     let totalDays = 0;
+    // Conta o total de dias configurados no planner atual
     Object.values(config).forEach(w => {
         if (w.days) totalDays += w.days.length;
     });
     
     let done = 0;
+    // Conta quantos dias marcados como concluídos existem no config atual
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
             const dayNum = parseInt(key.replace('d', ''));
@@ -22,20 +24,31 @@ export function updateProgressBar(targetPrefix = "", customConfig = null, custom
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
+    // 1. Atualiza a largura da barra de preenchimento
     const pbar = document.getElementById(targetPrefix + "pbar");
     if (pbar) pbar.style.width = pctValue + "%";
     
-    const dcntEl = document.getElementById(targetPrefix + "dcnt");
-    if (dcntEl) dcntEl.textContent = done;
-
-    // Atualiza o texto do progresso (ex: 0 / 115 days)
-    const statsContainer = document.getElementById(targetPrefix + "dcnt-text");
-    if (statsContainer) {
-        statsContainer.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
-    }
-
+    // 2. Atualiza a porcentagem de texto (ex: 15%)
     const pctEl = document.getElementById(targetPrefix + "pct");
     if (pctEl) pctEl.textContent = pctValue + "%";
+
+    // 3. Atualiza o contador numérico (ex: 10 / 90 days)
+    // Lógica para o Planner Principal (id="dcnt")
+    const dcntEl = document.getElementById(targetPrefix + "dcnt");
+    if (dcntEl) {
+        dcntEl.textContent = done;
+        // Tenta encontrar o nó de texto após o strong para atualizar o total de dias
+        const parent = dcntEl.parentNode;
+        if (parent && !targetPrefix) {
+            parent.innerHTML = `<strong id="dcnt">${done}</strong> / ${totalDays} days`;
+        }
+    }
+
+    // Lógica específica para a Sandbox (id="sb-dcnt-text")
+    const statsContainer = document.getElementById(targetPrefix + "dcnt-text");
+    if (statsContainer && targetPrefix === "sb-") {
+        statsContainer.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
+    }
 }
 
 // --- STRUCTURE RENDERING FUNCTION ---
@@ -49,7 +62,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
 
     if (!monthNav || !monthPanels) return;
 
-    // Limpa navegação e painéis (preservando o addBtn no planner principal)
+    // Limpa navegação e painéis (exceto o botão de add no planner principal)
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
