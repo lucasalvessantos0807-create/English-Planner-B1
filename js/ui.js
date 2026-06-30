@@ -3,8 +3,6 @@ export function updateProgressBar() {
     // Ensure we are using the most current global state (important for Preview Mode)
     const state = window.appState || {};
     const config = window.plannerConfig || {};
-    const state = window.appState || {};
-    const config = window.plannerConfig || {};
     
     let totalDays = 0;
     Object.values(config).forEach(w => {
