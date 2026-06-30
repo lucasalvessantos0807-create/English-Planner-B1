@@ -16,7 +16,8 @@ function pushToUndo() {
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
         content: JSON.parse(JSON.stringify(window.pageContent || {}))
     });
-    document.getElementById('undoBtn').style.display = 'block';
+    const undoBtn = document.getElementById('undoBtn');
+    if (undoBtn) undoBtn.style.display = 'block';
 }
 
 export function performUndo(uid) {
@@ -25,7 +26,8 @@ export function performUndo(uid) {
     window.plannerConfig = lastState.config;
     window.pageContent = lastState.content;
     refreshGlobalTexts();
-    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    const undoBtn = document.getElementById('undoBtn');
+    if (undoStack.length === 0 && undoBtn) undoBtn.style.display = 'none';
     refreshCurrentWeek(uid);
 }
 
@@ -63,11 +65,13 @@ function updateUIEditMode() {
     const cancelBtn = document.getElementById('cancelEditBtn');
     const undoBtn = document.getElementById('undoBtn');
     
-    btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
-    btn.style.background = isEditMode ? "var(--green-light)" : "none";
-    btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
-    cancelBtn.style.display = isEditMode ? "block" : "none";
-    if (!isEditMode) undoBtn.style.display = "none";
+    if (btn) {
+        btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
+        btn.style.background = isEditMode ? "var(--green-light)" : "none";
+        btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
+    }
+    if (cancelBtn) cancelBtn.style.display = isEditMode ? "block" : "none";
+    if (undoBtn && !isEditMode) undoBtn.style.display = "none";
 }
 
 export function toggleEditMode(uid) {
@@ -123,7 +127,7 @@ function refreshCurrentWeek(uid) {
 export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPrefix = "", customConfig = null, customState = null) {
     const key = `${m}-${w}`;
     const config = customConfig || window.plannerConfig;
-    const activeState = customState || window.state;
+    const activeState = customState || window.appState || window.state;
     
     const containerId = targetPrefix ? `${targetPrefix}wp${m}-${w}` : `wp${m}-${w}`;
     const container = document.getElementById(containerId);
@@ -158,6 +162,8 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
         }).join('');
 
         const dbId = targetPrefix ? `${targetPrefix}db${day.n}` : `db${day.n}`;
+        const ntId = targetPrefix ? `${targetPrefix}nt${day.n}` : `nt${day.n}`;
+
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
@@ -167,19 +173,19 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
             <div class="daybody ${isOpen ? 'on' : ''}" id="${dbId}">
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" id="${targetPrefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
+                <textarea class="ntxt" id="${ntId}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                icon.onclick = (e) => {
-                e.stopPropagation();
-                const wrapper = icon.closest('.aico-wrapper');
-                const wasOpen = wrapper.classList.contains('show-suggestions');
-                document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                if (!wasOpen) wrapper.classList.add('show-suggestions');
-            };
+                    e.stopPropagation();
+                    const wrapper = icon.closest('.aico-wrapper');
+                    const wasOpen = wrapper.classList.contains('show-suggestions');
+                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                    if (!wasOpen) wrapper.classList.add('show-suggestions');
+                };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
@@ -253,7 +259,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
 
         container.appendChild(card);
     });
-    builtWeeks.add(key);
 }
 
 export function addNewMonth(uid) {
@@ -286,7 +291,6 @@ export function addNewMonth(uid) {
             days: Array.from({length: daysInThisWeek}, () => {
                 const d = currentDay++;
                 const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-                // Calcula o dia da semana baseado no número global (assumindo que o dia 1 foi uma Segunda)
                 const dayName = weekDayNames[(d - 1) % 7];
                 
                 return {
@@ -409,19 +413,21 @@ export function renderDynamicOverviewBlocks(uid, targetPrefix = "", customConten
 
     if (!targetPrefix) {
         grid.querySelectorAll('.ov-card').forEach((card, index) => {
-            const delBtn = document.createElement('button');
-            delBtn.className = 'del-ov-btn';
-            delBtn.innerHTML = '✕';
-            delBtn.style.display = isEditMode ? 'flex' : 'none';
-            delBtn.onclick = (e) => {
-                e.stopPropagation();
-                if(confirm("Hide this block?")) {
-                    card.style.display = 'none';
-                    window.pageContent[`hide-static-ov-${index}`] = true;
-                    saveUserData(uid);
-                }
-            };
-            card.prepend(delBtn);
+            if (!card.querySelector('.del-ov-btn')) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'del-ov-btn';
+                delBtn.innerHTML = '✕';
+                delBtn.style.display = isEditMode ? 'flex' : 'none';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm("Hide this block?")) {
+                        card.style.display = 'none';
+                        window.pageContent[`hide-static-ov-${index}`] = true;
+                        saveUserData(uid);
+                    }
+                };
+                card.prepend(delBtn);
+            }
             if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
         });
     }
