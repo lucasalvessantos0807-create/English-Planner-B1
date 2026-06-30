@@ -6,37 +6,80 @@ import { renderStructure, updateProgressBar } from './ui.js';
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content) {
     const data = content || {};
-    
-    // Default content to ensure the Daily Template and headers never look empty
-    const defaults = {
-        "global-cover-eye": "Personal English Study Planner",
-        "global-cover-title": "A2+ to B1 Roadmap",
-        "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
-        "global-goal-strong": "🎯 Your Goal",
-        "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
-        "tpl-t1": "0–15 min", 
-        "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
-        "tpl-t2": "15–35 min", 
-        "tpl-a2": "📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.",
-        "tpl-t3": "35–55 min", 
-        "tpl-a3": "🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.",
-        "tpl-t4": "55–75 min", 
-        "tpl-a4": "🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.",
-        "tpl-t5": "75–95 min", 
-        "tpl-a5": "📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)",
-        "tpl-t6": "95–115 min", 
-        "tpl-a6": "🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.",
-        "tpl-t7": "Sunday", 
-        "tpl-a7": "🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals."
-    };
-
-    document.querySelectorAll(".editable-global").forEach(el => {
-        const val = data[el.id];
-        if (val !== undefined && val !== null && val !== "") {
-            el.innerHTML = val;
-        } else if (defaults[el.id]) {
-            el.innerHTML = defaults[el.id];
+    document.querySelectorAll('.editable-global').forEach(el => {
+        if (data[el.id] !== undefined) {
+            el.innerHTML = data[el.id];
         }
+    });
+}
+
+// ── FUNÇÃO DO SANDBOX DE PREVIEW ──
+function renderPreviewToSandbox(backup) {
+    const data = backup.pageContent || {};
+    const config = backup.plannerConfig || {};
+    const state = backup.state || {};
+    
+    // 1. Capa e Cabeçalho
+    document.getElementById('pv-page-cover').style.background = state.settings?.coverColor || "#f4f1ea";
+    document.getElementById('pv-global-cover-eye').textContent = data['global-cover-eye'] || "Personal English Study Planner";
+    document.getElementById('pv-global-cover-title').textContent = data['global-cover-title'] || "A2+ to B1 Roadmap";
+    document.getElementById('pv-global-cover-sub').textContent = data['global-cover-sub'] || "3 months · Every day · 1.5–2+ hours";
+    
+    // 2. Metas
+    document.getElementById('pv-global-goal-strong').textContent = data['global-goal-strong'] || "🎯 Your Goal";
+    document.getElementById('pv-global-goal-text').textContent = data['global-goal-text'] || "Reach B1 level...";
+
+    // 3. Template
+    for(let i=1; i<=7; i++) {
+        document.getElementById(`pv-tpl-t${i}`).textContent = data[`tpl-t${i}`] || "";
+        document.getElementById(`pv-tpl-a${i}`).innerHTML = data[`tpl-a${i}`] || "";
+    }
+
+    // 4. Progresso
+    let total = 0; Object.values(config).forEach(w => total += w.days.length);
+    let done = 0; Object.keys(state).forEach(k => { if(state[k] && state[k].done) done++; });
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
+    document.getElementById('pv-pbar').style.width = pct + "%";
+    document.getElementById('pv-prog-text').textContent = `${done} / ${total} days (${pct}% complete)`;
+
+    // 5. Overview Grid
+    const ovGrid = document.getElementById('pv-dynamic-ov-grid');
+    ovGrid.innerHTML = '';
+    ['ca','cb','cg'].forEach(type => {
+        const card = document.createElement('div');
+        card.className = `ov-card ${type}`;
+        card.innerHTML = `<div class="ov-label">${data[`global-ov-${type}-label`] || ""}</div><div class="ov-body">${data[`global-ov-${type}-body`] || ""}</div>`;
+        ovGrid.appendChild(card);
+    });
+
+    // 6. Roadmap (Meses e Semanas)
+    const mNav = document.getElementById('pv-monthNav');
+    const mPanels = document.getElementById('pv-monthPanels');
+    mNav.innerHTML = ''; mPanels.innerHTML = '';
+
+    const months = [...new Set(Object.keys(config).map(k => k.split('-')[0]))].sort((a,b)=>Number(a)-Number(b));
+    months.forEach((m, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `mbtn ${idx===0?'on':''}`;
+        btn.textContent = `Month ${m}`;
+        const panel = document.createElement('div');
+        panel.className = `mpanel ${idx===0?'on':''}`;
+        
+        const weeks = Object.keys(config).filter(k => k.startsWith(m+'-')).sort();
+        weeks.forEach(wkKey => {
+            const wk = config[wkKey];
+            const wkDiv = document.createElement('div');
+            wkDiv.className = "wkbar";
+            wkDiv.innerHTML = `<h3>${wk.label}</h3><p>${wk.theme}</p>`;
+            panel.appendChild(wkDiv);
+        });
+
+        btn.onclick = () => {
+            mNav.querySelectorAll('.mbtn').forEach(b => b.classList.remove('on'));
+            mPanels.querySelectorAll('.mpanel').forEach(p => p.classList.remove('on'));
+            btn.classList.add('on'); panel.classList.add('on');
+        };
+        mNav.appendChild(btn); mPanels.appendChild(panel);
     });
 }
 
@@ -50,7 +93,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- USERNAME LOGIC ---
+        // --- LÓGICA DE USERNAME ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -69,7 +112,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- LANGUAGE ACCORDION ---
+        // --- ACORDION DE IDIOMA ---
         document.getElementById('langToggle').onclick = () => {
             const wrapper = document.getElementById('langWrapper');
             const arrow = document.getElementById('langArrow');
@@ -78,18 +121,22 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- INITIAL RENDERING ---
+        document.querySelectorAll('.lang-opt').forEach(btn => {
+            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
+        });
+
+        // --- RENDERIZAÇÃO INICIAL ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
         
-        // --- TOPBAR BUTTONS ---
+        // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // --- EXPORT / IMPORT ---
+        // --- EXPORT / IMPORT SYSTEM ---
         const cover = document.getElementById('page-cover');
         const importInput = document.getElementById('importFileInput');
         
@@ -110,7 +157,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- IMPORT HISTORY (PREVIEW / UNDO) ---
+        // --- HISTÓRICO DE IMPORTAÇÕES (PREVIEW / UNDO) ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
         const previewBar = document.getElementById('previewBar');
@@ -146,42 +193,14 @@ onAuthStateChanged(auth, async (user) => {
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
                     if (confirm("Undo and return to this exact state?")) {
-                        import('./storage.js').then(async (store) => {
-                            store.applySnapshot(backup.plannerConfig, backup.pageContent);
-                            await store.saveUserData(currentUser);
-                            window.location.reload();
-                        });
+                        applySnapshot(backup.plannerConfig, backup.pageContent);
+                        import('./storage.js').then(s => s.saveUserData(currentUser).then(() => window.location.reload()));
                     }
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
-                    const coverEl = document.getElementById('page-cover');
-                    sessionSnapshot = { 
-                        config: JSON.parse(JSON.stringify(window.plannerConfig)), 
-                        content: JSON.parse(JSON.stringify(window.pageContent)),
-                        state: JSON.parse(JSON.stringify(window.appState || {})),
-                        cover: coverEl ? coverEl.style.background : "#f4f1ea"
-                    };
-                    
                     document.body.classList.add('preview-mode');
-                    
-                    // 1. Overwrite globals with backup data
-                    applySnapshot(backup.plannerConfig, backup.pageContent);
-                    window.appState = JSON.parse(JSON.stringify(backup.state || {}));
-                    
-                    // 2. Refresh entire central area (page container)
-                    if (coverEl) {
-                        coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
-                    }
-                    refreshGlobalDOM(backup.pageContent);
-                    
-                    // 3. Rebuild roadmap specifically for Preview
-                    renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
-                    
-                    // 4. Update secondary modules
-                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                    updateProgressBar();
-                    
+                    renderPreviewToSandbox(backup); // CHAMA O SANDBOX
                     historyModal.style.display = 'none';
                     previewBar.style.display = 'block';
                     window.scrollTo(0, 0);
@@ -198,28 +217,17 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         document.getElementById('exitPreviewBtn').onclick = () => {
-            previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
-            
-            // Revert everything to original session state
-            applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
-            window.appState = sessionSnapshot.state;
-            document.getElementById('page-cover').style.background = sessionSnapshot.cover;
-            
-            refreshGlobalDOM(sessionSnapshot.content);
-            renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-            updateProgressBar();
+            previewBar.style.display = 'none';
         };
 
         document.getElementById('restorePreviewBtn').onclick = async () => {
             if (confirm("Restore this version to your account?")) {
-                await importData(window.plannerConfig, currentUser, true);
-                window.location.reload();
+                alert("Use the 'Undo' button in history list to restore fully.");
             }
         };
-
-        // --- COLOR PICKER LOGIC ---
+        
+        // --- LÓGICA DO COLOR PICKER (IRO.JS) ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
@@ -238,19 +246,32 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false; color1 = null;
+            pickingGradient = false; 
+            color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color";
-            menu.style.display = 'none'; openPicker();
+            menu.style.display = 'none'; 
+            openPicker();
         };
 
         document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true; color1 = null;
+            pickingGradient = true; 
+            color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            menu.style.display = 'none'; openPicker();
+            menu.style.display = 'none'; 
+            openPicker();
         };
 
-        document.getElementById('choiceCancel').onclick = () => menu.style.display = 'none';
+        document.getElementById('choiceCancel').onclick = () => {
+            menu.style.display = 'none';
+        };
         
+        document.addEventListener('click', (e) => {
+            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) menu.style.display = 'none';
+            if (!e.target.closest('.aico-wrapper')) {
+                document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
+            }
+        });
+
         function openPicker() {
             renderHistoryUI();
             document.getElementById('colorPickerContainer').classList.add('open');
@@ -285,7 +306,8 @@ onAuthStateChanged(auth, async (user) => {
                 colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
             }
-            saveAllColorData(color); closePicker();
+            saveAllColorData(color);
+            closePicker();
         }
 
         function applyGradient(c1, c2) {
@@ -296,14 +318,17 @@ onAuthStateChanged(auth, async (user) => {
                 colorHistory.gradients.unshift({ c1, c2 });
                 if (colorHistory.gradients.length > 3) colorHistory.gradients.pop();
             }
-            saveAllColorData(grad); closePicker();
+            saveAllColorData(grad);
+            closePicker();
         }
 
         function saveAllColorData(lastValue) {
-            if(!userData.state.settings) userData.state.settings = {};
-            userData.state.settings.coverColor = lastValue;
-            userData.state.colorHistory = colorHistory;
-            import('./storage.js').then(store => store.saveUserData(currentUser));
+            import('./storage.js').then(store => {
+                if(!store.state.settings) store.state.settings = {};
+                store.state.settings.coverColor = lastValue;
+                store.state.colorHistory = colorHistory;
+                store.saveUserData(currentUser);
+            });
         }
 
         function renderHistoryUI() {
@@ -349,11 +374,11 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
-        if(userData.state.settings?.coverColor) {
+        if(userData.state.settings && userData.state.settings.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- DRAWERS & PERSONALIZATION ---
+        // --- GAVETAS E PERSONALIZAÇÃO ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -379,29 +404,47 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
-        const googleFonts = ["Arial", "Verdana", "Georgia", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display"];
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
+        const fontSearchInput = document.getElementById('fontSearchInput');
 
-        function renderFonts() {
+        function loadGoogleFont(fontName) {
+            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
+            const id = `font-${fontName.replace(/\s+/g, '-')}`;
+            if (!document.getElementById(id)) {
+                const link = document.createElement('link');
+                link.id = id; 
+                link.rel = 'stylesheet';
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+                document.head.appendChild(link);
+            }
+        }
+
+        function renderFonts(filter = "") {
             fontListContainer.innerHTML = "";
-            googleFonts.forEach(font => {
+            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
                 const div = document.createElement('div');
                 div.className = 'font-item';
                 div.textContent = font;
+                loadGoogleFont(font);
                 div.style.fontFamily = `"${font}", sans-serif`;
                 div.onclick = () => {
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    if (!userData.state.settings) userData.state.settings = {};
-                    userData.state.settings.font = font;
-                    import('./storage.js').then(store => store.saveUserData(currentUser));
+                    import('./storage.js').then(store => {
+                        if (!store.state.settings) store.state.settings = {};
+                        store.state.settings.font = font;
+                        store.saveUserData(currentUser);
+                    });
                 };
                 fontListContainer.appendChild(div);
             });
         }
+        fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         if (userData.state.settings?.font) {
+            loadGoogleFont(userData.state.settings.font);
             document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
         }
         fontSizeSlider.value = userData.state.settings?.fontSize || "15";
@@ -413,9 +456,11 @@ onAuthStateChanged(auth, async (user) => {
             document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
         };
         fontSizeSlider.onchange = (e) => {
-            if (!userData.state.settings) userData.state.settings = {};
-            userData.state.settings.fontSize = e.target.value;
-            import('./storage.js').then(store => store.saveUserData(currentUser));
+            import('./storage.js').then(store => {
+                if (!store.state.settings) store.state.settings = {};
+                store.state.settings.fontSize = e.target.value;
+                store.saveUserData(currentUser);
+            });
         };
 
         document.getElementById('fontStyleToggle').onclick = () => {
@@ -426,39 +471,35 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- FINALIZATION & COMMON HISTORY ---
+        // --- FINALIZAÇÃO E HISTÓRICO COMUM ---
         function renderHistory() {
             const container = document.getElementById('historyList');
-            container.innerHTML = history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
-            history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `
-                    <span class="history-date">${new Date(item.timestamp).toLocaleString()}</span>
-                    <strong style="font-size:0.8rem">${item.label}</strong>
-                    <div style="display:flex; gap:5px; margin-top:5px;">
-                        <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
-                        <button class="history-del">✕</button>
-                    </div>`;
-                div.querySelector('.history-restore').onclick = async () => { 
-                    if(confirm("Restore this state?")) { 
-                        applySnapshot(item.plannerConfig, item.pageContent); 
-                        import('./storage.js').then(store => store.saveUserData(currentUser).then(() => window.location.reload()));
-                    } 
-                };
-                div.querySelector('.history-del').onclick = async () => { 
-                    if(confirm("Delete this entry?")) { 
-                        await deleteHistoryEntry(currentUser, item.id); renderHistory(); 
-                    } 
-                };
-                container.appendChild(div);
+            import('./storage.js').then(store => {
+                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
+                store.history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <span class="history-date">${new Date(item.timestamp).toLocaleString()}</span>
+                        <strong style="font-size:0.8rem">${item.label}</strong>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
+                            <button class="history-del">✕</button>
+                        </div>`;
+                    div.querySelector('.history-restore').onclick = async () => { if(confirm("Restore?")) { store.applySnapshot(item.plannerConfig, item.pageContent); await store.saveUserData(currentUser); window.location.reload(); } };
+                    div.querySelector('.history-del').onclick = async () => { if(confirm("Delete?")) { await deleteHistoryEntry(currentUser, item.id); renderHistory(); } };
+                    container.appendChild(div);
+                });
             });
         }
 
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
         document.getElementById('addOverviewBlockBtn').onclick = () => import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         document.getElementById('clearHistoryBtn').onclick = async () => {
-            if(confirm("Permanently delete ALL history?")) { await clearAllHistory(currentUser); renderHistory(); }
+            if(confirm("Permanently delete ALL history?")) {
+                await clearAllHistory(currentUser);
+                renderHistory();
+            }
         };
 
         updateProgressBar();
