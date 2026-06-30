@@ -7,25 +7,34 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content) {
     const data = content || {};
     
-    // IDs padrões do Daily Template para caso o backup não os possua
+    // Default contents for Daily Template if not present in backup
     const defaults = {
-        'tpl-t1': '0–15 min', 'tpl-a1': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
-        'tpl-t2': '15–35 min', 'tpl-a2': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
-        'tpl-t3': '35–55 min', 'tpl-a3': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
-        'tpl-t4': '55–75 min', 'tpl-a4': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
-        'tpl-t5': '75–95 min', 'tpl-a5': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
-        'tpl-t6': '95–115 min', 'tpl-a6': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
-        'tpl-t7': 'Sunday', 'tpl-a7': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
+        "tpl-t1": "0–15 min", 
+        "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
+        "tpl-t2": "15–35 min", 
+        "tpl-a2": "📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.",
+        "tpl-t3": "35–55 min", 
+        "tpl-a3": "🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.",
+        "tpl-t4": "55–75 min", 
+        "tpl-a4": "🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.",
+        "tpl-t5": "75–95 min", 
+        "tpl-a5": "📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)",
+        "tpl-t6": "95–115 min", 
+        "tpl-a6": "🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.",
+        "tpl-t7": "Sunday", 
+        "tpl-a7": "🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals."
     };
 
-    document.querySelectorAll('.editable-global').forEach(el => {
-        // Se o backup tem o dado, usa ele. Se não tem e é um campo do template, usa o default.
-        if (data[el.id] !== undefined && data[el.id] !== "") {
-            el.innerHTML = data[el.id];
-        } else if (defaults[el.id]) {
-            el.innerHTML = defaults[el.id];
-        } else if (!data[el.id]) {
-            // Se não tem no backup e não tem default, não limpa para não ficar branco (ex: títulos)
+    document.querySelectorAll(".editable-global").forEach(el => {
+        const backupValue = data[el.id];
+        const defaultValue = defaults[el.id];
+
+        if (backupValue !== undefined && backupValue !== null && backupValue !== "") {
+            // Use value from backup
+            el.innerHTML = backupValue;
+        } else if (defaultValue) {
+            // Use default system value if backup is empty
+            el.innerHTML = defaultValue;
         }
     });
 }
@@ -146,34 +155,35 @@ onAuthStateChanged(auth, async (user) => {
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
-                    // Salva o estado atual do usuário para poder voltar depois
+                    const coverEl = document.getElementById('page-cover');
+                    
+                    // Save current session to allow exit
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)),
                         state: JSON.parse(JSON.stringify(window.appState || {})),
-                        cover: document.getElementById('page-cover').style.background 
+                        cover: coverEl ? coverEl.style.background : "#f4f1ea"
                     };
                     
                     document.body.classList.add('preview-mode');
                     
-                    // 1. Aplica dados do arquivo de backup nas globais
+                    // 1. Load data from backup file
                     applySnapshot(backup.plannerConfig, backup.pageContent);
                     window.appState = JSON.parse(JSON.stringify(backup.state || {}));
                     
-                    // 2. Atualiza Background
-                    const cover = document.getElementById('page-cover');
-                    cover.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
+                    // 2. Update Header/Cover Color
+                    if (coverEl) {
+                        coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
+                    }
 
-                    // 3. Atualiza textos (Template, Metas, etc)
+                    // 3. Force update on all texts (Template, Goals, etc)
                     refreshGlobalDOM(backup.pageContent);
                     
-                    // 4. Reconstrói a estrutura de semanas (Roadmap)
+                    // 4. Rebuild structure for Preview
                     renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
                     
-                    // 5. Atualiza blocos dinâmicos do overview
+                    // 5. Update Overview blocks and Progress Bar
                     import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-
-                    // 6. Atualiza Barra de Progresso com os dados do backup
                     import('./ui.js').then(mod => mod.updateProgressBar());
                     
                     historyModal.style.display = 'none';
