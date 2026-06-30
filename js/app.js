@@ -3,47 +3,39 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
-// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
-function refreshGlobalDOM(content) {
-    const data = content || {};
-    document.querySelectorAll('.editable-global').forEach(el => {
-        if (data[el.id] !== undefined) {
-            el.innerHTML = data[el.id];
-        }
-    });
-}
-
-// ── FUNÇÃO DO SANDBOX DE PREVIEW ──
-function renderPreviewToSandbox(backup) {
+// ── FUNÇÃO INTEGRAL PARA MONTAR O SANDBOX DE PREVIEW ──
+function renderPreviewSandbox(backup) {
     const data = backup.pageContent || {};
     const config = backup.plannerConfig || {};
-    const state = backup.state || {};
+    const bState = backup.state || {};
     
-    // 1. Capa e Cabeçalho
-    document.getElementById('pv-page-cover').style.background = state.settings?.coverColor || "#f4f1ea";
-    document.getElementById('pv-global-cover-eye').textContent = data['global-cover-eye'] || "Personal English Study Planner";
-    document.getElementById('pv-global-cover-title').textContent = data['global-cover-title'] || "A2+ to B1 Roadmap";
-    document.getElementById('pv-global-cover-sub').textContent = data['global-cover-sub'] || "3 months · Every day · 1.5–2+ hours";
+    // 1. Capa e Cabeçalho do Sandbox
+    document.getElementById('ps-page-cover').style.background = bState.settings?.coverColor || "#f4f1ea";
+    document.getElementById('ps-global-cover-eye').innerHTML = data['global-cover-eye'] || "Personal English Study Planner";
+    document.getElementById('ps-global-cover-title').innerHTML = data['global-cover-title'] || "A2+ to B1 Roadmap";
+    document.getElementById('ps-global-cover-sub').innerHTML = data['global-cover-sub'] || "3 months · Every day · 1.5–2+ hours";
     
     // 2. Metas
-    document.getElementById('pv-global-goal-strong').textContent = data['global-goal-strong'] || "🎯 Your Goal";
-    document.getElementById('pv-global-goal-text').textContent = data['global-goal-text'] || "Reach B1 level...";
+    document.getElementById('ps-global-goal-strong').innerHTML = data['global-goal-strong'] || "🎯 Your Goal";
+    document.getElementById('ps-global-goal-text').innerHTML = data['global-goal-text'] || "Reach B1 level...";
 
-    // 3. Template
+    // 3. Template (Onde estava em branco no seu PNG)
     for(let i=1; i<=7; i++) {
-        document.getElementById(`pv-tpl-t${i}`).textContent = data[`tpl-t${i}`] || "";
-        document.getElementById(`pv-tpl-a${i}`).innerHTML = data[`tpl-a${i}`] || "";
+        const timeEl = document.getElementById(`ps-tpl-t${i}`);
+        const actEl = document.getElementById(`ps-tpl-a${i}`);
+        if(timeEl) timeEl.innerHTML = data[`tpl-t${i}`] || "";
+        if(actEl) actEl.innerHTML = data[`tpl-a${i}`] || "";
     }
 
-    // 4. Progresso
-    let total = 0; Object.values(config).forEach(w => total += w.days.length);
-    let done = 0; Object.keys(state).forEach(k => { if(state[k] && state[k].done) done++; });
-    const pct = total > 0 ? Math.round((done/total)*100) : 0;
-    document.getElementById('pv-pbar').style.width = pct + "%";
-    document.getElementById('pv-prog-text').textContent = `${done} / ${total} days (${pct}% complete)`;
+    // 4. Progresso Simulado
+    let totalDays = 0; Object.values(config).forEach(w => totalDays += w.days.length);
+    let doneDays = 0; Object.keys(bState).forEach(k => { if(bState[k] && bState[k].done) doneDays++; });
+    const pct = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
+    document.getElementById('ps-pbar').style.width = pct + "%";
+    document.getElementById('ps-dcnt').textContent = `${doneDays} / ${totalDays} days (${pct}% complete)`;
 
-    // 5. Overview Grid
-    const ovGrid = document.getElementById('pv-dynamic-ov-grid');
+    // 5. Overview Grid do Sandbox
+    const ovGrid = document.getElementById('ps-dynamic-ov-grid');
     ovGrid.innerHTML = '';
     ['ca','cb','cg'].forEach(type => {
         const card = document.createElement('div');
@@ -52,28 +44,25 @@ function renderPreviewToSandbox(backup) {
         ovGrid.appendChild(card);
     });
 
-    // 6. Roadmap (Meses e Semanas)
-    const mNav = document.getElementById('pv-monthNav');
-    const mPanels = document.getElementById('pv-monthPanels');
+    // 6. Roadmap Simplificado para o Sandbox
+    const mNav = document.getElementById('ps-monthNav');
+    const mPanels = document.getElementById('ps-monthPanels');
     mNav.innerHTML = ''; mPanels.innerHTML = '';
-
-    const months = [...new Set(Object.keys(config).map(k => k.split('-')[0]))].sort((a,b)=>Number(a)-Number(b));
+    const months = [...new Set(Object.keys(config).map(k => k.split('-')[0]))].sort((a,b)=>a-b);
     months.forEach((m, idx) => {
         const btn = document.createElement('button');
         btn.className = `mbtn ${idx===0?'on':''}`;
         btn.textContent = `Month ${m}`;
         const panel = document.createElement('div');
         panel.className = `mpanel ${idx===0?'on':''}`;
-        
         const weeks = Object.keys(config).filter(k => k.startsWith(m+'-')).sort();
         weeks.forEach(wkKey => {
             const wk = config[wkKey];
-            const wkDiv = document.createElement('div');
-            wkDiv.className = "wkbar";
-            wkDiv.innerHTML = `<h3>${wk.label}</h3><p>${wk.theme}</p>`;
-            panel.appendChild(wkDiv);
+            const div = document.createElement('div');
+            div.className = "wkbar";
+            div.innerHTML = `<h3>${wk.label}</h3><p>${wk.theme}</p>`;
+            panel.appendChild(div);
         });
-
         btn.onclick = () => {
             mNav.querySelectorAll('.mbtn').forEach(b => b.classList.remove('on'));
             mPanels.querySelectorAll('.mpanel').forEach(p => p.classList.remove('on'));
@@ -199,10 +188,15 @@ onAuthStateChanged(auth, async (user) => {
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
+                    // Ativa a classe de Preview no Body
                     document.body.classList.add('preview-mode');
-                    renderPreviewToSandbox(backup); // CHAMA O SANDBOX
+                    
+                    // Renderiza os dados do backup exclusivamente no Sandbox
+                    renderPreviewSandbox(backup);
+                    
+                    // Fecha o modal e abre a barra de preview
                     historyModal.style.display = 'none';
-                    previewBar.style.display = 'block';
+                    document.getElementById('previewBar').style.display = 'block';
                     window.scrollTo(0, 0);
                 };
 
