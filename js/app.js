@@ -6,13 +6,26 @@ import { renderStructure, updateProgressBar } from './ui.js';
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content) {
     const data = content || {};
-    // Selects all editable areas including Daily Template and Goals
+    
+    // IDs padrões do Daily Template para caso o backup não os possua
+    const defaults = {
+        'tpl-t1': '0–15 min', 'tpl-a1': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
+        'tpl-t2': '15–35 min', 'tpl-a2': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
+        'tpl-t3': '35–55 min', 'tpl-a3': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
+        'tpl-t4': '55–75 min', 'tpl-a4': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
+        'tpl-t5': '75–95 min', 'tpl-a5': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
+        'tpl-t6': '95–115 min', 'tpl-a6': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
+        'tpl-t7': 'Sunday', 'tpl-a7': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
+    };
+
     document.querySelectorAll('.editable-global').forEach(el => {
-        if (data[el.id] !== undefined) {
+        // Se o backup tem o dado, usa ele. Se não tem e é um campo do template, usa o default.
+        if (data[el.id] !== undefined && data[el.id] !== "") {
             el.innerHTML = data[el.id];
-        } else {
-            // Optional: If the backup doesn't have a custom value, we keep the default HTML
-            // This ensures sections like "Daily Template" reflect the backup state
+        } else if (defaults[el.id]) {
+            el.innerHTML = defaults[el.id];
+        } else if (!data[el.id]) {
+            // Se não tem no backup e não tem default, não limpa para não ficar branco (ex: títulos)
         }
     });
 }
@@ -133,35 +146,40 @@ onAuthStateChanged(auth, async (user) => {
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
+                    // Salva o estado atual do usuário para poder voltar depois
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)),
-                        cover: cover.style.background 
+                        state: JSON.parse(JSON.stringify(window.appState || {})),
+                        cover: document.getElementById('page-cover').style.background 
                     };
                     
                     document.body.classList.add('preview-mode');
                     
-                    // Apply data from the backup file
+                    // 1. Aplica dados do arquivo de backup nas globais
                     applySnapshot(backup.plannerConfig, backup.pageContent);
+                    window.appState = JSON.parse(JSON.stringify(backup.state || {}));
                     
-                    // Update the UI Background
-                    if (backup.state?.settings?.coverColor) {
-                        cover.style.background = backup.state.settings.coverColor;
-                    } else {
-                        cover.style.background = "#f4f1ea";
-                    }
+                    // 2. Atualiza Background
+                    const cover = document.getElementById('page-cover');
+                    cover.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
 
-                    // Refresh all text components (Template, Goals, etc)
+                    // 3. Atualiza textos (Template, Metas, etc)
                     refreshGlobalDOM(backup.pageContent);
                     
-                    // Refresh the main roadmap structure
-                    renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
+                    // 4. Reconstrói a estrutura de semanas (Roadmap)
+                    renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
                     
-                    // Refresh dynamic summary blocks
-                    import('./planner.js').then(mod => {
-                        mod.renderDynamicOverviewBlocks(currentUser);
-                    });
+                    // 5. Atualiza blocos dinâmicos do overview
+                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
 
+                    // 6. Atualiza Barra de Progresso com os dados do backup
+                    import('./ui.js').then(mod => mod.updateProgressBar());
+                    
+                    historyModal.style.display = 'none';
+                    previewBar.style.display = 'block';
+                    window.scrollTo(0, 0);
+                };
                     // Refresh progress bar based on backup 'state'
                     import('./ui.js').then(mod => {
                         window.appState = backup.state || {};
@@ -195,14 +213,15 @@ onAuthStateChanged(auth, async (user) => {
             previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
             
+            // Restaura tudo para o que era antes do preview
             applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
-            cover.style.background = sessionSnapshot.cover;
+            window.appState = sessionSnapshot.state;
+            document.getElementById('page-cover').style.background = sessionSnapshot.cover;
             
             refreshGlobalDOM(sessionSnapshot.content);
             renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            import('./planner.js').then(mod => {
-                mod.renderDynamicOverviewBlocks(currentUser);
-            });
+            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+            import('./ui.js').then(mod => mod.updateProgressBar());
         };
         
         // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
