@@ -19,10 +19,12 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
+    // Atualiza as referências locais
     plannerConfig = JSON.parse(JSON.stringify(newConfig));
     pageContent = JSON.parse(JSON.stringify(newContent));
+    // Atualiza as referências globais que o app.js e ui.js usam
     window.plannerConfig = plannerConfig;
-    window.pageContent = window.pageContent;
+    window.pageContent = pageContent;
 }
 
 export async function loadUserData(uid) {
@@ -37,11 +39,9 @@ export async function loadUserData(uid) {
             history = data.history || [];
             importHistory = data.importHistory || [];
 
-            // Limpeza de Histórico Comum (30 dias)
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             history = history.filter(item => item.timestamp > thirtyDaysAgo);
 
-            // Limpeza de Histórico de Importação (6 meses / 180 dias)
             const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
             importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
 
@@ -58,9 +58,7 @@ export async function loadUserData(uid) {
 
             return { state, plannerConfig, pageContent, history, importHistory };
         }
-    } catch (e) {
-        console.error("Error loading user data:", e);
-    }
+    } catch (e) { console.error("Error loading user data:", e); }
     return { state, plannerConfig, pageContent, history, importHistory };
 }
 
@@ -74,9 +72,7 @@ export async function saveUserData(uid) {
             history: history,
             importHistory: importHistory
         });
-    } catch (e) {
-        console.error("Error saving data:", e);
-    }
+    } catch (e) { console.error("Error saving data:", e); }
 }
 
 export function addHistoryEntry(label, config, content) {
@@ -111,7 +107,6 @@ export function updateState(dayKey, data) {
 }
 
 export function exportData() {
-    // Criamos uma cópia do estado para remover dados de identidade antes de exportar
     const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
     delete cleanState.customName;
     delete cleanState.namePrompted;
@@ -127,56 +122,50 @@ export function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `planner_export_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `planner_backup_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
 
-export async function importData(file, uid, isRestore = false) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file format");
+export async function importData(fileOrData, uid, isRestore = false) {
+    let imported;
+    if (fileOrData instanceof File || fileOrData instanceof Blob) {
+        const text = await fileOrData.text();
+        imported = JSON.parse(text);
+    } else {
+        imported = fileOrData;
+    }
 
-                // CRIA BACKUP AUTOMÁTICO DO ESTADO ATUAL ANTES DE SOBREPOR
-                if (!isRestore) {
-                    const backup = {
-                        id: "imp_" + Date.now(),
-                        timestamp: Date.now(),
-                        filename: file.name || "External Import",
-                        state: JSON.parse(JSON.stringify(state)),
-                        plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
-                        pageContent: JSON.parse(JSON.stringify(pageContent))
-                    };
-                    importHistory.unshift(backup);
-                }
+    if (!imported.plannerConfig || !imported.state) throw new Error("Invalid file format");
 
-                // Preservar a identificação do usuário atual antes de importar novos dados
-                const currentCustomName = state.customName;
-                const currentNamePrompted = state.namePrompted;
-
-                state = imported.state;
-                
-                // Reaplica a identidade original do usuário ao novo estado importado
-                if (currentCustomName) state.customName = currentCustomName;
-                state.namePrompted = currentNamePrompted || false;
-                plannerConfig = imported.plannerConfig;
-                pageContent = imported.pageContent || {};
-                
-                window.appState = state;
-                window.plannerConfig = plannerConfig;
-                window.pageContent = pageContent;
-
-                await saveUserData(uid);
-                resolve(true);
-            } catch (err) {
-                reject(err);
-            }
+    if (!isRestore) {
+        const backup = {
+            id: "imp_" + Date.now(),
+            timestamp: Date.now(),
+            filename: fileOrData.name || "System Backup",
+            state: JSON.parse(JSON.stringify(state)),
+            plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
+            pageContent: JSON.parse(JSON.stringify(pageContent))
         };
-        reader.readAsText(file);
-    });
+        importHistory.unshift(backup);
+    }
+
+    const currentName = state.customName;
+    const currentPrompted = state.namePrompted;
+
+    state = imported.state;
+    plannerConfig = imported.plannerConfig;
+    pageContent = imported.pageContent || {};
+
+    if (currentName) state.customName = currentName;
+    state.namePrompted = currentPrompted;
+
+    window.appState = state;
+    window.plannerConfig = plannerConfig;
+    window.pageContent = pageContent;
+
+    await saveUserData(uid);
+    return true;
 }
