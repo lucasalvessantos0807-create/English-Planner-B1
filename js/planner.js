@@ -365,7 +365,7 @@ export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
-    // Se o grid estiver vazio (Preview), recriamos os blocos com IDs corretos
+    // 1. Se estiver vazio (Preview), recria a estrutura base
     if (grid.children.length === 0) {
         grid.innerHTML = `
             <div class="ov-card ca">
@@ -383,12 +383,22 @@ export function renderDynamicOverviewBlocks(uid) {
         `;
     }
 
-    // APLICAÇÃO IMEDIATA DOS TEXTOS DO BACKUP
-    Object.keys(window.pageContent || {}).forEach(id => {
+    // 2. BUSCA ATIVA: Garante que os textos do window.pageContent sejam aplicados
+    // Especialmente importante para o Preview
+    const idsToRefresh = [
+        'global-ov-ca-label', 'global-ov-ca-body',
+        'global-ov-cb-label', 'global-ov-cb-body',
+        'global-ov-cg-label', 'global-ov-cg-body'
+    ];
+
+    idsToRefresh.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = window.pageContent[id];
+        if (el && window.pageContent[id]) {
+            el.innerHTML = window.pageContent[id];
+        }
     });
 
+    // 3. Gerenciamento de ocultação e botões de deletar
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
             const delBtn = document.createElement('button');
@@ -397,7 +407,7 @@ export function renderDynamicOverviewBlocks(uid) {
             delBtn.style.display = isEditMode ? 'flex' : 'none';
             delBtn.onclick = (e) => {
                 e.stopPropagation();
-                if(confirm("Hide this default block?")) {
+                if(confirm("Hide this block?")) {
                     card.style.display = 'none';
                     window.pageContent[`hide-static-ov-${index}`] = true;
                     saveUserData(uid);
@@ -408,6 +418,7 @@ export function renderDynamicOverviewBlocks(uid) {
         if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
     });
 
+    // 4. Renderizar blocos dinâmicos extras
     if(window.pageContent && window.pageContent.dynamicBlocks) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
