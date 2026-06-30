@@ -137,50 +137,66 @@ onAuthStateChanged(auth, async (user) => {
                         <span class="backup-meta">${new Date(backup.timestamp).toLocaleString()}</span>
                     </div>
                     <div class="backup-actions">
-                        <button class="btn-undo-import">Undo</button>
-                        <button class="btn-preview">Preview</button>
+                        <button class="btn-undo-import">Restore</button>
+                        <button class="btn-preview">Preview Box</button>
                         <button class="btn-delete-backup">✕</button>
                     </div>
                 `;
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Undo and return to this exact state?")) {
+                    if (confirm("Restore and return to this exact state? This will overwrite your current progress.")) {
                         import('./storage.js').then(async (store) => {
-                            store.applySnapshot(backup.plannerConfig, backup.pageContent);
-                            await store.saveUserData(currentUser);
+                            await store.importData(backup, currentUser, true);
                             window.location.reload();
                         });
                     }
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
-                    const coverEl = document.getElementById('page-cover');
-                    sessionSnapshot = { 
-                        config: JSON.parse(JSON.stringify(window.plannerConfig)), 
-                        content: JSON.parse(JSON.stringify(window.pageContent)),
-                        state: JSON.parse(JSON.stringify(window.appState || {})),
-                        cover: coverEl ? coverEl.style.background : "#f4f1ea"
-                    };
+                    const sandbox = document.getElementById('previewSandbox');
+                    const backupContent = backup.pageContent || {};
+                    const backupState = backup.state || {};
                     
-                    document.body.classList.add('preview-mode');
-                    import('./storage.js').then(store => {
-                        store.applySnapshot(backup.plannerConfig, backup.pageContent);
-                        window.appState = JSON.parse(JSON.stringify(backup.state || {}));
-                        
-                        if (coverEl) {
-                            coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
-                        }
-
-                        refreshGlobalDOM(backup.pageContent);
-                        renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
-                        
-                        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                        import('./ui.js').then(mod => mod.updateProgressBar());
-                        
-                        historyModal.style.display = 'none';
-                        previewBar.style.display = 'block';
-                        window.scrollTo(0, 0);
+                    document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
+                    
+                    // Populate Static Sandbox Texts
+                    const sbIds = ['global-cover-eye', 'global-cover-title', 'global-cover-sub', 'global-goal-text'];
+                    sbIds.forEach(id => {
+                        const el = document.getElementById(`sb-${id}`);
+                        if (el) el.innerHTML = backupContent[id] || "";
                     });
+
+                    // Cover Color
+                    const sbCover = document.getElementById('sb-page-cover');
+                    if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
+
+                    // Progress Bar Calculation for Preview
+                    let total = 0, done = 0;
+                    Object.values(backup.plannerConfig).forEach(w => total += w.days.length);
+                    Object.keys(backupState).forEach(k => { if(backupState[k]?.done) done++; });
+                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                    document.getElementById('sb-pbar').style.width = pct + "%";
+                    document.getElementById('sb-pct').textContent = pct + "%";
+                    document.getElementById('sb-dcnt-text').innerHTML = `<strong>${done}</strong> / ${total} days`;
+
+                    // Render Structure inside Sandbox
+                    renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
+                        import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
+                    }, true, "sb-");
+
+                    // Show Sandbox
+                    historyModal.style.display = 'none';
+                    sandbox.style.display = 'flex';
+
+                    // Restore from Sandbox logic
+                    document.getElementById('restoreSandboxBtn').onclick = async () => {
+                        if(confirm("Restore this version?")) {
+                            import('./storage.js').then(async (store) => {
+                                await store.importData(backup, currentUser, true);
+                                window.location.reload();
+                            });
+                        }
+                    };
                 };
 
                 card.querySelector('.btn-delete-backup').onclick = async () => {
@@ -193,10 +209,9 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        document.getElementById('exitPreviewBtn').onclick = () => {
-            previewBar.style.display = 'none';
-            document.body.classList.remove('preview-mode');
-            
+        document.getElementById('closeSandboxBtn').onclick = () => {
+            document.getElementById('previewSandbox').style.display = 'none';
+        };            
             // Restaura tudo para o que era antes do preview
             import('./storage.js').then(store => {
                 store.applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
