@@ -16,8 +16,7 @@ function pushToUndo() {
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
         content: JSON.parse(JSON.stringify(window.pageContent || {}))
     });
-    const undoBtn = document.getElementById('undoBtn');
-    if (undoBtn) undoBtn.style.display = 'block';
+    document.getElementById('undoBtn').style.display = 'block';
 }
 
 export function performUndo(uid) {
@@ -26,8 +25,7 @@ export function performUndo(uid) {
     window.plannerConfig = lastState.config;
     window.pageContent = lastState.content;
     refreshGlobalTexts();
-    const undoBtn = document.getElementById('undoBtn');
-    if (undoStack.length === 0 && undoBtn) undoBtn.style.display = 'none';
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
     refreshCurrentWeek(uid);
 }
 
@@ -65,13 +63,11 @@ function updateUIEditMode() {
     const cancelBtn = document.getElementById('cancelEditBtn');
     const undoBtn = document.getElementById('undoBtn');
     
-    if (btn) {
-        btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
-        btn.style.background = isEditMode ? "var(--green-light)" : "none";
-        btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
-    }
-    if (cancelBtn) cancelBtn.style.display = isEditMode ? "block" : "none";
-    if (undoBtn && !isEditMode) undoBtn.style.display = "none";
+    btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
+    btn.style.background = isEditMode ? "var(--green-light)" : "none";
+    btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
+    cancelBtn.style.display = isEditMode ? "block" : "none";
+    if (!isEditMode) undoBtn.style.display = "none";
 }
 
 export function toggleEditMode(uid) {
@@ -124,22 +120,17 @@ function refreshCurrentWeek(uid) {
     }
 }
 
-export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPrefix = "", customConfig = null, customState = null) {
+export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
     const key = `${m}-${w}`;
-    const config = customConfig || window.plannerConfig;
-    const activeState = customState || window.appState || window.state;
-    
-    const containerId = targetPrefix ? `${targetPrefix}wp${m}-${w}` : `wp${m}-${w}`;
-    const container = document.getElementById(containerId);
-    
-    const wk = config[key];
+    const wk = window.plannerConfig[key];
+    const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
     container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
-        const dayData = activeState[dayKey] || { done: false, notes: "" };
+        const dayData = state[dayKey] || { done: false, notes: "" };
         const card = document.createElement("div");
         card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
@@ -161,31 +152,28 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
                 </div>`;
         }).join('');
 
-        const dbId = targetPrefix ? `${targetPrefix}db${day.n}` : `db${day.n}`;
-        const ntId = targetPrefix ? `${targetPrefix}nt${day.n}` : `nt${day.n}`;
-
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody ${isOpen ? 'on' : ''}" id="${dbId}">
+            <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" id="${ntId}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
+                <textarea class="ntxt" id="nt${day.n}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                icon.onclick = (e) => {
-                    e.stopPropagation();
-                    const wrapper = icon.closest('.aico-wrapper');
-                    const wasOpen = wrapper.classList.contains('show-suggestions');
-                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    if (!wasOpen) wrapper.classList.add('show-suggestions');
-                };
+                e.stopPropagation();
+                const wrapper = icon.closest('.aico-wrapper');
+                const wasOpen = wrapper.classList.contains('show-suggestions');
+                document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                if (!wasOpen) wrapper.classList.add('show-suggestions');
+            };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
@@ -226,7 +214,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
         if (addBtn) addBtn.onclick = () => {
             pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, config, activeState);
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
         };
 
         card.querySelectorAll('.del-act').forEach(btn => {
@@ -234,7 +222,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
                 if(confirm("Delete this activity?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, config, activeState);
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
                 }
             };
         });
@@ -259,46 +247,24 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPre
 
         container.appendChild(card);
     });
+    builtWeeks.add(key);
 }
 
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
-    
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
-    
-    const existingMonths = [...new Set(Object.keys(window.plannerConfig).map(k => parseInt(k.split('-')[0])))];
-    const nextMonth = existingMonths.length > 0 ? Math.max(...existingMonths) + 1 : 1;
-    
-    // Calcula o último dia absoluto para continuar a contagem
-    let lastDay = 0;
-    Object.values(window.plannerConfig).forEach(week => {
-        week.days.forEach(day => {
-            if (day.n > lastDay) lastDay = day.n;
-        });
-    });
-    
-    let currentDay = lastDay + 1;
-    const totalWeeks = Math.ceil(dayCount / 7);
-    
-    for (let w = 1; w <= totalWeeks; w++) {
-        const daysInThisWeek = Math.min(7, dayCount - ((w - 1) * 7));
-        const weekKey = `${nextMonth}-${w}`;
-        
-        window.plannerConfig[weekKey] = {
-            label: `Week ${w}`,
-            theme: "New Month Focus",
-            days: Array.from({length: daysInThisWeek}, () => {
+    const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
+    const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
+    const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
+    let currentDay = startDay;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${nextMonth}-${w}`] = {
+            label: `Week ${Object.keys(window.plannerConfig).length + 1}`, theme: "New Month",
+            days: Array.from({length: daysInW}, () => {
                 const d = currentDay++;
-                const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-                const dayName = weekDayNames[(d - 1) % 7];
-                
-                return {
-                    n: d,
-                    name: dayName,
-                    tag: "Act",
-                    activities: [{t:"grammar", i:"📐", title:"New Topic", desc:"Edit details...", time: "20m"}]
-                };
+                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
             })
         };
     }
@@ -372,13 +338,11 @@ export function addOverviewBlock(uid) {
     saveUserData(uid);
 }
 
-export function renderDynamicOverviewBlocks(uid, targetPrefix = "", customContent = null) {
-    const gridId = targetPrefix ? `${targetPrefix}dynamic-ov-grid` : 'dynamic-ov-grid';
-    const grid = document.getElementById(gridId);
+export function renderDynamicOverviewBlocks(uid) {
+    const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
-    const content = customContent || window.pageContent || {};
-
+    // 1. Estrutura com Textos Padrão (Fallbacks)
     const defaults = {
         'global-ov-ca-label': 'Month 1 — Foundation',
         'global-ov-ca-body': 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web',
@@ -388,61 +352,73 @@ export function renderDynamicOverviewBlocks(uid, targetPrefix = "", customConten
         'global-ov-cg-body': 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick'
     };
 
+    // 2. Reconstrói a estrutura base
     grid.innerHTML = `
         <div class="ov-card ca">
-          <div class="ov-label" id="${targetPrefix}global-ov-ca-label"></div>
-          <div class="ov-body" id="${targetPrefix}global-ov-ca-body"></div>
+          <div class="ov-label editable-global" id="global-ov-ca-label"></div>
+          <div class="ov-body editable-global" id="global-ov-ca-body"></div>
         </div>
         <div class="ov-card cb">
-          <div class="ov-label" id="${targetPrefix}global-ov-cb-label"></div>
-          <div class="ov-body" id="${targetPrefix}global-ov-cb-body"></div>
+          <div class="ov-label editable-global" id="global-ov-cb-label"></div>
+          <div class="ov-body editable-global" id="global-ov-cb-body"></div>
         </div>
         <div class="ov-card cg">
-          <div class="ov-label" id="${targetPrefix}global-ov-cg-label"></div>
-          <div class="ov-body" id="${targetPrefix}global-ov-cg-body"></div>
+          <div class="ov-label editable-global" id="global-ov-cg-label"></div>
+          <div class="ov-body editable-global" id="global-ov-cg-body"></div>
         </div>
     `;
 
-    ['ca','cb','cg'].forEach(suffix => {
-        const id = `global-ov-${suffix}`;
-        const lbl = document.getElementById(`${targetPrefix}${id}-label`);
-        const bdy = document.getElementById(`${targetPrefix}${id}-body`);
-        if(lbl) lbl.innerHTML = content[`${id}-label`] || defaults[`${id}-label`];
-        if(bdy) bdy.innerHTML = content[`${id}-body`] || defaults[`${id}-body`];
+    // 3. Aplica Texto: Prioridade para o salvo (ou backup), senão usa o padrão
+    Object.keys(defaults).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = (window.pageContent && window.pageContent[id]) ? window.pageContent[id] : defaults[id];
+        }
     });
 
-    if (!targetPrefix) {
-        grid.querySelectorAll('.ov-card').forEach((card, index) => {
-            if (!card.querySelector('.del-ov-btn')) {
-                const delBtn = document.createElement('button');
-                delBtn.className = 'del-ov-btn';
-                delBtn.innerHTML = '✕';
-                delBtn.style.display = isEditMode ? 'flex' : 'none';
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if(confirm("Hide this block?")) {
-                        card.style.display = 'none';
-                        window.pageContent[`hide-static-ov-${index}`] = true;
-                        saveUserData(uid);
-                    }
-                };
-                card.prepend(delBtn);
-            }
-            if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
-        });
-    }
+    // 4. Botões de Ocultar/Excluir
+    grid.querySelectorAll('.ov-card').forEach((card, index) => {
+        if (!card.querySelector('.del-ov-btn')) {
+            const delBtn = document.createElement('button');
+            delBtn.className = 'del-ov-btn';
+            delBtn.innerHTML = '✕';
+            delBtn.style.display = isEditMode ? 'flex' : 'none';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                if(confirm("Hide this block?")) {
+                    card.style.display = 'none';
+                    window.pageContent[`hide-static-ov-${index}`] = true;
+                    saveUserData(uid);
+                }
+            };
+            card.prepend(delBtn);
+        }
+        if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
+    });
 
-    if(content.dynamicBlocks) {
-        content.dynamicBlocks.forEach(blockId => {
+    // 5. Blocos Extras Dinâmicos
+    if(window.pageContent && window.pageContent.dynamicBlocks) {
+        window.pageContent.dynamicBlocks.forEach(blockId => {
+            if(document.getElementById(`container-${blockId}`)) return;
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
-            newBlock.id = `${targetPrefix}container-${blockId}`;
-            const displayDel = (isEditMode && !targetPrefix) ? 'flex' : 'none';
+            newBlock.id = `container-${blockId}`;
+            const displayDel = isEditMode ? 'flex' : 'none';
             newBlock.innerHTML = `
                 <button class="del-ov-btn" style="display:${displayDel};">✕</button>
-                <div class="ov-label" id="${targetPrefix}${blockId}-title">${content[`${blockId}-title`] || 'New Phase'}</div>
-                <div class="ov-body" id="${targetPrefix}${blockId}-body">${content[`${blockId}-body`] || 'Edit...'}</div>
+                <div class="ov-label editable-global" id="${blockId}-title" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
+                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-body`] || 'Edit...'}</div>
             `;
+            newBlock.querySelector('.del-ov-btn').onclick = (e) => {
+                e.stopPropagation();
+                if(confirm("Delete this block?")) {
+                    newBlock.remove();
+                    window.pageContent.dynamicBlocks = (window.pageContent.dynamicBlocks || []).filter(id => id !== blockId);
+                    delete window.pageContent[`${blockId}-title`];
+                    delete window.pageContent[`${blockId}-body`];
+                    saveUserData(uid);
+                }
+            };
             grid.appendChild(newBlock);
         });
     }
