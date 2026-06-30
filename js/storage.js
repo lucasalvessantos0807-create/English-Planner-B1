@@ -19,16 +19,15 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Reset global references safely
+    // Sobrescreve os objetos globais para garantir visibilidade em todos os módulos
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
-    // Sync module variables
-    const configVar = window.plannerConfig;
-    const contentVar = window.pageContent;
+    // Sincroniza as variáveis locais do módulo storage.js para corresponderem
+    plannerConfig = window.plannerConfig;
+    pageContent = window.pageContent;
 
-    // This ensures consistency across the app
-    console.log("Snapshot applied successfully.");
+    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -111,13 +110,10 @@ export function updateState(dayKey, data) {
 }
 
 export function exportData() {
-    // Cópia para limpeza
     const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
-    
-    // REMOVE IDENTIDADE E HISTÓRICO DE CORES
     delete cleanState.customName;
     delete cleanState.namePrompted;
-    delete cleanState.colorHistory; // O histórico de cores não vai no arquivo
+    delete cleanState.colorHistory;
 
     const dataToExport = {
         state: cleanState,
@@ -160,19 +156,17 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
-    // PRESERVAR IDENTIDADE E HISTÓRICO DE CORES LOCAL
     const localName = state.customName;
     const localPrompted = state.namePrompted;
-    const localColorHistory = state.colorHistory; // Salva o seu histórico de cores
+    const localColorHistory = state.colorHistory;
 
     state = imported.state;
     plannerConfig = imported.plannerConfig;
     pageContent = imported.pageContent || {};
 
-    // Restaurar dados locais após a importação do estado
     if (localName) state.customName = localName;
     state.namePrompted = localPrompted || false;
-    if (localColorHistory) state.colorHistory = localColorHistory; // Devolve o seu histórico
+    if (localColorHistory) state.colorHistory = localColorHistory;
 
     window.appState = state;
     window.plannerConfig = plannerConfig;
