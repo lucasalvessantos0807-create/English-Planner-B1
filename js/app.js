@@ -39,8 +39,8 @@ function refreshGlobalDOM(content, targetPrefix = "") {
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
-        const cleanId = el.id.replace('sb-', '');
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
+        const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
         if (val !== undefined && val !== null && val !== "") {
             el.innerHTML = val;
@@ -192,9 +192,10 @@ onAuthStateChanged(auth, async (user) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
 
-                    // 6. Mostrar Sandbox
+                    // 6. Mostrar Sandbox e travar scroll do fundo
                     historyModal.style.display = 'none';
                     sandbox.style.display = 'flex';
+                    document.body.classList.add('preview-open');
 
                     // 7. Lógica do botão de restauração dentro da Sandbox
                     document.getElementById('restoreSandboxBtn').onclick = async () => {
@@ -219,6 +220,7 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById('closeSandboxBtn').onclick = () => {
             document.getElementById('previewSandbox').style.display = 'none';
+            document.body.classList.remove('preview-open');
         };
 
         // --- LÓGICA DO COLOR PICKER (COMPLETA E INTEGRAL) ---
