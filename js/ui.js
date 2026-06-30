@@ -1,5 +1,6 @@
 // --- PROGRESS FUNCTIONS ---
 export function updateProgressBar(prefix = "", customConfig = null, customState = null) {
+    // Usa o estado e config passados (Preview) ou os globais da janela
     const state = customState || window.appState || {};
     const config = customConfig || window.plannerConfig || {};
     
@@ -21,7 +22,7 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
-    // IDs dinâmicos baseados no prefixo (vazio ou "sb-")
+    // Atualiza os elementos baseados no prefixo (Ex: "pbar" ou "sb-pbar")
     const pbar = document.getElementById(prefix + "pbar");
     if (pbar) pbar.style.width = pctValue + "%";
     
@@ -30,6 +31,12 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
 
     const pctEl = document.getElementById(prefix + "pct");
     if (pctEl) pctEl.textContent = pctValue + "%";
+
+    // Estatísticas textuais (se existirem no HTML)
+    const statsContainer = document.querySelector(`#${prefix}dcnt`)?.parentElement;
+    if (statsContainer && statsContainer.tagName === 'SPAN') {
+        statsContainer.innerHTML = `<strong id="${prefix}dcnt">${done}</strong> / ${totalDays} days`;
+    }
 }
 
 // --- STRUCTURE RENDERING FUNCTION ---
@@ -38,17 +45,18 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById(prefix + 'monthPanels');
     const addBtn = document.getElementById(prefix + 'addMonthBtn');
 
-    if(!monthNav || !monthPanels) return;
+    if (!monthNav || !monthPanels) return;
 
-    // Clear navigation (mantendo o botão de add se não for preview)
-    const selector = isPreview ? '.mbtn' : '.mbtn:not(#' + prefix + 'addMonthBtn)';
-    monthNav.querySelectorAll(selector).forEach(n => n.remove());
+    // Limpa a navegação e os painéis (Exceto o botão de adicionar no modo normal)
+    const buttonsToRemove = isPreview ? '.mbtn' : '.mbtn:not(#addMonthBtn)';
+    monthNav.querySelectorAll(buttonsToRemove).forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
+        // Criar Botão do Mês
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
@@ -59,6 +67,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             monthNav.insertBefore(mBtn, addBtn);
         }
 
+        // Criar Painel do Mês
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `${prefix}mp${m}`;
@@ -66,22 +75,24 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
-                <p class="${isPreview ? '' : 'editable-global'}" id="${prefix}m-desc-${m}" contenteditable="${isEditMode && !isPreview}">English Study Plan</p>
+                <p class="${isPreview ? '' : 'editable-global'}" id="${prefix}m-desc-${m}" contenteditable="${isEditMode && !isPreview}">English Study Plan — Continuous Progress</p>
                 <div style="display: ${isPreview ? 'none' : 'flex'}; gap: 10px;">
-                    <button class="edit-m-btn" data-month="${m}">⚙️ Restructure</button>
-                    <button class="del-m-btn" data-month="${m}">🗑️ Delete</button>
+                    <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
+                    <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
                 </div>
             </div>
             <div class="week-nav"></div>
         `;
 
         const wNav = mPanel.querySelector('.week-nav');
+        
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
             .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
+            
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.textContent = plannerConfig[wkKey].label;
@@ -95,6 +106,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
                 mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
                 wBtn.classList.add('on');
                 wPanel.classList.add('on');
+                // Chama o callback passando as informações necessárias
                 onWeekChange(m, weekNum, isPreview, prefix);
             };
 
@@ -102,52 +114,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             mPanel.appendChild(wPanel);
         });
 
-        monthPanels.appendChild(mPanel);
-
-        mBtn.onclick = () => {
-            monthNav.querySelectorAll('.mbtn').forEach(el => el.classList.remove('on'));
-            monthPanels.querySelectorAll('.mpanel').forEach(el => el.classList.remove('on'));
-            mBtn.classList.add('on');
-            mPanel.classList.add('on');
-            const firstW = mPanel.querySelector('.wbtn');
-            if(firstW) firstW.click();
-        };
-    });
-}
-
-        // --- WEEK NAVIGATION BAR ---
-        const wNav = document.createElement('div');
-        wNav.className = "week-nav";
-        mPanel.appendChild(wNav); 
-        
-        const weeks = Object.keys(plannerConfig)
-            .filter(key => key.startsWith(`${m}-`))
-            .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
-
-        weeks.forEach((wkKey, wIdx) => {
-            const weekNum = wkKey.split('-')[1];
-            
-            const wBtn = document.createElement('button');
-            wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
-            wBtn.textContent = plannerConfig[wkKey].label;
-            
-            const wPanel = document.createElement('div');
-            wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
-            wPanel.id = `wp${m}-${weekNum}`;
-
-            wBtn.onclick = (e) => {
-                e.stopPropagation();
-                mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
-                wBtn.classList.add('on');
-                wPanel.classList.add('on');
-                onWeekChange(m, weekNum, isPreview);
-            };
-
-            wNav.appendChild(wBtn);
-            mPanel.appendChild(wPanel);
-        });
-
-        // Event listeners for month management (hidden in Preview)
+        // Event listeners para gerenciamento de meses (apenas modo normal)
         if (!isPreview) {
             mPanel.querySelector('.edit-m-btn').onclick = (e) => {
                 e.stopPropagation();
@@ -165,7 +132,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         monthPanels.appendChild(mPanel);
 
         mBtn.onclick = () => {
-            document.querySelectorAll('.mbtn, .mpanel').forEach(el => el.classList.remove('on'));
+            monthNav.querySelectorAll('.mbtn').forEach(el => el.classList.remove('on'));
+            monthPanels.querySelectorAll('.mpanel').forEach(el => el.classList.remove('on'));
             mBtn.classList.add('on');
             mPanel.classList.add('on');
             const firstW = mPanel.querySelector('.wbtn');
