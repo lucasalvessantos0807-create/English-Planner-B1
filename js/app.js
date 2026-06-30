@@ -109,12 +109,10 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- HISTÓRICO DE IMPORTAÇÕES (PREVIEW / UNDO) ---
+        // --- HISTÓRICO DE IMPORTAÇÕES (PREVIEW SANDBOX) ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
-        const previewBar = document.getElementById('previewBar');
-        let sessionSnapshot = null;
-
+        
         document.getElementById('importHistoryBtn').onclick = () => {
             renderImportHistory();
             historyModal.style.display = 'flex';
@@ -159,36 +157,42 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
-                    // Populate Static Sandbox Texts
+                    // Preencher textos da Sandbox
                     const sbIds = ['global-cover-eye', 'global-cover-title', 'global-cover-sub', 'global-goal-text'];
                     sbIds.forEach(id => {
                         const el = document.getElementById(`sb-${id}`);
                         if (el) el.innerHTML = backupContent[id] || "";
                     });
 
-                    // Cover Color
+                    // Cor da Capa na Sandbox
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
-                    // Progress Bar Calculation for Preview
+                    // Barra de Progresso na Sandbox
                     let total = 0, done = 0;
                     Object.values(backup.plannerConfig).forEach(w => total += w.days.length);
                     Object.keys(backupState).forEach(k => { if(backupState[k]?.done) done++; });
                     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-                    document.getElementById('sb-pbar').style.width = pct + "%";
-                    document.getElementById('sb-pct').textContent = pct + "%";
-                    document.getElementById('sb-dcnt-text').innerHTML = `<strong>${done}</strong> / ${total} days`;
+                    
+                    const sbPbar = document.getElementById('sb-pbar');
+                    if(sbPbar) sbPbar.style.width = pct + "%";
+                    
+                    const sbPct = document.getElementById('sb-pct');
+                    if(sbPct) sbPct.textContent = pct + "%";
+                    
+                    const sbDcnt = document.getElementById('sb-dcnt-text');
+                    if(sbDcnt) sbDcnt.innerHTML = `<strong>${done}</strong> / ${total} days`;
 
-                    // Render Structure inside Sandbox
+                    // Renderizar Estrutura dentro da Sandbox
                     renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
 
-                    // Show Sandbox
+                    // Mostrar Sandbox
                     historyModal.style.display = 'none';
                     sandbox.style.display = 'flex';
 
-                    // Restore from Sandbox logic
+                    // Lógica do botão Restore dentro da Sandbox
                     document.getElementById('restoreSandboxBtn').onclick = async () => {
                         if(confirm("Restore this version?")) {
                             import('./storage.js').then(async (store) => {
@@ -211,20 +215,8 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById('closeSandboxBtn').onclick = () => {
             document.getElementById('previewSandbox').style.display = 'none';
-        };            
-            // Restaura tudo para o que era antes do preview
-            import('./storage.js').then(store => {
-                store.applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
-                window.appState = sessionSnapshot.state;
-                document.getElementById('page-cover').style.background = sessionSnapshot.cover;
-                
-                refreshGlobalDOM(sessionSnapshot.content);
-                renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-                import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                import('./ui.js').then(mod => mod.updateProgressBar());
-            });
         };
-        
+
         // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
