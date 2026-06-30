@@ -440,3 +440,21 @@ body.preview-mode #planner .topbar button {
 body.preview-mode .page {
   pointer-events: auto !important;
 }
+/* --- Sandbox Specific Styles --- */
+#previewSandbox .page {
+  box-shadow: none;
+  margin: 0;
+}
+
+#previewSandbox .ov-card {
+  pointer-events: none;
+}
+
+#previewSandbox .mbtn.on {
+  background: var(--accent) !important;
+  color: white !important;
+}
+
+#previewSandbox .mpanel.on {
+  display: block !important;
+}
