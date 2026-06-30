@@ -1,6 +1,6 @@
 // --- FUNÇÕES DE PROGRESSO ---
 export function updateProgressBar() {
-    // Ensure we are using the most current global state (important for Preview Mode)
+    // Garante que estamos usando o estado global mais atual (crucial para o Preview Mode)
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
@@ -10,10 +10,10 @@ export function updateProgressBar() {
     });
     
     let done = 0;
-    // We only count days that exist in the current configuration being viewed
+    // Contamos apenas os dias marcados como "done" que existem na configuração sendo visualizada no momento
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
-            // Verify if the day belongs to the current plannerConfig
+            // Verifica se o dia (ex: "d1") pertence ao plannerConfig atual
             const dayNum = parseInt(key.replace('d', ''));
             const dayExists = Object.values(config).some(week => 
                 week.days.some(d => d.n === dayNum)
@@ -45,7 +45,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpeza
+    // Limpeza da navegação e dos painéis
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
@@ -64,17 +64,18 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
         
-       mPanel.innerHTML = `
-    <div class="mheader">
-        <h2>Month ${m}</h2>
-        <p class="editable-global" id="m-desc-${m}" contenteditable="${isEditMode}">English Study Plan — Continuous Progress</p>
-        <div style="display: flex; gap: 10px;">
-            <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
-            <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
-        </div>
-    </div>
-`;
-        // --- BARRA DE NAVEGAÇÃO DE SEMANAS (Sempre no topo) ---
+        mPanel.innerHTML = `
+            <div class="mheader">
+                <h2>Month ${m}</h2>
+                <p class="editable-global" id="m-desc-${m}" contenteditable="${isEditMode}">English Study Plan — Continuous Progress</p>
+                <div style="display: ${isPreview ? 'none' : 'flex'}; gap: 10px;">
+                    <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
+                    <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
+                </div>
+            </div>
+        `;
+
+        // --- BARRA DE NAVEGAÇÃO DE SEMANAS ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
         mPanel.appendChild(wNav); 
@@ -106,19 +107,20 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             mPanel.appendChild(wPanel);
         });
 
-        // Evento do botão de reestruturar
-        mPanel.querySelector('.edit-m-btn').onclick = (e) => {
-            e.stopPropagation();
-            const uid = window.auth.currentUser.uid;
-            import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
-        };
-       
-        // Evento do botão de deletar
-mPanel.querySelector('.del-m-btn').onclick = (e) => {
-    e.stopPropagation();
-    const uid = window.auth.currentUser.uid;
-    import('./planner.js').then(mod => mod.deleteMonth(m, uid));
-};
+        // Eventos dos botões de gerência do mês (ocultos em Preview)
+        if (!isPreview) {
+            mPanel.querySelector('.edit-m-btn').onclick = (e) => {
+                e.stopPropagation();
+                const uid = window.auth.currentUser.uid;
+                import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
+            };
+           
+            mPanel.querySelector('.del-m-btn').onclick = (e) => {
+                e.stopPropagation();
+                const uid = window.auth.currentUser.uid;
+                import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+            };
+        }
 
         monthPanels.appendChild(mPanel);
 
