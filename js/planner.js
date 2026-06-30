@@ -365,40 +365,37 @@ export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
-    // 1. Se estiver vazio (Preview), recria a estrutura base
-    if (grid.children.length === 0) {
-        grid.innerHTML = `
-            <div class="ov-card ca">
-              <div class="ov-label editable-global" id="global-ov-ca-label">Month 1</div>
-              <div class="ov-body editable-global" id="global-ov-ca-body"></div>
-            </div>
-            <div class="ov-card cb">
-              <div class="ov-label editable-global" id="global-ov-cb-label">Month 2</div>
-              <div class="ov-body editable-global" id="global-ov-cb-body"></div>
-            </div>
-            <div class="ov-card cg">
-              <div class="ov-label editable-global" id="global-ov-cg-label">Month 3</div>
-              <div class="ov-body editable-global" id="global-ov-cg-body"></div>
-            </div>
-        `;
-    }
+    // 1. Limpa e Recria a estrutura base (Garante que não fiquem textos residuais)
+    grid.innerHTML = `
+        <div class="ov-card ca">
+          <div class="ov-label editable-global" id="global-ov-ca-label">Month 1</div>
+          <div class="ov-body editable-global" id="global-ov-ca-body"></div>
+        </div>
+        <div class="ov-card cb">
+          <div class="ov-label editable-global" id="global-ov-cb-label">Month 2</div>
+          <div class="ov-body editable-global" id="global-ov-cb-body"></div>
+        </div>
+        <div class="ov-card cg">
+          <div class="ov-label editable-global" id="global-ov-cg-label">Month 3</div>
+          <div class="ov-body editable-global" id="global-ov-cg-body"></div>
+        </div>
+    `;
 
-    // 2. BUSCA ATIVA: Garante que os textos do window.pageContent sejam aplicados
-    // Especialmente importante para o Preview
-    const idsToRefresh = [
+    // 2. Aplica os textos salvos no window.pageContent (que o applySnapshot atualizou)
+    const staticIds = [
         'global-ov-ca-label', 'global-ov-ca-body',
         'global-ov-cb-label', 'global-ov-cb-body',
         'global-ov-cg-label', 'global-ov-cg-body'
     ];
 
-    idsToRefresh.forEach(id => {
+    staticIds.forEach(id => {
         const el = document.getElementById(id);
         if (el && window.pageContent[id]) {
             el.innerHTML = window.pageContent[id];
         }
     });
 
-    // 3. Gerenciamento de ocultação e botões de deletar
+    // 3. Gerenciamento de ocultação e botões de controle
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
             const delBtn = document.createElement('button');
@@ -418,7 +415,7 @@ export function renderDynamicOverviewBlocks(uid) {
         if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
     });
 
-    // 4. Renderizar blocos dinâmicos extras
+    // 4. Renderiza blocos dinâmicos extras do backup
     if(window.pageContent && window.pageContent.dynamicBlocks) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
