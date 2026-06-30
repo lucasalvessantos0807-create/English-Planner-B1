@@ -438,5 +438,48 @@ body.preview-mode #planner .topbar button {
 
 /* Garante que o conteúdo do planner continue clicável para expandir semanas */
 body.preview-mode .page {
+  /* Bloqueio da barra lateral e drawers durante o Preview */
+body.preview-mode .custom-drawer {
+  pointer-events: none !important;
+  opacity: 0.7;
+}
+
+body.preview-mode #planner .topbar button {
+  pointer-events: none !important;
+  opacity: 0.5;
+}
+
+/* Garante que o conteúdo do planner continue clicável para expandir semanas */
+body.preview-mode .page {
   pointer-events: auto !important;
+}
+
+/* ── PREVIEW VIEWPORT (SANDBOX CENTRAL) ── */
+#preview-viewport {
+    display: none;
+    position: fixed;
+    top: 46px; /* Altura da barra laranja */
+    left: 0;
+    right: 320px; /* Deixa a barra lateral de settings livre */
+    bottom: 0;
+    background: var(--bg);
+    z-index: 3500;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.05);
+}
+
+body.preview-mode #preview-viewport {
+    display: block;
+}
+
+/* Esconde a Topbar original durante o Preview */
+body.preview-mode .topbar {
+    visibility: hidden;
+}
+
+@media(max-width:800px) {
+    #preview-viewport {
+        right: 0;
+    }
 }
