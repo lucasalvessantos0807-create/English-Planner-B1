@@ -1,6 +1,6 @@
 // --- FUNÇÕES DE PROGRESSO ---
 export function updateProgressBar() {
-    // Garante que estamos usando o estado global mais atual (crucial para o Preview Mode)
+    // Garante o uso do estado global atual (importante para o Preview Mode)
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
@@ -10,10 +10,10 @@ export function updateProgressBar() {
     });
     
     let done = 0;
-    // Contamos apenas os dias marcados como "done" que existem na configuração sendo visualizada no momento
+    // Contamos apenas os dias que existem na configuração sendo visualizada
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
-            // Verifica se o dia (ex: "d1") pertence ao plannerConfig atual
+            // Verifica se o dia pertence ao plannerConfig atual
             const dayNum = parseInt(key.replace('d', ''));
             const dayExists = Object.values(config).some(week => 
                 week.days.some(d => d.n === dayNum)
@@ -45,7 +45,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpeza da navegação e dos painéis
+    // Limpeza
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
@@ -107,7 +107,6 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             mPanel.appendChild(wPanel);
         });
 
-        // Eventos dos botões de gerência do mês (ocultos em Preview)
         if (!isPreview) {
             mPanel.querySelector('.edit-m-btn').onclick = (e) => {
                 e.stopPropagation();
