@@ -3,72 +3,35 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
-// ── FUNÇÃO INTEGRAL PARA MONTAR O SANDBOX DE PREVIEW ──
-function renderPreviewSandbox(backup) {
-    const data = backup.pageContent || {};
-    const config = backup.plannerConfig || {};
-    const bState = backup.state || {};
+// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
+function refreshGlobalDOM(content) {
+    const data = content || {};
     
-    // 1. Capa e Cabeçalho do Sandbox
-    document.getElementById('ps-page-cover').style.background = bState.settings?.coverColor || "#f4f1ea";
-    document.getElementById('ps-global-cover-eye').innerHTML = data['global-cover-eye'] || "Personal English Study Planner";
-    document.getElementById('ps-global-cover-title').innerHTML = data['global-cover-title'] || "A2+ to B1 Roadmap";
-    document.getElementById('ps-global-cover-sub').innerHTML = data['global-cover-sub'] || "3 months · Every day · 1.5–2+ hours";
-    
-    // 2. Metas
-    document.getElementById('ps-global-goal-strong').innerHTML = data['global-goal-strong'] || "🎯 Your Goal";
-    document.getElementById('ps-global-goal-text').innerHTML = data['global-goal-text'] || "Reach B1 level...";
+    // Conteúdos padrão para garantir que o Daily Template nunca fique em branco durante o Preview
+    const defaults = {
+        "tpl-t1": "0–15 min", 
+        "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
+        "tpl-t2": "15–35 min", 
+        "tpl-a2": "📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.",
+        "tpl-t3": "35–55 min", 
+        "tpl-a3": "🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.",
+        "tpl-t4": "55–75 min", 
+        "tpl-a4": "🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.",
+        "tpl-t5": "75–95 min", 
+        "tpl-a5": "📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)",
+        "tpl-t6": "95–115 min", 
+        "tpl-a6": "🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.",
+        "tpl-t7": "Sunday", 
+        "tpl-a7": "🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals."
+    };
 
-    // 3. Template (Onde estava em branco no seu PNG)
-    for(let i=1; i<=7; i++) {
-        const timeEl = document.getElementById(`ps-tpl-t${i}`);
-        const actEl = document.getElementById(`ps-tpl-a${i}`);
-        if(timeEl) timeEl.innerHTML = data[`tpl-t${i}`] || "";
-        if(actEl) actEl.innerHTML = data[`tpl-a${i}`] || "";
-    }
-
-    // 4. Progresso Simulado
-    let totalDays = 0; Object.values(config).forEach(w => totalDays += w.days.length);
-    let doneDays = 0; Object.keys(bState).forEach(k => { if(bState[k] && bState[k].done) doneDays++; });
-    const pct = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
-    document.getElementById('ps-pbar').style.width = pct + "%";
-    document.getElementById('ps-dcnt').textContent = `${doneDays} / ${totalDays} days (${pct}% complete)`;
-
-    // 5. Overview Grid do Sandbox
-    const ovGrid = document.getElementById('ps-dynamic-ov-grid');
-    ovGrid.innerHTML = '';
-    ['ca','cb','cg'].forEach(type => {
-        const card = document.createElement('div');
-        card.className = `ov-card ${type}`;
-        card.innerHTML = `<div class="ov-label">${data[`global-ov-${type}-label`] || ""}</div><div class="ov-body">${data[`global-ov-${type}-body`] || ""}</div>`;
-        ovGrid.appendChild(card);
-    });
-
-    // 6. Roadmap Simplificado para o Sandbox
-    const mNav = document.getElementById('ps-monthNav');
-    const mPanels = document.getElementById('ps-monthPanels');
-    mNav.innerHTML = ''; mPanels.innerHTML = '';
-    const months = [...new Set(Object.keys(config).map(k => k.split('-')[0]))].sort((a,b)=>a-b);
-    months.forEach((m, idx) => {
-        const btn = document.createElement('button');
-        btn.className = `mbtn ${idx===0?'on':''}`;
-        btn.textContent = `Month ${m}`;
-        const panel = document.createElement('div');
-        panel.className = `mpanel ${idx===0?'on':''}`;
-        const weeks = Object.keys(config).filter(k => k.startsWith(m+'-')).sort();
-        weeks.forEach(wkKey => {
-            const wk = config[wkKey];
-            const div = document.createElement('div');
-            div.className = "wkbar";
-            div.innerHTML = `<h3>${wk.label}</h3><p>${wk.theme}</p>`;
-            panel.appendChild(div);
-        });
-        btn.onclick = () => {
-            mNav.querySelectorAll('.mbtn').forEach(b => b.classList.remove('on'));
-            mPanels.querySelectorAll('.mpanel').forEach(p => p.classList.remove('on'));
-            btn.classList.add('on'); panel.classList.add('on');
-        };
-        mNav.appendChild(btn); mPanels.appendChild(panel);
+    document.querySelectorAll(".editable-global").forEach(el => {
+        const val = data[el.id];
+        if (val !== undefined && val !== null && val !== "") {
+            el.innerHTML = val;
+        } else if (defaults[el.id]) {
+            el.innerHTML = defaults[el.id];
+        }
     });
 }
 
@@ -182,22 +145,42 @@ onAuthStateChanged(auth, async (user) => {
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
                     if (confirm("Undo and return to this exact state?")) {
-                        applySnapshot(backup.plannerConfig, backup.pageContent);
-                        import('./storage.js').then(s => s.saveUserData(currentUser).then(() => window.location.reload()));
+                        import('./storage.js').then(async (store) => {
+                            store.applySnapshot(backup.plannerConfig, backup.pageContent);
+                            await store.saveUserData(currentUser);
+                            window.location.reload();
+                        });
                     }
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
-                    // Ativa a classe de Preview no Body
+                    const coverEl = document.getElementById('page-cover');
+                    sessionSnapshot = { 
+                        config: JSON.parse(JSON.stringify(window.plannerConfig)), 
+                        content: JSON.parse(JSON.stringify(window.pageContent)),
+                        state: JSON.parse(JSON.stringify(window.appState || {})),
+                        cover: coverEl ? coverEl.style.background : "#f4f1ea"
+                    };
+                    
                     document.body.classList.add('preview-mode');
-                    
-                    // Renderiza os dados do backup exclusivamente no Sandbox
-                    renderPreviewSandbox(backup);
-                    
-                    // Fecha o modal e abre a barra de preview
-                    historyModal.style.display = 'none';
-                    document.getElementById('previewBar').style.display = 'block';
-                    window.scrollTo(0, 0);
+                    import('./storage.js').then(store => {
+                        store.applySnapshot(backup.plannerConfig, backup.pageContent);
+                        window.appState = JSON.parse(JSON.stringify(backup.state || {}));
+                        
+                        if (coverEl) {
+                            coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
+                        }
+
+                        refreshGlobalDOM(backup.pageContent);
+                        renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
+                        
+                        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                        import('./ui.js').then(mod => mod.updateProgressBar());
+                        
+                        historyModal.style.display = 'none';
+                        previewBar.style.display = 'block';
+                        window.scrollTo(0, 0);
+                    });
                 };
 
                 card.querySelector('.btn-delete-backup').onclick = async () => {
@@ -211,17 +194,23 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         document.getElementById('exitPreviewBtn').onclick = () => {
-            document.body.classList.remove('preview-mode');
             previewBar.style.display = 'none';
-        };
-
-        document.getElementById('restorePreviewBtn').onclick = async () => {
-            if (confirm("Restore this version to your account?")) {
-                alert("Use the 'Undo' button in history list to restore fully.");
-            }
+            document.body.classList.remove('preview-mode');
+            
+            // Restaura tudo para o que era antes do preview
+            import('./storage.js').then(store => {
+                store.applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
+                window.appState = sessionSnapshot.state;
+                document.getElementById('page-cover').style.background = sessionSnapshot.cover;
+                
+                refreshGlobalDOM(sessionSnapshot.content);
+                renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+                import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                import('./ui.js').then(mod => mod.updateProgressBar());
+            });
         };
         
-        // --- LÓGICA DO COLOR PICKER (IRO.JS) ---
+        // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
