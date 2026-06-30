@@ -1,8 +1,8 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot } from './storage.js';
-function refreshGlobalDOM(content) {
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
+
 function refreshGlobalDOM(content) {
     const data = content || {};
     document.querySelectorAll('.editable-global').forEach(el => {
@@ -50,7 +50,6 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // Language buttons (noop for now as requested)
         document.querySelectorAll('.lang-opt').forEach(btn => {
             btn.onclick = () => { console.log("Language selected:", btn.textContent); };
         });
@@ -63,10 +62,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-        document.getElementById('exportDataBtn').onclick = () => exportData();
-        
-        const importInput = document.getElementById('importFileInput');
-        document.getElementById('importDataBtn').onclick = () => importInput.click();
+
         // --- EXPORT / IMPORT & HISTORY SYSTEM ---
         const importInput = document.getElementById('importFileInput');
         
@@ -75,7 +71,7 @@ onAuthStateChanged(auth, async (user) => {
 
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
-                if (confirm("Importing will overwrite your current planner. A backup will be saved in 'Import History'. Continue?")) {
+                if (confirm("Importing will overwrite your current planner. A backup of your current state will be saved in 'Import History'. Continue?")) {
                     try {
                         await importData(e.target.files[0], currentUser);
                         alert("Data imported successfully!");
@@ -144,7 +140,7 @@ onAuthStateChanged(auth, async (user) => {
                                 plannerConfig: sessionSnapshot.config, 
                                 pageContent: sessionSnapshot.content
                             })], {type: "application/json"});
-                            await importData(blob, currentUser); 
+                            await importData(blob, currentUser, true); 
                             window.location.reload();
                         }
                     };
@@ -169,11 +165,11 @@ onAuthStateChanged(auth, async (user) => {
             import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         };
         
+        // --- COVER & COLOR PICKER ---
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         
-        // --- COLOR PICKER LOGIC ---
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
         const iroPicker = new iro.ColorPicker("#iroPicker", {
             width: 180,
