@@ -365,28 +365,29 @@ export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
-    // Se o grid estiver vazio (como no Preview), recriamos os 3 blocos estáticos padrão primeiro
+    // Se o grid estiver vazio (Preview), recriamos os blocos com IDs corretos
     if (grid.children.length === 0) {
         grid.innerHTML = `
             <div class="ov-card ca">
-              <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
-              <div class="ov-body editable-global" id="global-ov-ca-body">...</div>
+              <div class="ov-label editable-global" id="global-ov-ca-label">Month 1</div>
+              <div class="ov-body editable-global" id="global-ov-ca-body"></div>
             </div>
             <div class="ov-card cb">
-              <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-              <div class="ov-body editable-global" id="global-ov-cb-body">...</div>
+              <div class="ov-label editable-global" id="global-ov-cb-label">Month 2</div>
+              <div class="ov-body editable-global" id="global-ov-cb-body"></div>
             </div>
             <div class="ov-card cg">
-              <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-              <div class="ov-body editable-global" id="global-ov-cg-body">...</div>
+              <div class="ov-label editable-global" id="global-ov-cg-label">Month 3</div>
+              <div class="ov-body editable-global" id="global-ov-cg-body"></div>
             </div>
         `;
-        // Recarrega os textos neles a partir do snapshot
-        Object.keys(window.pageContent || {}).forEach(id => {
-            const el = grid.querySelector(`#${id}`);
-            if (el) el.innerHTML = window.pageContent[id];
-        });
     }
+
+    // APLICAÇÃO IMEDIATA DOS TEXTOS DO BACKUP
+    Object.keys(window.pageContent || {}).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = window.pageContent[id];
+    });
 
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
@@ -403,8 +404,8 @@ export function renderDynamicOverviewBlocks(uid) {
                 }
             };
             card.prepend(delBtn);
-            if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
         }
+        if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
     });
 
     if(window.pageContent && window.pageContent.dynamicBlocks) {
