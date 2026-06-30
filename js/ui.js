@@ -1,6 +1,6 @@
 // --- PROGRESS FUNCTIONS ---
 export function updateProgressBar() {
-    // Ensures we use the current global state (crucial for Preview Mode)
+    // Ensure we are using the most current global state (important for Preview Mode)
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
@@ -13,6 +13,7 @@ export function updateProgressBar() {
     // We only count days that exist in the current configuration being viewed
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
+            // Verify if the day belongs to the current plannerConfig
             const dayNum = parseInt(key.replace('d', ''));
             const dayExists = Object.values(config).some(week => 
                 week.days.some(d => d.n === dayNum)
@@ -44,11 +45,9 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Clean current UI
+    // Clear navigation and panels
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
-
-    if (addBtn) addBtn.style.display = isPreview ? 'none' : 'block';
 
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
@@ -68,7 +67,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
-                <p class="editable-global" id="m-desc-${m}" contenteditable="${isEditMode && !isPreview}">English Study Plan — Continuous Progress</p>
+                <p class="editable-global" id="m-desc-${m}" contenteditable="${isEditMode}">English Study Plan — Continuous Progress</p>
                 <div style="display: ${isPreview ? 'none' : 'flex'}; gap: 10px;">
                     <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
                     <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
@@ -76,7 +75,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             </div>
         `;
 
-        // --- WEEK NAVIGATION ---
+        // --- WEEK NAVIGATION BAR ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
         mPanel.appendChild(wNav); 
