@@ -111,6 +111,7 @@ onAuthStateChanged(auth, async (user) => {
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
+                    document.body.classList.add('preview-mode');
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)) 
@@ -129,6 +130,7 @@ onAuthStateChanged(auth, async (user) => {
 
                     document.getElementById('restorePreviewBtn').onclick = async () => {
                         if (confirm("Restore this version?")) {
+                            document.body.classList.remove('preview-mode');
                             await importData(backup, currentUser); 
                             window.location.reload();
                         }
@@ -146,6 +148,7 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         document.getElementById('exitPreviewBtn').onclick = () => {
+            document.body.classList.remove('preview-mode');
             previewBar.style.display = 'none';
             applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
             refreshGlobalDOM(sessionSnapshot.content);
