@@ -19,11 +19,11 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Sobrescreve os objetos globais para garantir visibilidade em todos os módulos
+    // Overwrites global objects to ensure visibility across all modules
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
-    // Sincroniza as variáveis locais do módulo storage.js para corresponderem
+    // Sync local module variables
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
 
@@ -53,11 +53,6 @@ export async function loadUserData(uid) {
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
-
-            Object.keys(pageContent).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = pageContent[id];
-            });
 
             return { state, plannerConfig, pageContent, history, importHistory };
         }
