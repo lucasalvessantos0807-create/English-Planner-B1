@@ -342,34 +342,41 @@ export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
+    // 1. Estrutura com Textos Padrão (Fallbacks)
+    const defaults = {
+        'global-ov-ca-label': 'Month 1 — Foundation',
+        'global-ov-ca-body': 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web',
+        'global-ov-cb-label': 'Month 2 — Building',
+        'global-ov-cb-body': 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey',
+        'global-ov-cg-label': 'Month 3 — Consolidation',
+        'global-ov-cg-body': 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick'
+    };
+
+    // 2. Reconstrói a estrutura base
     grid.innerHTML = `
         <div class="ov-card ca">
-          <div class="ov-label editable-global" id="global-ov-ca-label">Month 1</div>
+          <div class="ov-label editable-global" id="global-ov-ca-label"></div>
           <div class="ov-body editable-global" id="global-ov-ca-body"></div>
         </div>
         <div class="ov-card cb">
-          <div class="ov-label editable-global" id="global-ov-cb-label">Month 2</div>
+          <div class="ov-label editable-global" id="global-ov-cb-label"></div>
           <div class="ov-body editable-global" id="global-ov-cb-body"></div>
         </div>
         <div class="ov-card cg">
-          <div class="ov-label editable-global" id="global-ov-cg-label">Month 3</div>
+          <div class="ov-label editable-global" id="global-ov-cg-label"></div>
           <div class="ov-body editable-global" id="global-ov-cg-body"></div>
         </div>
     `;
 
-    const staticIds = [
-        'global-ov-ca-label', 'global-ov-ca-body',
-        'global-ov-cb-label', 'global-ov-cb-body',
-        'global-ov-cg-label', 'global-ov-cg-body'
-    ];
-
-    staticIds.forEach(id => {
+    // 3. Aplica Texto: Prioridade para o salvo (ou backup), senão usa o padrão
+    Object.keys(defaults).forEach(id => {
         const el = document.getElementById(id);
-        if (el && window.pageContent && window.pageContent[id]) {
-            el.innerHTML = window.pageContent[id];
+        if (el) {
+            el.innerHTML = (window.pageContent && window.pageContent[id]) ? window.pageContent[id] : defaults[id];
         }
     });
 
+    // 4. Botões de Ocultar/Excluir
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
             const delBtn = document.createElement('button');
@@ -389,6 +396,7 @@ export function renderDynamicOverviewBlocks(uid) {
         if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
     });
 
+    // 5. Blocos Extras Dinâmicos
     if(window.pageContent && window.pageContent.dynamicBlocks) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
