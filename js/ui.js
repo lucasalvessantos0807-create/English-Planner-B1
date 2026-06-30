@@ -31,7 +31,7 @@ export function updateProgressBar() {
 }
 
 // --- FUNÇÃO DE RENDERIZAÇÃO DA ESTRUTURA ---
-export function renderStructure(plannerConfig, isEditMode, onWeekChange) {
+export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false) {
     const monthNav = document.getElementById('monthNav');
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
@@ -90,7 +90,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange) {
                 mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
                 wBtn.classList.add('on');
                 wPanel.classList.add('on');
-                onWeekChange(m, weekNum);
+                onWeekChange(m, weekNum, isPreview);
             };
 
             wNav.appendChild(wBtn);
