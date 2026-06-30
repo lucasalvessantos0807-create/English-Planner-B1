@@ -1,6 +1,9 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot } from './storage.js';
 function refreshGlobalDOM(content) {
+import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
+import { renderStructure, updateProgressBar } from './ui.js';
+function refreshGlobalDOM(content) {
     const data = content || {};
     document.querySelectorAll('.editable-global').forEach(el => {
         if (data[el.id] !== undefined) {
@@ -8,8 +11,6 @@ function refreshGlobalDOM(content) {
         }
     });
 }
-import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
-import { renderStructure, updateProgressBar } from './ui.js';
 
 let currentUser = null;
 
@@ -66,9 +67,10 @@ onAuthStateChanged(auth, async (user) => {
         
         const importInput = document.getElementById('importFileInput');
         document.getElementById('importDataBtn').onclick = () => importInput.click();
-        // --- EXPORT / IMPORT & HISTORY ---
-        document.getElementById('exportDataBtn').onclick = () => exportData();
+        // --- EXPORT / IMPORT & HISTORY SYSTEM ---
         const importInput = document.getElementById('importFileInput');
+        
+        document.getElementById('exportDataBtn').onclick = () => exportData();
         document.getElementById('importDataBtn').onclick = () => importInput.click();
 
         importInput.onchange = async (e) => {
@@ -97,7 +99,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('closeHistoryModal').onclick = () => historyModal.style.display = 'none';
 
         function renderImportHistory() {
-            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted);">No backups found.</p>' : '';
+            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
             importHistory.forEach(backup => {
                 const card = document.createElement('div');
                 card.className = 'import-backup-card';
@@ -121,7 +123,10 @@ onAuthStateChanged(auth, async (user) => {
                 };
 
                 card.querySelector('.btn-preview').onclick = () => {
-                    sessionSnapshot = { config: JSON.parse(JSON.stringify(window.plannerConfig)), content: JSON.parse(JSON.stringify(window.pageContent)) };
+                    sessionSnapshot = { 
+                        config: JSON.parse(JSON.stringify(window.plannerConfig)), 
+                        content: JSON.parse(JSON.stringify(window.pageContent)) 
+                    };
                     applySnapshot(backup.plannerConfig, backup.pageContent);
                     refreshGlobalDOM(backup.pageContent);
                     renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
@@ -134,7 +139,11 @@ onAuthStateChanged(auth, async (user) => {
 
                     document.getElementById('restorePreviewBtn').onclick = async () => {
                         if (confirm("Restore this version? Current data will be moved to history.")) {
-                            const blob = new Blob([JSON.stringify({state: window.appState, plannerConfig: sessionSnapshot.config, pageContent: sessionSnapshot.content})], {type: "application/json"});
+                            const blob = new Blob([JSON.stringify({
+                                state: window.appState, 
+                                plannerConfig: sessionSnapshot.config, 
+                                pageContent: sessionSnapshot.content
+                            })], {type: "application/json"});
                             await importData(blob, currentUser); 
                             window.location.reload();
                         }
