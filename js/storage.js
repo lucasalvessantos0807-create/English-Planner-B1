@@ -19,16 +19,19 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Updates local module references
-    plannerConfig = JSON.parse(JSON.stringify(newConfig));
-    pageContent = JSON.parse(JSON.stringify(newContent || {}));
-    
-    // Updates global references used by app.js, ui.js and planner.js
-    window.plannerConfig = plannerConfig;
-    window.pageContent = pageContent;
+    // Limpa referências globais antes de aplicar o backup
+    window.plannerConfig = {};
+    window.pageContent = {};
 
-    // Force progress calculation based on the new snapshot
-    import('./ui.js').then(mod => mod.updateProgressBar());
+    // Aplica os novos dados transformando em objetos reais para evitar referências circulares
+    window.plannerConfig = JSON.parse(JSON.stringify(newConfig));
+    window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
+    
+    // Sincroniza as variáveis locais do módulo storage.js
+    plannerConfig = window.plannerConfig;
+    pageContent = window.pageContent;
+
+    console.log("Snapshot applied to global window objects.");
 }
 
 export async function loadUserData(uid) {
