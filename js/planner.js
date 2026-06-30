@@ -120,17 +120,22 @@ function refreshCurrentWeek(uid) {
     }
 }
 
-export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
+export function buildWeek(m, w, uid, openDays = [], isPreview = false, targetPrefix = "", customConfig = null, customState = null) {
     const key = `${m}-${w}`;
-    const wk = window.plannerConfig[key];
-    const container = document.getElementById(`wp${m}-${w}`);
+    const config = customConfig || window.plannerConfig;
+    const activeState = customState || window.state;
+    
+    const containerId = targetPrefix ? `${targetPrefix}wp${m}-${w}` : `wp${m}-${w}`;
+    const container = document.getElementById(containerId);
+    
+    const wk = config[key];
     if (!wk || !container) return;
 
     container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
-        const dayData = state[dayKey] || { done: false, notes: "" };
+        const dayData = activeState[dayKey] || { done: false, notes: "" };
         const card = document.createElement("div");
         card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
@@ -152,16 +157,17 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
                 </div>`;
         }).join('');
 
+        const dbId = targetPrefix ? `${targetPrefix}db${day.n}` : `db${day.n}`;
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${day.name}</div>
                 <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
-            <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
+            <div class="daybody ${isOpen ? 'on' : ''}" id="${dbId}">
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" id="nt${day.n}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
+                <textarea class="ntxt" id="${targetPrefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
@@ -214,7 +220,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
         if (addBtn) addBtn.onclick = () => {
             pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, customConfig, customState);
         };
 
         card.querySelectorAll('.del-act').forEach(btn => {
@@ -222,7 +228,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
                 if(confirm("Delete this activity?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, targetPrefix, customConfig, customState);
                 }
             };
         });
