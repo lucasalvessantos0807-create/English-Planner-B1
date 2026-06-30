@@ -7,7 +7,7 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content) {
     const data = content || {};
     
-    // Default contents for Daily Template if not present in backup
+    // Conteúdos padrão para garantir que o Daily Template nunca fique em branco
     const defaults = {
         "tpl-t1": "0–15 min", 
         "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
@@ -26,15 +26,11 @@ function refreshGlobalDOM(content) {
     };
 
     document.querySelectorAll(".editable-global").forEach(el => {
-        const backupValue = data[el.id];
-        const defaultValue = defaults[el.id];
-
-        if (backupValue !== undefined && backupValue !== null && backupValue !== "") {
-            // Use value from backup
-            el.innerHTML = backupValue;
-        } else if (defaultValue) {
-            // Use default system value if backup is empty
-            el.innerHTML = defaultValue;
+        const val = data[el.id];
+        if (val !== undefined && val !== null && val !== "") {
+            el.innerHTML = val;
+        } else if (defaults[el.id]) {
+            el.innerHTML = defaults[el.id];
         }
     });
 }
@@ -156,8 +152,6 @@ onAuthStateChanged(auth, async (user) => {
 
                 card.querySelector('.btn-preview').onclick = () => {
                     const coverEl = document.getElementById('page-cover');
-                    
-                    // Save current session to allow exit
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)),
@@ -166,48 +160,35 @@ onAuthStateChanged(auth, async (user) => {
                     };
                     
                     document.body.classList.add('preview-mode');
-                    
-                    // 1. Load data from backup file
-                    applySnapshot(backup.plannerConfig, backup.pageContent);
-                    window.appState = JSON.parse(JSON.stringify(backup.state || {}));
-                    
-                    // 2. Update Header/Cover Color
-                    if (coverEl) {
-                        coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
-                    }
-
-                    // 3. Force update on all texts (Template, Goals, etc)
-                    refreshGlobalDOM(backup.pageContent);
-                    
-                    // 4. Rebuild structure for Preview
-                    renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
-                    
-                    // 5. Update Overview blocks and Progress Bar
-                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                    import('./ui.js').then(mod => mod.updateProgressBar());
-                    
-                    historyModal.style.display = 'none';
-                    previewBar.style.display = 'block';
-                    window.scrollTo(0, 0);
-                };
-                    // Refresh progress bar based on backup 'state'
-                    import('./ui.js').then(mod => {
-                        window.appState = backup.state || {};
-                        mod.updateProgressBar();
-                    });
-                    
-                    historyModal.style.display = 'none';
-                    previewBar.style.display = 'block';
-                    window.scrollTo(0, 0);
-
-                    document.getElementById('restorePreviewBtn').onclick = async () => {
-                        if (confirm("Restore this version?")) {
-                            document.body.classList.remove('preview-mode');
-                            await importData(backup, currentUser); 
-                            window.location.reload();
+                    import('./storage.js').then(store => {
+                        store.applySnapshot(backup.plannerConfig, backup.pageContent);
+                        window.appState = JSON.parse(JSON.stringify(backup.state || {}));
+                        
+                        if (coverEl) {
+                            coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
                         }
-                    };
+
+                        refreshGlobalDOM(backup.pageContent);
+                        renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
+                        
+                        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                        import('./ui.js').then(mod => mod.updateProgressBar());
+                        
+                        historyModal.style.display = 'none';
+                        previewBar.style.display = 'block';
+                        window.scrollTo(0, 0);
+                    });
                 };
+
+                card.querySelector('.btn-delete-backup').onclick = async () => {
+                    if(confirm("Delete backup?")) {
+                        await deleteImportBackup(currentUser, backup.id);
+                        renderImportHistory();
+                    }
+                };
+                historyList.appendChild(card);
+            });
+        }
 
                 card.querySelector('.btn-delete-backup').onclick = async () => {
                     if(confirm("Delete backup?")) {
