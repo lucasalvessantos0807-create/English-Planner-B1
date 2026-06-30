@@ -7,7 +7,7 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || {};
     
-    // Conteúdos padrão para garantir que nada fique em branco
+    // Conteúdos padrão integrais (Daily Template restaurado)
     const defaults = {
         "global-cover-eye": "Personal English Study Planner",
         "global-cover-title": "A2+ to B1 Roadmap",
@@ -36,9 +36,9 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-monthly": "Monthly Plans"
     };
 
-    // Define qual container será o pai para a busca dos IDs (Normal ou Sandbox)
+    // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
-
+    
     parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
         const cleanId = el.id.replace('sb-', '');
         const val = data[cleanId];
@@ -172,7 +172,7 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
-                    // 1. Atualizar Textos Globais da Sandbox (incluindo capa e metas)
+                    // 1. Atualizar Textos Globais da Sandbox
                     refreshGlobalDOM(backupContent, "sb-");
 
                     // 2. Cor da Capa na Sandbox
@@ -372,7 +372,7 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- GAVETAS E PERSONALIZAÇÃO (INTEGRAL) ---
+        // --- GAVETAS E PERSONALIZAÇÃO (INTEGRAL E SEM SIMPLIFICAÇÃO) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
