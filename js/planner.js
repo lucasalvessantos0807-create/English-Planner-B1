@@ -41,10 +41,11 @@ export function cancelEdit(uid) {
     
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
+    
+    isEditMode = false;
 
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
-    isEditMode = false;
 
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = "false";
@@ -82,10 +83,8 @@ export function toggleEditMode(uid) {
         undoStack = [];
         isEditMode = true;
 
-        // Gerenciamento dos botões de blocos
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
-        document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'flex');
 
     } else {
         const currentConfigStr = JSON.stringify(window.plannerConfig);
@@ -101,7 +100,6 @@ export function toggleEditMode(uid) {
 
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
-        document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'none');
     }
 
     updateUIEditMode();
@@ -118,7 +116,7 @@ export function toggleEditMode(uid) {
     });
     
     refreshCurrentWeek(uid);
-    renderDynamicOverviewBlocks(uid); // Re-renderiza para aplicar travas de edição
+    renderDynamicOverviewBlocks(uid);
 }
 
 function refreshCurrentWeek(uid) {
@@ -178,17 +176,11 @@ export function buildWeek(m, w, uid, openDays = []) {
         if (isEditMode) {
             card.querySelectorAll('.aico').forEach(icon => {
                icon.onclick = (e) => {
-                e.stopPropagation(); // Evita que o clique global feche o seletor imediatamente
+                e.stopPropagation();
                 const wrapper = icon.closest('.aico-wrapper');
                 const wasOpen = wrapper.classList.contains('show-suggestions');
-                
-                // Fecha todos os seletores abertos antes de decidir se abre este
                 document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                
-                // Se ele não estava aberto, abra-o agora
-                if (!wasOpen) {
-                    wrapper.classList.add('show-suggestions');
-                }
+                if (!wasOpen) wrapper.classList.add('show-suggestions');
             };
             });
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
@@ -365,7 +357,6 @@ export function renderDynamicOverviewBlocks(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     if (!grid) return;
 
-    // 1. Limpa e Recria a estrutura base (Garante que não fiquem textos residuais)
     grid.innerHTML = `
         <div class="ov-card ca">
           <div class="ov-label editable-global" id="global-ov-ca-label">Month 1</div>
@@ -381,7 +372,6 @@ export function renderDynamicOverviewBlocks(uid) {
         </div>
     `;
 
-    // 2. Aplica os textos salvos no window.pageContent (que o applySnapshot atualizou)
     const staticIds = [
         'global-ov-ca-label', 'global-ov-ca-body',
         'global-ov-cb-label', 'global-ov-cb-body',
@@ -390,12 +380,11 @@ export function renderDynamicOverviewBlocks(uid) {
 
     staticIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el && window.pageContent[id]) {
+        if (el && window.pageContent && window.pageContent[id]) {
             el.innerHTML = window.pageContent[id];
         }
     });
 
-    // 3. Gerenciamento de ocultação e botões de controle
     grid.querySelectorAll('.ov-card').forEach((card, index) => {
         if (!card.querySelector('.del-ov-btn')) {
             const delBtn = document.createElement('button');
@@ -412,10 +401,9 @@ export function renderDynamicOverviewBlocks(uid) {
             };
             card.prepend(delBtn);
         }
-        if(window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
+        if(window.pageContent && window.pageContent[`hide-static-ov-${index}`]) card.style.display = 'none';
     });
 
-    // 4. Renderiza blocos dinâmicos extras do backup
     if(window.pageContent && window.pageContent.dynamicBlocks) {
         window.pageContent.dynamicBlocks.forEach(blockId => {
             if(document.getElementById(`container-${blockId}`)) return;
