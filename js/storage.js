@@ -19,12 +19,16 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Atualiza as referências locais
+    // Updates local module references
     plannerConfig = JSON.parse(JSON.stringify(newConfig));
-    pageContent = JSON.parse(JSON.stringify(newContent));
-    // Atualiza as referências globais que o app.js e ui.js usam
+    pageContent = JSON.parse(JSON.stringify(newContent || {}));
+    
+    // Updates global references used by app.js, ui.js and planner.js
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
+
+    // Force progress calculation based on the new snapshot
+    import('./ui.js').then(mod => mod.updateProgressBar());
 }
 
 export async function loadUserData(uid) {
