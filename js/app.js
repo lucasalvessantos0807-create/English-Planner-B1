@@ -22,7 +22,6 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- USERNAME LOGIC ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -41,7 +40,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- LANGUAGE ACCORDION LOGIC ---
         document.getElementById('langToggle').onclick = () => {
             const wrapper = document.getElementById('langWrapper');
             const arrow = document.getElementById('langArrow');
@@ -50,14 +48,9 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        document.querySelectorAll('.lang-opt').forEach(btn => {
-            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
-        });
-
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
-        // --- TOPBAR BUTTONS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
@@ -65,13 +58,12 @@ onAuthStateChanged(auth, async (user) => {
 
         // --- EXPORT / IMPORT & HISTORY SYSTEM ---
         const importInput = document.getElementById('importFileInput');
-        
         document.getElementById('exportDataBtn').onclick = () => exportData();
         document.getElementById('importDataBtn').onclick = () => importInput.click();
 
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
-                if (confirm("Importing will overwrite your current planner. A backup of your current state will be saved in 'Import History'. Continue?")) {
+                if (confirm("Importing will overwrite your current planner. A backup will be saved in 'Import History'. Continue?")) {
                     try {
                         await importData(e.target.files[0], currentUser);
                         alert("Data imported successfully!");
