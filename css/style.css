@@ -18,9 +18,9 @@ button, input, select, textarea { font-family: inherit; }
 #preview-sandbox {
     display: none;
     position: fixed;
-    top: 46px; /* Altura da Preview Bar */
+    top: 46px; /* Altura da Preview Bar laranja */
     left: 0;
-    right: 320px; /* Largura da barra de settings */
+    right: 320px; /* Largura da barra lateral de settings para deixá-la visível */
     bottom: 0;
     background: var(--bg);
     z-index: 8500;
@@ -29,8 +29,12 @@ button, input, select, textarea { font-family: inherit; }
     box-shadow: 10px 0 30px rgba(0,0,0,0.1);
 }
 
+/* Quando o modo preview está ativo, mostramos o sandbox e escondemos a topbar original */
 body.preview-mode #preview-sandbox { display: block; }
 body.preview-mode .topbar { visibility: hidden; }
+
+/* Esconde o conteúdo principal do planner para não haver sobreposição visual por baixo do sandbox */
+body.preview-mode #planner .page { visibility: hidden; }
 
 /* ── LOGIN SCREEN ── */
 #login-screen{
@@ -107,4 +111,7 @@ body.preview-mode .topbar { visibility: hidden; }
 #colorChoiceMenu { display:none; position: absolute; top: 175px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; z-index: 1500; flex-direction: column; gap: 4px; min-width: 140px; }
 #colorChoiceMenu button { font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; }
 
-@media(max-width:800px){ #preview-sandbox { right: 0; } }
+/* Garante que o preview sandbox seja responsivo */
+@media(max-width:800px){ 
+    #preview-sandbox { right: 0; } 
+}
