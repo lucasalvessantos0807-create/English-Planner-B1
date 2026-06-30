@@ -58,16 +58,51 @@
   </div>
 </div>
 
-<!-- ── PLANNER ── -->
+<!-- ── PREVIEW VIEWPORT (O SEGUNDO PLANNER / POP-UP) ── -->
+<div id="preview-viewport">
+  <div id="pv-page-cover" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border);"></div>
+  <div class="page">
+    <div class="cover">
+      <div class="cover-eye" id="pv-global-cover-eye"></div>
+      <div class="cover-title" id="pv-global-cover-title"></div>
+      <div class="cover-sub" id="pv-global-cover-sub"></div>
+    </div>
+    <div class="goal-box">
+      <strong id="pv-global-goal-strong"></strong>
+      <div id="pv-global-goal-text"></div>
+    </div>
+    <div class="sec">3-Month Overview</div>
+    <div class="ov-grid" id="pv-dynamic-ov-grid"></div>
+    <div class="sec">Daily Template (1.5–2 hours)</div>
+    <div class="tpl" id="pv-template-container">
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t1"></div><div class="tpl-act" id="pv-tpl-a1"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t2"></div><div class="tpl-act" id="pv-tpl-a2"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t3"></div><div class="tpl-act" id="pv-tpl-a3"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t4"></div><div class="tpl-act" id="pv-tpl-a4"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t5"></div><div class="tpl-act" id="pv-tpl-a5"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t6"></div><div class="tpl-act" id="pv-tpl-a6"></div></div>
+      <div class="tpl-row"><div class="tpl-time" id="pv-tpl-t7"></div><div class="tpl-act" id="pv-tpl-a7"></div></div>
+    </div>
+    <div class="sec">Progress</div>
+    <div class="prog-box">
+      <div class="prog-bg"><div class="prog-fill" id="pv-pbar"></div></div>
+      <div class="prog-stats"><span id="pv-prog-text"></span></div>
+    </div>
+    <div class="sec">Monthly Plans</div>
+    <div class="month-nav" id="pv-monthNav"></div>
+    <div id="pv-monthPanels"></div>
+  </div>
+</div>
+
+<!-- ── PLANNER ORIGINAL ── -->
 <div id="planner">
   <div class="topbar">
     <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
     <div style="display: flex; gap: 8px;">
-      <!-- Botões de Controle -->
-      <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">✎ Edit Mode</button>
+      <button id="editModeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">✎ Edit Mode</button>
       <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
       <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
-      <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer; transition: all 0.2s;">🎨 Personalize</button>
+      <button id="personalizeBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">🎨 Personalize</button>
       <button id="settingsBtn" style="font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">⚙️ Settings</button>
     </div>
   </div>
@@ -76,17 +111,12 @@
     <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
    <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
     
-    <!-- Menu de Escolha Sutil (Posicionado abaixo do botão) -->
     <div id="colorChoiceMenu" style="display:none; position: absolute; top: 175px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; z-index: 1500; flex-direction: column; gap: 4px; min-width: 140px;">
       <button class="mbtn" id="choiceSolid" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🎨 Solid Color</button>
       <button class="mbtn" id="choiceGradient" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🌈 Gradient</button>
       <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
       <button id="choiceCancel" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; color: #cc0000;">✕ Cancel</button>
-        </div>
     </div>
-
-    <input type="color" id="coverColorInput" style="opacity:0; position:absolute; pointer-events:none;">
-    <input type="color" id="coverColorInput2" style="opacity:0; position:absolute; pointer-events:none;">
   </div>
 
   <div class="page">
@@ -103,24 +133,8 @@
 
     <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
     <div id="overview-container">
-      <div class="ov-grid" id="dynamic-ov-grid">
-        <!-- Bloco Mês 1 -->
-        <div class="ov-card ca">
-          <div class="ov-label editable-global" id="global-ov-ca-label">Month 1 — Foundation</div>
-          <div class="ov-body editable-global" id="global-ov-ca-body">Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte's Web</div>
-        </div>
-        <!-- Bloco Mês 2 -->
-        <div class="ov-card cb">
-          <div class="ov-label editable-global" id="global-ov-cb-label">Month 2 — Building</div>
-          <div class="ov-body editable-global" id="global-ov-cb-body">Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey</div>
-        </div>
-        <!-- Bloco Mês 3 -->
-        <div class="ov-card cg">
-          <div class="ov-label editable-global" id="global-ov-cg-label">Month 3 — Consolidation</div>
-          <div class="ov-body editable-global" id="global-ov-cg-body">Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick</div>
-        </div>
-      </div>
-     <button id="addOverviewBlockBtn" style="display:none; width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
+      <div class="ov-grid" id="dynamic-ov-grid"></div>
+      <button id="addOverviewBlockBtn" style="display:none; width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
     </div>
 
     <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
@@ -149,134 +163,45 @@
     <div class="month-nav" id="monthNav">
         <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
     </div>
-
     <div id="monthPanels"></div>
-    
-    <!-- Personalization Drawer -->
-    <div id="customDrawer" class="custom-drawer">
-      <div class="drawer-header">
-        <span>Personalization</span>
-        <button id="closeDrawer">✕</button>
-      </div>
-      <div class="drawer-body">
-        <div class="control-group">
-          <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
-            Font Style <span id="fontArrow">▼</span>
-          </div>
-          <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
-            <div class="font-search-container">
-              <input type="text" id="fontSearchInput" placeholder="Search 100+ fonts...">
-              <div id="fontList" class="font-list-results"></div>
-            </div>
-          </div>
-        </div>
-        <div class="control-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
-          <label style="display:flex; justify-content:space-between; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
-            Font Size <span id="fontSizeVal">15px</span>
-          </label>
-          <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
-        </div>
-      </div>
-    </div>
-
-    <!-- Settings & History Drawer -->
-    <div id="settingsDrawer" class="custom-drawer">
-      <div class="drawer-header">
-        <span>Settings & History</span>
-        <button id="closeSettings">✕</button>
-      </div>
-      <div class="drawer-body">
-        
-        <!-- Accordion de Idioma -->
-        <div class="control-group">
-          <div id="langToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
-            Language Settings <span id="langArrow">▼</span>
-          </div>
-          <div id="langWrapper" style="display:none; margin-top:10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);">
-            <div style="padding: 5px;">
-              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">English</button>
-              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Português (Brasil)</button>
-              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Español</button>
-              <button class="mbtn lang-opt" style="width:100%; text-align:left; border:none; background:none; font-size:0.8rem; padding:8px 12px; cursor:pointer; color: var(--ink);">Français</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="control-group" style="margin-top: 20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="margin:0;">Change History (30 days)</label>
-            <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
-          </div>
-          <div id="historyList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;">
-            <!-- Itens preenchidos via JS -->
-          </div>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; flex-direction: column; gap: 10px;">
-          <button class="topbar-logout" id="changeNameBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Change Username</button>
-          
-          <div style="display: flex; gap: 8px; width: 100%;">
-            <button class="topbar-logout" id="exportDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Export</button>
-            <button class="topbar-logout" id="importDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Import</button>
-          </div>
-          <input type="file" id="importFileInput" style="display:none;" accept=".json">
-
-          <button class="topbar-logout" id="importHistoryBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Import History</button>
-
-          <button class="topbar-logout" id="logoutBtn" style="width:100%; padding: 12px; border: 1px solid #ffcccc; color: #cc0000; background:none; border-radius:8px; cursor:pointer; font-weight:600;">Logout</button>
-        </div>
-      </div>
-
-  </div> <!-- Fim da Page -->
-</div> <!-- Fim do Planner -->
+  </div>
+</div>
 
 <script type="module" src="js/app.js"></script>
-<div id="pickerOverlay"></div>
-<div id="pickerOverlay"></div>
 
+<!-- Color Picker UI -->
+<div id="pickerOverlay"></div>
 <div id="colorPickerContainer">
   <div class="picker-title" id="pickerActionTitle">Select Color</div>
   <div id="iroPicker"></div>
-  
-  <!-- Seção de Histórico e Fixados -->
   <div id="pickerExtras" style="margin-top: 15px; text-align: left; font-size: 11px;">
-    <div style="margin-bottom: 8px;">
-      <span style="color: #888; text-transform: uppercase;">Recent Solids</span>
-      <div id="historySolids" style="display: flex; gap: 6px; margin-top: 4px;"></div>
-    </div>
-    <div style="margin-bottom: 8px;">
-      <span style="color: #888; text-transform: uppercase;">Recent Gradients</span>
-      <div id="historyGradients" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
-    </div>
-    <div>
-      <span style="color: #888; text-transform: uppercase;">Pinned Gradients (Max 2)</span>
-      <div id="pinnedGradients" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div>
-    </div>
+    <div style="margin-bottom: 8px;"><span style="color: #888;">Recent Solids</span><div id="historySolids" style="display: flex; gap: 6px; margin-top: 4px;"></div></div>
+    <div style="margin-bottom: 8px;"><span style="color: #888;">Recent Gradients</span><div id="historyGradients" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div></div>
+    <div><span style="color: #888;">Pinned</span><div id="pinnedGradients" style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;"></div></div>
   </div>
-
   <div class="picker-btns">
     <button class="picker-btn btn-cancel" id="btnCancelPicker">Cancel</button>
     <button class="picker-btn btn-apply" id="btnApplyPicker">Confirm</button>
   </div>
 </div>
-    <!-- Import History Modal -->
+
+<!-- Import History Modal -->
 <div id="importHistoryModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--white); width:100%; max-width:550px; border-radius:16px; display:flex; flex-direction:column; max-height:80vh; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
       <h3 style="font-size:1.1rem; font-weight:600;">Import Backups (6 Months)</h3>
       <button id="closeHistoryModal" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted);">✕</button>
     </div>
-    <div id="importHistoryList" style="flex:1; overflow-y:auto; padding:15px; background:var(--bg);">
-      <!-- Generated by JS -->
-    </div>
+    <div id="importHistoryList" style="flex:1; overflow-y:auto; padding:15px; background:var(--bg);"></div>
   </div>
 </div>
 
-<!-- Preview System -->
+<!-- Preview Bar -->
 <div id="previewBar" style="display:none; position:fixed; top:0; left:0; width:100%; background:var(--accent); color:white; padding:12px; z-index:4000; text-align:center; font-weight:600; box-shadow:0 2px 15px rgba(0,0,0,0.2); font-family: sans-serif;">
   PREVIEW MODE: Viewing backup content.
   <button id="exitPreviewBtn" style="margin-left:20px; padding:6px 15px; border-radius:6px; border:1px solid white; background:none; color:white; cursor:pointer; font-size:0.8rem;">Exit Preview</button>
   <button id="restorePreviewBtn" style="margin-left:10px; padding:6px 15px; border-radius:6px; border:none; background:white; color:var(--accent); cursor:pointer; font-size:0.8rem; font-weight:bold;">Restore This Version</button>
 </div>
+
 </body>
 </html>
