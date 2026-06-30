@@ -110,20 +110,34 @@ onAuthStateChanged(auth, async (user) => {
                     }
                 };
 
-                card.querySelector('.btn-preview').onclick = () => {
-                    document.body.classList.add('preview-mode');
+                // Salva estado ATUAL completo para poder voltar depois
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
-                        content: JSON.parse(JSON.stringify(window.pageContent)) 
+                        content: JSON.parse(JSON.stringify(window.pageContent)),
+                        cover: cover.style.background 
                     };
+                    
+                    document.body.classList.add('preview-mode');
+
+                    // Aplica dados do BACKUP nas variáveis globais
                     applySnapshot(backup.plannerConfig, backup.pageContent);
+                    
+                    // 1. Atualiza Cor do Cover do Backup
+                    if (backup.state?.settings?.coverColor) {
+                        cover.style.background = backup.state.settings.coverColor;
+                    } else {
+                        cover.style.background = "#f4f1ea"; // Cor padrão se não houver
+                    }
+
+                    // 2. Atualiza Textos Globais (Títulos, Metas)
                     refreshGlobalDOM(backup.pageContent);
-                    renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-                    import('./planner.js').then(mod => {
-                        const grid = document.getElementById('dynamic-ov-grid');
-                        if(grid) grid.innerHTML = ''; 
-                        mod.renderDynamicOverviewBlocks(currentUser);
-                    });
+                    
+                    // 3. Reconstrói a navegação de meses/semanas
+                    renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser), true);
+                    
+                    // 4. Reconstrói o Overview com os textos do backup
+                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                    
                     historyModal.style.display = 'none';
                     previewBar.style.display = 'block';
                     window.scrollTo(0, 0);
@@ -135,8 +149,7 @@ onAuthStateChanged(auth, async (user) => {
                             window.location.reload();
                         }
                     };
-                };
-
+                
                 card.querySelector('.btn-delete-backup').onclick = async () => {
                     if(confirm("Delete backup?")) {
                         await deleteImportBackup(currentUser, backup.id);
@@ -147,16 +160,16 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        document.getElementById('exitPreviewBtn').onclick = () => {
+        previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
-            previewBar.style.display = 'none';
+            
+            // Restaura dados e cover originais
             applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
+            cover.style.background = sessionSnapshot.cover;
+            
             refreshGlobalDOM(sessionSnapshot.content);
             renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            import('./planner.js').then(mod => {
-                const grid = document.getElementById('dynamic-ov-grid');
-                if(grid) grid.innerHTML = '';
-                mod.renderDynamicOverviewBlocks(currentUser);
+            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
             });
         };
         
