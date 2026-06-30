@@ -74,18 +74,14 @@ export function toggleEditMode(uid) {
     if (!isEditMode) {
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
-        
         sessionInitialDOMSnapshot = {};
         document.querySelectorAll('.editable-global').forEach(el => {
             sessionInitialDOMSnapshot[el.id] = el.innerHTML;
         });
-
         undoStack = [];
         isEditMode = true;
-
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
-
     } else {
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
@@ -97,13 +93,10 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
-
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
     }
-
     updateUIEditMode();
-    
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = isEditMode;
         if (isEditMode) {
@@ -114,7 +107,6 @@ export function toggleEditMode(uid) {
             };
         }
     });
-    
     refreshCurrentWeek(uid);
     renderDynamicOverviewBlocks(uid);
 }
@@ -128,13 +120,13 @@ function refreshCurrentWeek(uid) {
     }
 }
 
-export function buildWeek(m, w, uid, openDays = []) {
+export function buildWeek(m, w, uid, openDays = [], isPreview = false) {
     const key = `${m}-${w}`;
     const wk = window.plannerConfig[key];
     const container = document.getElementById(`wp${m}-${w}`);
     if (!wk || !container) return;
 
-    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
+    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
@@ -144,19 +136,19 @@ export function buildWeek(m, w, uid, openDays = []) {
         const isOpen = openDays.includes(day.n.toString());
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
-            let suggestionsHtml = isEditMode ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
+            let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
             return `
                 <div class="act">
                     <div class="aico-wrapper">
-                        <div class="aico ${act.t}" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                        <div class="aico ${act.t}" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
                         ${suggestionsHtml}
                     </div>
                     <div class="acont">
-                        <div class="atitle" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
-                        <div class="adesc" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                        <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
+                        <div class="adesc" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
                     </div>
-                    <div class="atime" contenteditable="${isEditMode}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
-                    ${isEditMode ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                    <div class="atime" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                    ${(isEditMode && !isPreview) ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
                 </div>`;
         }).join('');
 
@@ -164,16 +156,16 @@ export function buildWeek(m, w, uid, openDays = []) {
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${day.name}</div>
-                <div class="daytag" contenteditable="${isEditMode}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
+                <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
-                ${isEditMode ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" id="nt${day.n}" placeholder="Notes...">${dayData.notes || ""}</textarea>
-                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''}><span>Day ${day.n} completed</span></label>
+                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
+                <textarea class="ntxt" id="nt${day.n}" placeholder="Notes..." ${isPreview ? 'disabled' : ''}>${dayData.notes || ""}</textarea>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
-        if (isEditMode) {
+        if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                icon.onclick = (e) => {
                 e.stopPropagation();
@@ -202,7 +194,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         }
 
         card.querySelectorAll('[contenteditable="true"]').forEach(el => {
-            el.onfocus = () => { if(isEditMode) pushToUndo(); };
+            el.onfocus = () => { if(isEditMode && !isPreview) pushToUndo(); };
             el.onblur = (e) => {
                 const path = e.target.dataset.path;
                 const type = e.target.dataset.type;
@@ -222,7 +214,7 @@ export function buildWeek(m, w, uid, openDays = []) {
         if (addBtn) addBtn.onclick = () => {
             pushToUndo();
             window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+            buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
         };
 
         card.querySelectorAll('.del-act').forEach(btn => {
@@ -230,7 +222,7 @@ export function buildWeek(m, w, uid, openDays = []) {
                 if(confirm("Delete this activity?")) {
                     pushToUndo();
                     window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview);
                 }
             };
         });
@@ -241,16 +233,17 @@ export function buildWeek(m, w, uid, openDays = []) {
             }
         };
 
-        const textarea = card.querySelector('textarea');
-        textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
-
-        const chk = card.querySelector('input[type="checkbox"]');
-        chk.onchange = (e) => {
-            updateState(dayKey, { done: e.target.checked });
-            card.querySelector('.chk').classList.toggle('done', e.target.checked);
-            saveUserData(uid);
-            updateProgressBar();
-        };
+        if (!isPreview) {
+            const textarea = card.querySelector('textarea');
+            textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
+            const chk = card.querySelector('input[type="checkbox"]');
+            chk.onchange = (e) => {
+                updateState(dayKey, { done: e.target.checked });
+                card.querySelector('.chk').classList.toggle('done', e.target.checked);
+                saveUserData(uid);
+                updateProgressBar();
+            };
+        }
 
         container.appendChild(card);
     });
@@ -258,7 +251,7 @@ export function buildWeek(m, w, uid, openDays = []) {
 }
 
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days in this month?", "30"));
+    const dayCount = parseInt(prompt("How many days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
@@ -279,7 +272,7 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    const dayCount = parseInt(prompt("Total days?", "30")), startDay = parseInt(prompt("Start Day (e.g. 1)?", "1"));
+    const dayCount = parseInt(prompt("Total days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
     if (isNaN(dayCount)) return;
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
     Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
@@ -298,7 +291,7 @@ export function editMonthStructure(m, uid) {
 }
 
 export function deleteMonth(m, uid) {
-   if (confirm(`Are you sure you want to delete Month ${m}?`)) {
+   if (confirm(`Delete Month ${m}?`)) {
         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
         saveUserData(uid).then(() => refreshUI(uid));
@@ -317,22 +310,19 @@ function refreshUI(uid) {
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     const blockId = 'ov-' + Date.now();
-    
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
-
     const newBlock = document.createElement('div');
     newBlock.className = 'ov-card cg';
     newBlock.id = `container-${blockId}`;
     newBlock.innerHTML = `
         <button class="del-ov-btn" style="display:flex;">✕</button>
         <div class="ov-label editable-global" id="${blockId}-title" contenteditable="true">New Phase</div>
-        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit description...</div>
+        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit...</div>
     `;
-    
     newBlock.querySelector('.del-ov-btn').onclick = (e) => {
         e.stopPropagation();
-        if(confirm("Delete this overview block?")) {
+        if(confirm("Delete this block?")) {
             newBlock.remove();
             window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
             delete window.pageContent[`${blockId}-title`];
@@ -340,15 +330,10 @@ export function addOverviewBlock(uid) {
             saveUserData(uid);
         }
     };
-
     grid.appendChild(newBlock);
-    
     newBlock.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = isEditMode;
-        el.onblur = () => {
-            window.pageContent[el.id] = el.innerHTML;
-            saveUserData(uid);
-        };
+        el.onblur = () => { window.pageContent[el.id] = el.innerHTML; saveUserData(uid); };
     });
     saveUserData(uid);
 }
@@ -414,7 +399,7 @@ export function renderDynamicOverviewBlocks(uid) {
             newBlock.innerHTML = `
                 <button class="del-ov-btn" style="display:${displayDel};">✕</button>
                 <div class="ov-label editable-global" id="${blockId}-title" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-title`] || 'New Phase'}</div>
-                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-body`] || 'Edit description...'}</div>
+                <div class="ov-body editable-global" id="${blockId}-body" contenteditable="${isEditMode}">${window.pageContent[`${blockId}-body`] || 'Edit...'}</div>
             `;
             newBlock.querySelector('.del-ov-btn').onclick = (e) => {
                 e.stopPropagation();
