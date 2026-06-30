@@ -1,8 +1,7 @@
 // --- PROGRESS FUNCTIONS ---
-export function updateProgressBar() {
-    // Ensure we are using the most current global state (important for Preview Mode)
-    const state = window.appState || {};
-    const config = window.plannerConfig || {};
+export function updateProgressBar(targetPrefix = "", customConfig = null, customState = null) {
+    const state = customState || window.appState || {};
+    const config = customConfig || window.plannerConfig || {};
     
     let totalDays = 0;
     Object.values(config).forEach(w => {
@@ -10,10 +9,8 @@ export function updateProgressBar() {
     });
     
     let done = 0;
-    // We only count days that exist in the current configuration being viewed
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
-            // Verify if the day belongs to the current plannerConfig
             const dayNum = parseInt(key.replace('d', ''));
             const dayExists = Object.values(config).some(week => 
                 week.days.some(d => d.n === dayNum)
@@ -24,18 +21,19 @@ export function updateProgressBar() {
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
-    const pbar = document.getElementById("pbar");
+    const pbar = document.getElementById(targetPrefix + "pbar");
     if (pbar) pbar.style.width = pctValue + "%";
     
-    const dcntEl = document.getElementById("dcnt");
+    const dcntEl = document.getElementById(targetPrefix + "dcnt"); // Se houver ID específico
     if (dcntEl) dcntEl.textContent = done;
 
-    const statsContainer = document.querySelector('.prog-stats span:first-child');
+    // Atualiza o texto "0 / 115 days"
+    const statsContainer = document.getElementById(targetPrefix + "dcnt-text");
     if (statsContainer) {
         statsContainer.innerHTML = `<strong>${done}</strong> / ${totalDays} days`;
     }
 
-    const pctEl = document.getElementById("pct");
+    const pctEl = document.getElementById(targetPrefix + "pct");
     if (pctEl) pctEl.textContent = pctValue + "%";
 }
 
@@ -50,7 +48,6 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
 
     if (!monthNav || !monthPanels) return;
 
-    // Clear navigation and panels
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
@@ -62,7 +59,6 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
         
-        // No sandbox, o addBtn não existe, então usamos appendChild
         if (targetPrefix || !addBtn) {
             monthNav.appendChild(mBtn);
         } else {
@@ -113,6 +109,19 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             wNav.appendChild(wBtn);
             mPanel.appendChild(wPanel);
         });
+
+        if (!isPreview) {
+            mPanel.querySelector('.edit-m-btn').onclick = (e) => {
+                e.stopPropagation();
+                const uid = window.auth.currentUser.uid;
+                import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
+            };
+            mPanel.querySelector('.del-m-btn').onclick = (e) => {
+                e.stopPropagation();
+                const uid = window.auth.currentUser.uid;
+                import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+            };
+        }
 
         monthPanels.appendChild(mPanel);
 
