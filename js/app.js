@@ -7,7 +7,7 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content) {
     const data = content || {};
     
-    // Conteúdos padrão para garantir que o Daily Template nunca fique em branco
+    // Conteúdos padrão para garantir que o Daily Template nunca fique em branco durante o Preview
     const defaults = {
         "tpl-t1": "0–15 min", 
         "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
@@ -145,8 +145,11 @@ onAuthStateChanged(auth, async (user) => {
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
                     if (confirm("Undo and return to this exact state?")) {
-                        applySnapshot(backup.plannerConfig, backup.pageContent);
-                        import('./storage.js').then(s => s.saveUserData(currentUser).then(() => window.location.reload()));
+                        import('./storage.js').then(async (store) => {
+                            store.applySnapshot(backup.plannerConfig, backup.pageContent);
+                            await store.saveUserData(currentUser);
+                            window.location.reload();
+                        });
                     }
                 };
 
@@ -190,29 +193,21 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-                card.querySelector('.btn-delete-backup').onclick = async () => {
-                    if(confirm("Delete backup?")) {
-                        await deleteImportBackup(currentUser, backup.id);
-                        renderImportHistory();
-                    }
-                };
-                historyList.appendChild(card);
-            });
-        }
-
         document.getElementById('exitPreviewBtn').onclick = () => {
             previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
             
             // Restaura tudo para o que era antes do preview
-            applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
-            window.appState = sessionSnapshot.state;
-            document.getElementById('page-cover').style.background = sessionSnapshot.cover;
-            
-            refreshGlobalDOM(sessionSnapshot.content);
-            renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-            import('./ui.js').then(mod => mod.updateProgressBar());
+            import('./storage.js').then(store => {
+                store.applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
+                window.appState = sessionSnapshot.state;
+                document.getElementById('page-cover').style.background = sessionSnapshot.cover;
+                
+                refreshGlobalDOM(sessionSnapshot.content);
+                renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+                import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                import('./ui.js').then(mod => mod.updateProgressBar());
+            });
         };
         
         // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
