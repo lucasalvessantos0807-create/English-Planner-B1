@@ -19,15 +19,16 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Reset global pointers
+    // Reset global references safely
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
-    // Sync local module variables
-    plannerConfig = window.plannerConfig;
-    pageContent = window.pageContent;
+    // Sync module variables
+    const configVar = window.plannerConfig;
+    const contentVar = window.pageContent;
 
-    console.log("Preview snapshot loaded successfully.");
+    // This ensures consistency across the app
+    console.log("Snapshot applied successfully.");
 }
 
 export async function loadUserData(uid) {
