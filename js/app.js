@@ -1,5 +1,13 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot } from './storage.js';
+function refreshGlobalDOM(content) {
+    const data = content || {};
+    document.querySelectorAll('.editable-global').forEach(el => {
+        if (data[el.id] !== undefined) {
+            el.innerHTML = data[el.id];
+        }
+    });
+}
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
@@ -58,41 +66,83 @@ onAuthStateChanged(auth, async (user) => {
         
         const importInput = document.getElementById('importFileInput');
         document.getElementById('importDataBtn').onclick = () => importInput.click();
-        // --- IMPORT HISTORY LOGIC ---
+        // --- EXPORT / IMPORT & HISTORY ---
+        document.getElementById('exportDataBtn').onclick = () => exportData();
+        const importInput = document.getElementById('importFileInput');
+        document.getElementById('importDataBtn').onclick = () => importInput.click();
+
+        importInput.onchange = async (e) => {
+            if (e.target.files.length > 0) {
+                if (confirm("Importing will overwrite your current planner. A backup will be saved in 'Import History'. Continue?")) {
+                    try {
+                        await importData(e.target.files[0], currentUser);
+                        alert("Data imported successfully!");
+                        window.location.reload();
+                    } catch (err) { alert("Import failed: " + err.message); }
+                }
+            }
+        };
+
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
         const previewBar = document.getElementById('previewBar');
-        let originalSessionData = null;
+        const previewOverlay = document.getElementById('previewOverlay');
+        let sessionSnapshot = null;
 
         document.getElementById('importHistoryBtn').onclick = () => {
             renderImportHistory();
             historyModal.style.display = 'flex';
         };
 
-        document.getElementById('closeHistoryModal').onclick = () => {
-            historyModal.style.display = 'none';
-        };
+        document.getElementById('closeHistoryModal').onclick = () => historyModal.style.display = 'none';
 
         function renderImportHistory() {
-            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted);">No import backups found.</p>' : '';
+            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted);">No backups found.</p>' : '';
             importHistory.forEach(backup => {
                 const card = document.createElement('div');
                 card.className = 'import-backup-card';
-                const date = new Date(backup.timestamp).toLocaleString();
                 card.innerHTML = `
                     <div class="backup-info">
-                        <span class="backup-date">Undo Import: ${backup.filename}</span>
-                        <span class="backup-meta">Saved on: ${date}</span>
+                        <span class="backup-date">Pre-Import: ${backup.filename}</span>
+                        <span class="backup-meta">${new Date(backup.timestamp).toLocaleString()}</span>
                     </div>
                     <div class="backup-actions">
-                        <button class="btn-preview" data-id="${backup.id}">Preview</button>
-                        <button class="btn-delete-backup" data-id="${backup.id}">✕</button>
+                        <button class="btn-undo-import">Undo</button>
+                        <button class="btn-preview">Preview</button>
+                        <button class="btn-delete-backup">✕</button>
                     </div>
                 `;
                 
-                card.querySelector('.btn-preview').onclick = () => startPreview(backup);
+                card.querySelector('.btn-undo-import').onclick = async () => {
+                    if (confirm("Undo import and restore this state?")) {
+                        applySnapshot(backup.plannerConfig, backup.pageContent);
+                        import('./storage.js').then(s => s.saveUserData(currentUser).then(() => window.location.reload()));
+                    }
+                };
+
+                card.querySelector('.btn-preview').onclick = () => {
+                    sessionSnapshot = { config: JSON.parse(JSON.stringify(window.plannerConfig)), content: JSON.parse(JSON.stringify(window.pageContent)) };
+                    applySnapshot(backup.plannerConfig, backup.pageContent);
+                    refreshGlobalDOM(backup.pageContent);
+                    renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                    
+                    historyModal.style.display = 'none';
+                    previewBar.style.display = 'block';
+                    previewOverlay.style.display = 'block';
+                    window.scrollTo(0, 0);
+
+                    document.getElementById('restorePreviewBtn').onclick = async () => {
+                        if (confirm("Restore this version? Current data will be moved to history.")) {
+                            const blob = new Blob([JSON.stringify({state: window.appState, plannerConfig: sessionSnapshot.config, pageContent: sessionSnapshot.content})], {type: "application/json"});
+                            await importData(blob, currentUser); 
+                            window.location.reload();
+                        }
+                    };
+                };
+
                 card.querySelector('.btn-delete-backup').onclick = async () => {
-                    if(confirm("Delete this backup permanently?")) {
+                    if(confirm("Delete backup?")) {
                         await deleteImportBackup(currentUser, backup.id);
                         renderImportHistory();
                     }
@@ -101,48 +151,13 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        function startPreview(backup) {
-            originalSessionData = {
-                plannerConfig: JSON.parse(JSON.stringify(window.plannerConfig)),
-                pageContent: JSON.parse(JSON.stringify(window.pageContent))
-            };
-            
-            historyModal.style.display = 'none';
-            previewBar.style.display = 'block';
-            
-            // Aplicar snapshot do backup para visualização
-            applySnapshot(backup.plannerConfig, backup.pageContent);
-            renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            window.scrollTo(0,0);
-
-            document.getElementById('restorePreviewBtn').onclick = async () => {
-                if(confirm("Restore this version? Current data will be overwritten.")) {
-                    await importData({name: "Restored from History"}, currentUser); // Trigger backup of current
-                    applySnapshot(backup.plannerConfig, backup.pageContent);
-                    import('./storage.js').then(s => s.saveUserData(currentUser));
-                    window.location.reload();
-                }
-            };
-        }
-
         document.getElementById('exitPreviewBtn').onclick = () => {
             previewBar.style.display = 'none';
-            applySnapshot(originalSessionData.plannerConfig, originalSessionData.pageContent);
+            previewOverlay.style.display = 'none';
+            applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
+            refreshGlobalDOM(sessionSnapshot.content);
             renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-        };
-        
-        importInput.onchange = async (e) => {
-            if (e.target.files.length > 0) {
-                if (confirm("This will overwrite all your current data with the imported file. Continue?")) {
-                    try {
-                        await importData(e.target.files[0], currentUser);
-                        alert("Data imported successfully! The page will now reload.");
-                        window.location.reload();
-                    } catch (err) {
-                        alert("Error importing data: " + err.message);
-                    }
-                }
-            }
+            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         };
         
         const cover = document.getElementById('page-cover');
