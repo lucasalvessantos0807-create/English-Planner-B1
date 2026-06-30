@@ -6,9 +6,13 @@ import { renderStructure, updateProgressBar } from './ui.js';
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content) {
     const data = content || {};
+    // Selects all editable areas including Daily Template and Goals
     document.querySelectorAll('.editable-global').forEach(el => {
         if (data[el.id] !== undefined) {
             el.innerHTML = data[el.id];
+        } else {
+            // Optional: If the backup doesn't have a custom value, we keep the default HTML
+            // This ensures sections like "Daily Template" reflect the backup state
         }
     });
 }
@@ -136,19 +140,32 @@ onAuthStateChanged(auth, async (user) => {
                     };
                     
                     document.body.classList.add('preview-mode');
+                    
+                    // Apply data from the backup file
                     applySnapshot(backup.plannerConfig, backup.pageContent);
                     
+                    // Update the UI Background
                     if (backup.state?.settings?.coverColor) {
                         cover.style.background = backup.state.settings.coverColor;
                     } else {
                         cover.style.background = "#f4f1ea";
                     }
 
+                    // Refresh all text components (Template, Goals, etc)
                     refreshGlobalDOM(backup.pageContent);
+                    
+                    // Refresh the main roadmap structure
                     renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
                     
+                    // Refresh dynamic summary blocks
                     import('./planner.js').then(mod => {
                         mod.renderDynamicOverviewBlocks(currentUser);
+                    });
+
+                    // Refresh progress bar based on backup 'state'
+                    import('./ui.js').then(mod => {
+                        window.appState = backup.state || {};
+                        mod.updateProgressBar();
                     });
                     
                     historyModal.style.display = 'none';
