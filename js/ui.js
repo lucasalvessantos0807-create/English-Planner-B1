@@ -1,5 +1,12 @@
 // --- PROGRESS FUNCTIONS ---
+/**
+ * Atualiza a barra de progresso e as estatísticas de dias.
+ * @param {string} prefix - Prefixo para IDs (ex: "" para principal, "sb-" para sandbox)
+ * @param {object} customConfig - Configuração do planner (opcional para preview)
+ * @param {object} customState - Estado de conclusão (opcional para preview)
+ */
 export function updateProgressBar(prefix = "", customConfig = null, customState = null) {
+    // Garante que estamos usando o estado mais atual ou o fornecido pelo backup
     const state = customState || window.appState || {};
     const config = customConfig || window.plannerConfig || {};
     
@@ -9,6 +16,7 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
     });
     
     let done = 0;
+    // Só contamos dias marcados como "done" que realmente existem na configuração atual
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
             const dayNum = parseInt(key.replace('d', ''));
@@ -21,6 +29,7 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
     
+    // Atualiza Elementos no DOM usando o prefixo (Ex: pbar ou sb-pbar)
     const pbar = document.getElementById(prefix + "pbar");
     if (pbar) pbar.style.width = pctValue + "%";
     
@@ -30,14 +39,19 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
     const pctEl = document.getElementById(prefix + "pct");
     if (pctEl) pctEl.textContent = pctValue + "%";
 
-    // Atualiza o texto "X / Y days"
-    const statsContainer = dcntEl?.parentElement;
-    if (statsContainer && statsContainer.tagName === 'SPAN') {
-        statsContainer.innerHTML = `<strong id="${prefix}dcnt">${done}</strong> / ${totalDays} days`;
+    // Atualiza a frase estatística: "X / Y days"
+    // Buscamos o span que contém o contador específico
+    const statsSelector = prefix ? `#sb-dcnt` : `#dcnt`;
+    const dcntSpan = document.querySelector(statsSelector);
+    if (dcntSpan && dcntSpan.parentElement) {
+        dcntSpan.parentElement.innerHTML = `<strong id="${prefix}dcnt">${done}</strong> / ${totalDays} days`;
     }
 }
 
 // --- STRUCTURE RENDERING FUNCTION ---
+/**
+ * Renderiza os botões de meses e painéis de semanas.
+ */
 export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "") {
     const monthNav = document.getElementById(prefix + 'monthNav');
     const monthPanels = document.getElementById(prefix + 'monthPanels');
@@ -45,15 +59,17 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
 
     if (!monthNav || !monthPanels) return;
 
-    // Limpa navegação (mantém o botão de add se não for preview)
-    const selector = isPreview ? '.mbtn' : '.mbtn:not(#' + prefix + 'addMonthBtn)';
-    monthNav.querySelectorAll(selector).forEach(n => n.remove());
+    // Limpa a navegação e os painéis
+    // No modo normal, não remove o botão "+ Add Month"
+    const buttonsToRemove = isPreview ? '.mbtn' : '.mbtn:not(#addMonthBtn)';
+    monthNav.querySelectorAll(buttonsToRemove).forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
     const months = [...new Set(Object.keys(plannerConfig).map(key => key.split('-')[0]))]
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
+        // --- Criar Botão do Mês ---
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
@@ -64,10 +80,12 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             monthNav.insertBefore(mBtn, addBtn);
         }
 
+        // --- Criar Painel do Mês ---
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `${prefix}mp${m}`;
         
+        // Cabeçalho do Mês
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
@@ -81,12 +99,15 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         `;
 
         const wNav = mPanel.querySelector('.week-nav');
+        
+        // Filtrar e ordenar semanas deste mês
         const weeks = Object.keys(plannerConfig)
             .filter(key => key.startsWith(`${m}-`))
             .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
         weeks.forEach((wkKey, wIdx) => {
             const weekNum = wkKey.split('-')[1];
+            
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.textContent = plannerConfig[wkKey].label;
@@ -100,6 +121,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
                 mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
                 wBtn.classList.add('on');
                 wPanel.classList.add('on');
+                // Dispara a função para construir o conteúdo da semana
                 onWeekChange(m, weekNum, isPreview, prefix);
             };
 
@@ -107,27 +129,37 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             mPanel.appendChild(wPanel);
         });
 
+        // Event listeners para gestão de meses (escondidos em Preview)
         if (!isPreview) {
-            mPanel.querySelector('.edit-m-btn').onclick = (e) => {
-                e.stopPropagation();
-                const uid = window.auth.currentUser.uid;
-                import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
-            };
+            const editBtn = mPanel.querySelector('.edit-m-btn');
+            const delBtn = mPanel.querySelector('.del-m-btn');
+
+            if (editBtn) {
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const uid = window.auth.currentUser.uid;
+                    import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
+                };
+            }
            
-            mPanel.querySelector('.del-m-btn').onclick = (e) => {
-                e.stopPropagation();
-                const uid = window.auth.currentUser.uid;
-                import('./planner.js').then(mod => mod.deleteMonth(m, uid));
-            };
+            if (delBtn) {
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const uid = window.auth.currentUser.uid;
+                    import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+                };
+            }
         }
 
         monthPanels.appendChild(mPanel);
 
+        // Clique no Botão do Mês
         mBtn.onclick = () => {
             monthNav.querySelectorAll('.mbtn').forEach(el => el.classList.remove('on'));
             monthPanels.querySelectorAll('.mpanel').forEach(el => el.classList.remove('on'));
             mBtn.classList.add('on');
             mPanel.classList.add('on');
+            // Clica automaticamente na primeira semana do mês selecionado
             const firstW = mPanel.querySelector('.wbtn');
             if (firstW) firstW.click();
         };
