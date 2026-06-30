@@ -157,42 +157,31 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
-                    // Preencher textos da Sandbox
                     const sbIds = ['global-cover-eye', 'global-cover-title', 'global-cover-sub', 'global-goal-text'];
                     sbIds.forEach(id => {
                         const el = document.getElementById(`sb-${id}`);
                         if (el) el.innerHTML = backupContent[id] || "";
                     });
 
-                    // Cor da Capa na Sandbox
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
-                    // Barra de Progresso na Sandbox
                     let total = 0, done = 0;
                     Object.values(backup.plannerConfig).forEach(w => total += w.days.length);
                     Object.keys(backupState).forEach(k => { if(backupState[k]?.done) done++; });
                     const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                     
-                    const sbPbar = document.getElementById('sb-pbar');
-                    if(sbPbar) sbPbar.style.width = pct + "%";
-                    
-                    const sbPct = document.getElementById('sb-pct');
-                    if(sbPct) sbPct.textContent = pct + "%";
-                    
-                    const sbDcnt = document.getElementById('sb-dcnt-text');
-                    if(sbDcnt) sbDcnt.innerHTML = `<strong>${done}</strong> / ${total} days`;
+                    if(document.getElementById('sb-pbar')) document.getElementById('sb-pbar').style.width = pct + "%";
+                    if(document.getElementById('sb-pct')) document.getElementById('sb-pct').textContent = pct + "%";
+                    if(document.getElementById('sb-dcnt-text')) document.getElementById('sb-dcnt-text').innerHTML = `<strong>${done}</strong> / ${total} days`;
 
-                    // Renderizar Estrutura dentro da Sandbox
                     renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
 
-                    // Mostrar Sandbox
                     historyModal.style.display = 'none';
                     sandbox.style.display = 'flex';
 
-                    // Lógica do botão Restore dentro da Sandbox
                     document.getElementById('restoreSandboxBtn').onclick = async () => {
                         if(confirm("Restore this version?")) {
                             import('./storage.js').then(async (store) => {
@@ -217,7 +206,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('previewSandbox').style.display = 'none';
         };
 
-        // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
+        // --- LÓGICA DO COLOR PICKER ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
@@ -236,24 +225,18 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false; 
-            color1 = null;
+            pickingGradient = false; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color";
-            menu.style.display = 'none'; 
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
         document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true; 
-            color1 = null;
+            pickingGradient = true; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            menu.style.display = 'none'; 
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
-        document.getElementById('choiceCancel').onclick = () => {
-            menu.style.display = 'none';
-        };
+        document.getElementById('choiceCancel').onclick = () => { menu.style.display = 'none'; };
         
         document.addEventListener('click', (e) => {
             if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) menu.style.display = 'none';
@@ -403,8 +386,7 @@ onAuthStateChanged(auth, async (user) => {
             const id = `font-${fontName.replace(/\s+/g, '-')}`;
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
-                link.id = id; 
-                link.rel = 'stylesheet';
+                link.id = id; link.rel = 'stylesheet';
                 link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
                 document.head.appendChild(link);
             }
@@ -461,7 +443,6 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- FINALIZAÇÃO E HISTÓRICO COMUM ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
