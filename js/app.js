@@ -3,6 +3,7 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
+// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content) {
     const data = content || {};
     document.querySelectorAll('.editable-global').forEach(el => {
@@ -22,6 +23,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
+        // --- LÓGICA DE USERNAME (PRESERVA IDENTIDADE) ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -40,6 +42,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
+        // --- ACORDION DE IDIOMA ---
         document.getElementById('langToggle').onclick = () => {
             const wrapper = document.getElementById('langWrapper');
             const arrow = document.getElementById('langArrow');
@@ -48,16 +51,19 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
+        // --- INICIALIZAÇÃO DO PLANNER ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
+        // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // --- EXPORT / IMPORT & HISTORY SYSTEM ---
+        // --- SISTEMA UNIFICADO DE EXPORTAÇÃO / IMPORTAÇÃO ---
         const importInput = document.getElementById('importFileInput');
+        
         document.getElementById('exportDataBtn').onclick = () => exportData();
         document.getElementById('importDataBtn').onclick = () => importInput.click();
 
@@ -68,11 +74,14 @@ onAuthStateChanged(auth, async (user) => {
                         await importData(e.target.files[0], currentUser);
                         alert("Data imported successfully!");
                         window.location.reload();
-                    } catch (err) { alert("Import failed: " + err.message); }
+                    } catch (err) { 
+                        alert("Import failed: " + err.message); 
+                    }
                 }
             }
         };
 
+        // --- HISTÓRICO DE IMPORTAÇÕES (PREVIEW / RESTORE / UNDO) ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
         const previewBar = document.getElementById('previewBar');
@@ -84,37 +93,53 @@ onAuthStateChanged(auth, async (user) => {
             historyModal.style.display = 'flex';
         };
 
-        document.getElementById('closeHistoryModal').onclick = () => historyModal.style.display = 'none';
+        document.getElementById('closeHistoryModal').onclick = () => {
+            historyModal.style.display = 'none';
+        };
 
         function renderImportHistory() {
-            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
+            historyList.innerHTML = importHistory.length === 0 ? 
+                '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
+            
             importHistory.forEach(backup => {
                 const card = document.createElement('div');
                 card.className = 'import-backup-card';
                 card.innerHTML = `
                     <div class="backup-info">
-                        <span class="backup-date">Pre-Import: ${backup.filename}</span>
+                        <span class="backup-date">Backup: ${backup.filename}</span>
                         <span class="backup-meta">${new Date(backup.timestamp).toLocaleString()}</span>
                     </div>
                     <div class="backup-actions">
+                        <button class="btn-restore-backup" style="background:var(--accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:600;">Restore</button>
                         <button class="btn-undo-import">Undo</button>
                         <button class="btn-preview">Preview</button>
                         <button class="btn-delete-backup">✕</button>
                     </div>
                 `;
                 
+                // RESTORE: Volta para esta versão e cria backup da atual
+                card.querySelector('.btn-restore-backup').onclick = async () => {
+                    if (confirm("Restore this version? Your current state will be saved in history.")) {
+                        await importData(backup, currentUser);
+                        window.location.reload();
+                    }
+                };
+
+                // UNDO: Volta para este estado sem criar novos backups redundantes
                 card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Undo import and restore this state?")) {
+                    if (confirm("Undo and return to this exact state?")) {
                         applySnapshot(backup.plannerConfig, backup.pageContent);
                         import('./storage.js').then(s => s.saveUserData(currentUser).then(() => window.location.reload()));
                     }
                 };
 
+                // PREVIEW: Visualiza como o planner era
                 card.querySelector('.btn-preview').onclick = () => {
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)) 
                     };
+                    
                     applySnapshot(backup.plannerConfig, backup.pageContent);
                     refreshGlobalDOM(backup.pageContent);
                     renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
@@ -125,21 +150,17 @@ onAuthStateChanged(auth, async (user) => {
                     previewOverlay.style.display = 'block';
                     window.scrollTo(0, 0);
 
+                    // Botão Restore dentro do Preview
                     document.getElementById('restorePreviewBtn').onclick = async () => {
-                        if (confirm("Restore this version? Current data will be moved to history.")) {
-                            const blob = new Blob([JSON.stringify({
-                                state: window.appState, 
-                                plannerConfig: sessionSnapshot.config, 
-                                pageContent: sessionSnapshot.content
-                            })], {type: "application/json"});
-                            await importData(blob, currentUser, true); 
+                        if (confirm("Restore this version now?")) {
+                            await importData(backup, currentUser); 
                             window.location.reload();
                         }
                     };
                 };
 
                 card.querySelector('.btn-delete-backup').onclick = async () => {
-                    if(confirm("Delete backup?")) {
+                    if(confirm("Delete this backup permanently?")) {
                         await deleteImportBackup(currentUser, backup.id);
                         renderImportHistory();
                     }
@@ -157,7 +178,7 @@ onAuthStateChanged(auth, async (user) => {
             import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         };
         
-        // --- COVER & COLOR PICKER ---
+        // --- LÓGICA DO COLOR PICKER ---
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
@@ -178,7 +199,7 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById('choiceSolid').onclick = () => {
             pickingGradient = false; color1 = null;
-            document.getElementById('pickerActionTitle').textContent = "Select Cover Color";
+            document.getElementById('pickerActionTitle').textContent = "Select Color";
             menu.style.display = 'none'; openPicker();
         };
 
@@ -197,11 +218,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         });
 
-        window.addEventListener('scroll', () => {
-            if (menu) menu.style.display = 'none';
-            document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
-        }, { passive: true });
-
         function openPicker() {
             renderHistoryUI();
             document.getElementById('colorPickerContainer').classList.add('open');
@@ -214,8 +230,6 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         document.getElementById('btnCancelPicker').onclick = closePicker;
-        document.getElementById('pickerOverlay').onclick = closePicker;
-
         document.getElementById('btnApplyPicker').onclick = () => {
             const selectedColor = iroPicker.color.hexString;
             if (!pickingGradient) {
@@ -265,11 +279,10 @@ onAuthStateChanged(auth, async (user) => {
         function renderHistoryUI() {
             const solidContainer = document.getElementById('historySolids');
             const gradContainer = document.getElementById('historyGradients');
-            const pinnedContainer = document.getElementById('pinnedGradients');
             solidContainer.innerHTML = '';
             colorHistory.solids.forEach(color => {
                 const div = document.createElement('div');
-                div.style.cssText = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee; box-shadow:0 1px 3px rgba(0,0,0,0.2);`;
+                div.style.cssText = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee;`;
                 div.onclick = () => applySolid(color);
                 solidContainer.appendChild(div);
             });
@@ -277,34 +290,18 @@ onAuthStateChanged(auth, async (user) => {
             colorHistory.gradients.forEach((g) => {
                 const row = document.createElement('div');
                 row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => pinGradient(g);
                 gradContainer.appendChild(row);
             });
-            pinnedContainer.innerHTML = '';
-            colorHistory.pinned.forEach((g, idx) => {
-                const row = document.createElement('div');
-                row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
-                row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
-                row.querySelector('span').onclick = () => {
-                    colorHistory.pinned.splice(idx, 1);
-                    saveAllColorData(cover.style.background);
-                    renderHistoryUI();
-                };
-                pinnedContainer.appendChild(row);
-            });
         }
 
         function pinGradient(g) {
-            const isPinned = colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2);
-            if (!isPinned && colorHistory.pinned.length < 2) {
+            if (!colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2) && colorHistory.pinned.length < 2) {
                 colorHistory.pinned.push(g);
                 saveAllColorData(cover.style.background);
                 renderHistoryUI();
-            } else if (colorHistory.pinned.length >= 2) {
-                alert("Maximum of 2 pinned gradients. Remove one to add a new one.");
             }
         }
 
@@ -312,53 +309,18 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        document.getElementById('addOverviewBlockBtn').onclick = () => {
-            import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
-        };
-        document.getElementById('clearHistoryBtn').onclick = async () => {
-            if(confirm("Permanently delete ALL history? This cannot be undone.")){
-                await clearAllHistory(currentUser);
-                renderHistory();
-            }
-        };
-
+        // --- PERSONALIZAÇÃO (FONTES E GAVETAS) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
+
         personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
         settingsBtn.onclick = () => { customDrawer.classList.remove('open'); settingsDrawer.classList.toggle('open'); renderHistory(); };
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
-
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            import('./storage.js').then(store => {
-                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
-                store.history.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    const date = new Date(item.timestamp).toLocaleString();
-                    div.innerHTML = `<span class="history-date">${date}</span><strong style="font-size:0.8rem">${item.label}</strong><div style="display:flex; gap:5px; margin-top:5px;"><button class="history-restore" style="flex:1; cursor:pointer;">Restore</button><button class="history-del" style="color:#cc0000; background:none; border:1px solid #ffcccc; border-radius:4px; padding:2px 5px; cursor:pointer;">✕</button></div>`;
-                    div.querySelector('.history-restore').onclick = async () => {
-                        if(confirm("Restore this version? This will overwrite your current months and texts.")){
-                            store.applySnapshot(item.plannerConfig, item.pageContent);
-                            await store.saveUserData(currentUser);
-                            window.location.reload();
-                        }
-                    };
-                    div.querySelector('.history-del').onclick = async () => {
-                        if(confirm("Delete this entry?")){
-                            await deleteHistoryEntry(currentUser, item.id);
-                            renderHistory();
-                        }
-                    };
-                    container.appendChild(div);
-                });
-            });
-        }
 
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
@@ -398,12 +360,11 @@ onAuthStateChanged(auth, async (user) => {
         renderFonts();
 
         const fontSizeSlider = document.getElementById('fontSizeSlider');
-        const settings = userData.state.settings || {};
-        if (settings.font) {
-            loadGoogleFont(settings.font);
-            document.documentElement.style.setProperty('--main-font', `"${settings.font}", sans-serif`);
+        if (userData.state.settings?.font) {
+            loadGoogleFont(userData.state.settings.font);
+            document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
         }
-        fontSizeSlider.value = settings.fontSize || "15";
+        fontSizeSlider.value = userData.state.settings?.fontSize || "15";
         document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
         document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
@@ -427,7 +388,16 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
+        // --- FINALIZAÇÃO ---
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
+        document.getElementById('addOverviewBlockBtn').onclick = () => import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+        document.getElementById('clearHistoryBtn').onclick = async () => {
+            if(confirm("Permanently delete ALL history?")) {
+                await clearAllHistory(currentUser);
+                renderHistory();
+            }
+        };
+
         updateProgressBar();
         
     } else {
