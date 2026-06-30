@@ -3,7 +3,6 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
-// Função para atualizar textos globais e o Overview no DOM
 function refreshGlobalDOM(content) {
     const data = content || {};
     document.querySelectorAll('.editable-global').forEach(el => {
@@ -23,7 +22,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- USERNAME LOGIC (PRESERVA IDENTIDADE) ---
+        // --- USERNAME LOGIC ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -51,21 +50,15 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        document.querySelectorAll('.lang-opt').forEach(btn => {
-            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
-        });
-
-        // --- INITIAL RENDER ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
-        // --- TOPBAR BUTTONS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // --- EXPORT / IMPORT SYSTEM ---
+        // --- EXPORT / IMPORT & HISTORY SYSTEM ---
         const importInput = document.getElementById('importFileInput');
         document.getElementById('exportDataBtn').onclick = () => exportData();
         document.getElementById('importDataBtn').onclick = () => importInput.click();
@@ -75,17 +68,16 @@ onAuthStateChanged(auth, async (user) => {
                 if (confirm("Importing will overwrite your current planner. A backup will be saved. Continue?")) {
                     try {
                         await importData(e.target.files[0], currentUser);
+                        alert("Data imported successfully!");
                         window.location.reload();
                     } catch (err) { alert("Import failed: " + err.message); }
                 }
             }
         };
 
-        // --- IMPORT HISTORY (PREVIEW & UNDO) ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
         const previewBar = document.getElementById('previewBar');
-        const previewOverlay = document.getElementById('previewOverlay');
         let sessionSnapshot = null;
 
         document.getElementById('importHistoryBtn').onclick = () => {
@@ -95,9 +87,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('closeHistoryModal').onclick = () => historyModal.style.display = 'none';
 
         function renderImportHistory() {
-            historyList.innerHTML = importHistory.length === 0 ? 
-                '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
-            
+            historyList.innerHTML = importHistory.length === 0 ? '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
             importHistory.forEach(backup => {
                 const card = document.createElement('div');
                 card.className = 'import-backup-card';
@@ -125,20 +115,16 @@ onAuthStateChanged(auth, async (user) => {
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)) 
                     };
-                    
                     applySnapshot(backup.plannerConfig, backup.pageContent);
                     refreshGlobalDOM(backup.pageContent);
-                    
                     renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
                     import('./planner.js').then(mod => {
                         const grid = document.getElementById('dynamic-ov-grid');
                         if(grid) grid.innerHTML = ''; 
                         mod.renderDynamicOverviewBlocks(currentUser);
                     });
-                    
                     historyModal.style.display = 'none';
                     previewBar.style.display = 'block';
-                    previewOverlay.style.display = 'block';
                     window.scrollTo(0, 0);
 
                     document.getElementById('restorePreviewBtn').onclick = async () => {
@@ -161,7 +147,6 @@ onAuthStateChanged(auth, async (user) => {
 
         document.getElementById('exitPreviewBtn').onclick = () => {
             previewBar.style.display = 'none';
-            previewOverlay.style.display = 'none';
             applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
             refreshGlobalDOM(sessionSnapshot.content);
             renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
@@ -172,7 +157,7 @@ onAuthStateChanged(auth, async (user) => {
             });
         };
         
-        // --- COLOR PICKER (FULL LOGIC COM HISTÓRICO E PINS) ---
+        // --- COVER & COLOR PICKER (FULL IMPLEMENTATION) ---
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
@@ -319,7 +304,7 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- PERSONALIZATION & FONTS (FULL LOGIC COM BUSCA) ---
+        // --- PERSONALIZATION & FONTS (FULL IMPLEMENTATION) ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -398,7 +383,7 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- FINALIZAÇÃO E HISTÓRICO COMUM ---
+        // --- FINAL STEPS ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
