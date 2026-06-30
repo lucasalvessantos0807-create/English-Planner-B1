@@ -1,5 +1,8 @@
 // --- FUNÇÕES DE PROGRESSO ---
 export function updateProgressBar() {
+    // Ensure we are using the most current global state (important for Preview Mode)
+    const state = window.appState || {};
+    const config = window.plannerConfig || {};
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
@@ -9,8 +12,16 @@ export function updateProgressBar() {
     });
     
     let done = 0;
+    // We only count days that exist in the current configuration being viewed
     Object.keys(state).forEach(key => {
-        if (state[key] && state[key].done) done++;
+        if (state[key] && state[key].done) {
+            // Verify if the day belongs to the current plannerConfig
+            const dayNum = parseInt(key.replace('d', ''));
+            const dayExists = Object.values(config).some(week => 
+                week.days.some(d => d.n === dayNum)
+            );
+            if (dayExists) done++;
+        }
     });
 
     const pctValue = totalDays > 0 ? Math.round((done / totalDays) * 100) : 0;
