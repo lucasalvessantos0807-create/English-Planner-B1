@@ -58,6 +58,7 @@ onAuthStateChanged(auth, async (user) => {
         // --- RENDERIZAÇÃO INICIAL ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+        refreshGlobalDOM(userData.pageContent);
         
         // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
@@ -306,7 +307,7 @@ onAuthStateChanged(auth, async (user) => {
             colorHistory.gradients.forEach((g) => {
                 const row = document.createElement('div');
                 row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span style="cursor:pointer; font-size:12px;">📌</span>`;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => pinGradient(g);
                 gradContainer.appendChild(row);
@@ -315,7 +316,7 @@ onAuthStateChanged(auth, async (user) => {
             colorHistory.pinned.forEach((g, idx) => {
                 const row = document.createElement('div');
                 row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid var(--accent);"></div><span style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => {
                     colorHistory.pinned.splice(idx, 1);
@@ -338,16 +339,31 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- PERSONALIZAÇÃO & FONTES (COMPLETA COM BUSCA) ---
+        // --- GAVETAS E PERSONALIZAÇÃO ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsDrawer = document.getElementById('settingsDrawer');
+        const closeSettings = document.getElementById('closeSettings');
 
-        personalizeBtn.onclick = () => { settingsDrawer.classList.remove('open'); customDrawer.classList.toggle('open'); };
-        settingsBtn.onclick = () => { customDrawer.classList.remove('open'); settingsDrawer.classList.toggle('open'); renderHistory(); };
+        personalizeBtn.onclick = () => {
+            if (!document.body.classList.contains('preview-mode')) {
+                settingsDrawer.classList.remove('open');
+                customDrawer.classList.add('open');
+            }
+        };
+
+        settingsBtn.onclick = () => {
+            if (!document.body.classList.contains('preview-mode')) {
+                customDrawer.classList.remove('open');
+                settingsDrawer.classList.add('open');
+                renderHistory();
+            }
+        };
+
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
+        closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
