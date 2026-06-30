@@ -1,6 +1,6 @@
-// --- FUNÇÕES DE PROGRESSO ---
+// --- PROGRESS FUNCTIONS ---
 export function updateProgressBar() {
-    // Garante o uso do estado global atual (importante para o Preview Mode)
+    // Ensure we are using the most current global state (important for Preview Mode)
     const state = window.appState || {};
     const config = window.plannerConfig || {};
     
@@ -10,10 +10,10 @@ export function updateProgressBar() {
     });
     
     let done = 0;
-    // Contamos apenas os dias que existem na configuração sendo visualizada
+    // We only count days that exist in the current configuration being viewed
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
-            // Verifica se o dia pertence ao plannerConfig atual
+            // Verify if the day belongs to the current plannerConfig
             const dayNum = parseInt(key.replace('d', ''));
             const dayExists = Object.values(config).some(week => 
                 week.days.some(d => d.n === dayNum)
@@ -39,13 +39,13 @@ export function updateProgressBar() {
     if (pctEl) pctEl.textContent = pctValue + "%";
 }
 
-// --- FUNÇÃO DE RENDERIZAÇÃO DA ESTRUTURA ---
+// --- STRUCTURE RENDERING FUNCTION ---
 export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false) {
     const monthNav = document.getElementById('monthNav');
     const monthPanels = document.getElementById('monthPanels');
     const addBtn = document.getElementById('addMonthBtn');
 
-    // Limpeza
+    // Clear navigation and panels
     monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
     monthPanels.innerHTML = '';
 
@@ -53,13 +53,13 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
                    .sort((a, b) => Number(a) - Number(b));
 
     months.forEach((m, idx) => {
-        // Criar Botão do Mês
+        // Create Month Button
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.textContent = `Month ${m}`;
         monthNav.insertBefore(mBtn, addBtn);
 
-        // Criar Painel do Mês
+        // Create Month Panel
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `mp${m}`;
@@ -75,7 +75,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             </div>
         `;
 
-        // --- BARRA DE NAVEGAÇÃO DE SEMANAS ---
+        // --- WEEK NAVIGATION BAR ---
         const wNav = document.createElement('div');
         wNav.className = "week-nav";
         mPanel.appendChild(wNav); 
@@ -107,6 +107,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             mPanel.appendChild(wPanel);
         });
 
+        // Event listeners for month management (hidden in Preview)
         if (!isPreview) {
             mPanel.querySelector('.edit-m-btn').onclick = (e) => {
                 e.stopPropagation();
