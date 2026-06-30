@@ -41,7 +41,9 @@ export function cancelEdit(uid) {
     
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
-    
+
+    document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
+    document.getElementById('addOverviewBlockBtn').style.display = 'none';
     isEditMode = false;
 
     document.querySelectorAll('.editable-global').forEach(el => {
@@ -81,6 +83,7 @@ export function toggleEditMode(uid) {
         isEditMode = true;
 
         // Gerenciamento dos botões de blocos
+        document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'flex');
 
@@ -96,6 +99,7 @@ export function toggleEditMode(uid) {
         }
         isEditMode = false;
 
+        document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         document.querySelectorAll('.del-ov-btn').forEach(b => b.style.display = 'none');
     }
