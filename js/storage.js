@@ -111,8 +111,13 @@ export function updateState(dayKey, data) {
 }
 
 export function exportData() {
+    // Criamos uma cópia do estado para remover dados de identidade antes de exportar
+    const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
+    delete cleanState.customName;
+    delete cleanState.namePrompted;
+
     const dataToExport = {
-        state: window.appState,
+        state: cleanState,
         plannerConfig: window.plannerConfig,
         pageContent: window.pageContent,
         history: history,
@@ -122,7 +127,7 @@ export function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `planner_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `planner_export_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -150,7 +155,15 @@ export async function importData(file, uid, isRestore = false) {
                     importHistory.unshift(backup);
                 }
 
+                // Preservar a identificação do usuário atual antes de importar novos dados
+                const currentCustomName = state.customName;
+                const currentNamePrompted = state.namePrompted;
+
                 state = imported.state;
+                
+                // Reaplica a identidade original do usuário ao novo estado importado
+                if (currentCustomName) state.customName = currentCustomName;
+                state.namePrompted = currentNamePrompted || false;
                 plannerConfig = imported.plannerConfig;
                 pageContent = imported.pageContent || {};
                 
