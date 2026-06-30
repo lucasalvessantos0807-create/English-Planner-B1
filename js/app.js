@@ -136,8 +136,24 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('closeHistoryModal').onclick = () => {
             historyModal.style.display = 'none';
         };
+        
+        document.getElementById('undoLastImportBtn').onclick = async () => {
+            if (importHistory.length > 0) {
+                const lastBackup = importHistory[0];
+                if (confirm(`Undo last import and restore to state from: ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
+                    import('./storage.js').then(async (store) => {
+                        // Restaura os dados do backup
+                        await store.importData(lastBackup, currentUser, true);
+                        // Remove o backup que foi usado para desfazer, para manter o histórico limpo
+                        await store.deleteImportBackup(currentUser, lastBackup.id);
+                        window.location.reload();
+                    });
+                }
+            }
+        };
 
         function renderImportHistory() {
+            document.getElementById('undoLastImportBtn').style.display = importHistory.length > 0 ? 'block' : 'none';
             historyList.innerHTML = importHistory.length === 0 ? 
                 '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
             
@@ -221,6 +237,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('closeSandboxBtn').onclick = () => {
             document.getElementById('previewSandbox').style.display = 'none';
             document.body.classList.remove('preview-open');
+            document.getElementById('importHistoryModal').style.display = 'flex';
         };
 
         // --- LÓGICA DO COLOR PICKER (COMPLETA E INTEGRAL) ---
