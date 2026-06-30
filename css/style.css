@@ -458,3 +458,33 @@ body.preview-mode .page {
 #previewSandbox .mpanel.on {
   display: block !important;
 }
+
+/* --- Sandbox Fixes --- */
+#previewSandbox .mbtn:hover, #previewSandbox .wbtn:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+#previewSandbox .mbtn.on {
+    background: var(--accent) !important;
+    color: white !important;
+}
+
+#previewSandbox .wbtn.on {
+    background: var(--ink) !important;
+    color: white !important;
+}
+
+/* Garante que o scroll aconteça apenas dentro da sandbox se necessário */
+body.preview-open {
+    overflow: hidden;
+}
+
+#previewSandbox button:hover {
+    filter: brightness(0.9);
+}
+
+#previewSandbox .page {
+    width: 100% !important;
+    max-width: 900px !important;
+}
