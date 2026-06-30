@@ -19,19 +19,15 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Limpa referências globais antes de aplicar o backup
-    window.plannerConfig = {};
-    window.pageContent = {};
-
-    // Aplica os novos dados transformando em objetos reais para evitar referências circulares
-    window.plannerConfig = JSON.parse(JSON.stringify(newConfig));
+    // Reset global pointers
+    window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
-    // Sincroniza as variáveis locais do módulo storage.js
+    // Sync local module variables
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
 
-    console.log("Snapshot applied to global window objects.");
+    console.log("Preview snapshot loaded successfully.");
 }
 
 export async function loadUserData(uid) {
