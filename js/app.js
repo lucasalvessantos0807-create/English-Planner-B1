@@ -50,9 +50,15 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
+        document.querySelectorAll('.lang-opt').forEach(btn => {
+            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
+        });
+
+        // --- INITIAL RENDER ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         
+        // --- TOPBAR BUTTONS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
@@ -110,34 +116,24 @@ onAuthStateChanged(auth, async (user) => {
                     }
                 };
 
-                // Salva estado ATUAL completo para poder voltar depois
+                card.querySelector('.btn-preview').onclick = () => {
                     sessionSnapshot = { 
                         config: JSON.parse(JSON.stringify(window.plannerConfig)), 
                         content: JSON.parse(JSON.stringify(window.pageContent)),
                         cover: cover.style.background 
                     };
-                    
                     document.body.classList.add('preview-mode');
-
-                    // Aplica dados do BACKUP nas variáveis globais
                     applySnapshot(backup.plannerConfig, backup.pageContent);
-                    
-                    // 1. Atualiza Cor do Cover do Backup
                     if (backup.state?.settings?.coverColor) {
                         cover.style.background = backup.state.settings.coverColor;
                     } else {
-                        cover.style.background = "#f4f1ea"; // Cor padrão se não houver
+                        cover.style.background = "#f4f1ea";
                     }
-
-                    // 2. Atualiza Textos Globais (Títulos, Metas)
                     refreshGlobalDOM(backup.pageContent);
-                    
-                    // 3. Reconstrói a navegação de meses/semanas
                     renderStructure(backup.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser), true);
-                    
-                    // 4. Reconstrói o Overview com os textos do backup
-                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                    
+                    import('./planner.js').then(mod => {
+                        mod.renderDynamicOverviewBlocks(currentUser);
+                    });
                     historyModal.style.display = 'none';
                     previewBar.style.display = 'block';
                     window.scrollTo(0, 0);
@@ -149,7 +145,8 @@ onAuthStateChanged(auth, async (user) => {
                             window.location.reload();
                         }
                     };
-                
+                };
+
                 card.querySelector('.btn-delete-backup').onclick = async () => {
                     if(confirm("Delete backup?")) {
                         await deleteImportBackup(currentUser, backup.id);
@@ -160,25 +157,23 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        previewBar.style.display = 'none';
+        document.getElementById('exitPreviewBtn').onclick = () => {
+            previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
-            
-            // Restaura dados e cover originais
             applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
             cover.style.background = sessionSnapshot.cover;
-            
             refreshGlobalDOM(sessionSnapshot.content);
             renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+            import('./planner.js').then(mod => {
+                mod.renderDynamicOverviewBlocks(currentUser);
             });
         };
         
-        // --- COVER & COLOR PICKER (FULL IMPLEMENTATION) ---
+        // --- COVER & COLOR PICKER ---
         const cover = document.getElementById('page-cover');
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
-        
         const iroPicker = new iro.ColorPicker("#iroPicker", {
             width: 180,
             layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } }]
@@ -296,7 +291,7 @@ onAuthStateChanged(auth, async (user) => {
             colorHistory.pinned.forEach((g, idx) => {
                 const row = document.createElement('div');
                 row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1.5px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
+                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => {
                     colorHistory.pinned.splice(idx, 1);
@@ -308,8 +303,7 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         function pinGradient(g) {
-            const isPinned = colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2);
-            if (!isPinned && colorHistory.pinned.length < 2) {
+            if (!colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2) && colorHistory.pinned.length < 2) {
                 colorHistory.pinned.push(g);
                 saveAllColorData(cover.style.background);
                 renderHistoryUI();
@@ -320,7 +314,7 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- PERSONALIZATION & FONTS (FULL IMPLEMENTATION) ---
+        // --- PERSONALIZATION & FONTS ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
