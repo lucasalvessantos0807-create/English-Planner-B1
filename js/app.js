@@ -7,8 +7,13 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content) {
     const data = content || {};
     
-    // Conteúdos padrão para garantir que o Daily Template nunca fique em branco durante o Preview
+    // Default content to ensure the Daily Template and headers never look empty
     const defaults = {
+        "global-cover-eye": "Personal English Study Planner",
+        "global-cover-title": "A2+ to B1 Roadmap",
+        "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
+        "global-goal-strong": "🎯 Your Goal",
+        "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
         "tpl-t1": "0–15 min", 
         "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
         "tpl-t2": "15–35 min", 
@@ -45,7 +50,7 @@ onAuthStateChanged(auth, async (user) => {
         
         const userData = await loadUserData(currentUser);
 
-        // --- LÓGICA DE USERNAME ---
+        // --- USERNAME LOGIC ---
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -64,7 +69,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- ACORDION DE IDIOMA ---
+        // --- LANGUAGE ACCORDION ---
         document.getElementById('langToggle').onclick = () => {
             const wrapper = document.getElementById('langWrapper');
             const arrow = document.getElementById('langArrow');
@@ -73,22 +78,18 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        document.querySelectorAll('.lang-opt').forEach(btn => {
-            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
-        });
-
-        // --- RENDERIZAÇÃO INICIAL ---
+        // --- INITIAL RENDERING ---
         import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
         
-        // --- BOTÕES DA TOPBAR ---
+        // --- TOPBAR BUTTONS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
 
-        // --- EXPORT / IMPORT SYSTEM ---
+        // --- EXPORT / IMPORT ---
         const cover = document.getElementById('page-cover');
         const importInput = document.getElementById('importFileInput');
         
@@ -109,7 +110,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        // --- HISTÓRICO DE IMPORTAÇÕES (PREVIEW / UNDO) ---
+        // --- IMPORT HISTORY (PREVIEW / UNDO) ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
         const previewBar = document.getElementById('previewBar');
@@ -163,24 +164,27 @@ onAuthStateChanged(auth, async (user) => {
                     };
                     
                     document.body.classList.add('preview-mode');
-                    import('./storage.js').then(store => {
-                        store.applySnapshot(backup.plannerConfig, backup.pageContent);
-                        window.appState = JSON.parse(JSON.stringify(backup.state || {}));
-                        
-                        if (coverEl) {
-                            coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
-                        }
-
-                        refreshGlobalDOM(backup.pageContent);
-                        renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
-                        
-                        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                        import('./ui.js').then(mod => mod.updateProgressBar());
-                        
-                        historyModal.style.display = 'none';
-                        previewBar.style.display = 'block';
-                        window.scrollTo(0, 0);
-                    });
+                    
+                    // 1. Overwrite globals with backup data
+                    applySnapshot(backup.plannerConfig, backup.pageContent);
+                    window.appState = JSON.parse(JSON.stringify(backup.state || {}));
+                    
+                    // 2. Refresh entire central area (page container)
+                    if (coverEl) {
+                        coverEl.style.background = backup.state?.settings?.coverColor || "#f4f1ea";
+                    }
+                    refreshGlobalDOM(backup.pageContent);
+                    
+                    // 3. Rebuild roadmap specifically for Preview
+                    renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser, [], true), true);
+                    
+                    // 4. Update secondary modules
+                    import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+                    updateProgressBar();
+                    
+                    historyModal.style.display = 'none';
+                    previewBar.style.display = 'block';
+                    window.scrollTo(0, 0);
                 };
 
                 card.querySelector('.btn-delete-backup').onclick = async () => {
@@ -197,20 +201,25 @@ onAuthStateChanged(auth, async (user) => {
             previewBar.style.display = 'none';
             document.body.classList.remove('preview-mode');
             
-            // Restaura tudo para o que era antes do preview
-            import('./storage.js').then(store => {
-                store.applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
-                window.appState = sessionSnapshot.state;
-                document.getElementById('page-cover').style.background = sessionSnapshot.cover;
-                
-                refreshGlobalDOM(sessionSnapshot.content);
-                renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-                import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
-                import('./ui.js').then(mod => mod.updateProgressBar());
-            });
+            // Revert everything to original session state
+            applySnapshot(sessionSnapshot.config, sessionSnapshot.content);
+            window.appState = sessionSnapshot.state;
+            document.getElementById('page-cover').style.background = sessionSnapshot.cover;
+            
+            refreshGlobalDOM(sessionSnapshot.content);
+            renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
+            import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+            updateProgressBar();
         };
-        
-        // --- LÓGICA DO COLOR PICKER (COMPLETA) ---
+
+        document.getElementById('restorePreviewBtn').onclick = async () => {
+            if (confirm("Restore this version to your account?")) {
+                await importData(window.plannerConfig, currentUser, true);
+                window.location.reload();
+            }
+        };
+
+        // --- COLOR PICKER LOGIC ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
@@ -229,32 +238,19 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false; 
-            color1 = null;
+            pickingGradient = false; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color";
-            menu.style.display = 'none'; 
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
         document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true; 
-            color1 = null;
+            pickingGradient = true; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            menu.style.display = 'none'; 
-            openPicker();
+            menu.style.display = 'none'; openPicker();
         };
 
-        document.getElementById('choiceCancel').onclick = () => {
-            menu.style.display = 'none';
-        };
+        document.getElementById('choiceCancel').onclick = () => menu.style.display = 'none';
         
-        document.addEventListener('click', (e) => {
-            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) menu.style.display = 'none';
-            if (!e.target.closest('.aico-wrapper')) {
-                document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
-            }
-        });
-
         function openPicker() {
             renderHistoryUI();
             document.getElementById('colorPickerContainer').classList.add('open');
@@ -289,8 +285,7 @@ onAuthStateChanged(auth, async (user) => {
                 colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
             }
-            saveAllColorData(color);
-            closePicker();
+            saveAllColorData(color); closePicker();
         }
 
         function applyGradient(c1, c2) {
@@ -301,17 +296,14 @@ onAuthStateChanged(auth, async (user) => {
                 colorHistory.gradients.unshift({ c1, c2 });
                 if (colorHistory.gradients.length > 3) colorHistory.gradients.pop();
             }
-            saveAllColorData(grad);
-            closePicker();
+            saveAllColorData(grad); closePicker();
         }
 
         function saveAllColorData(lastValue) {
-            import('./storage.js').then(store => {
-                if(!store.state.settings) store.state.settings = {};
-                store.state.settings.coverColor = lastValue;
-                store.state.colorHistory = colorHistory;
-                store.saveUserData(currentUser);
-            });
+            if(!userData.state.settings) userData.state.settings = {};
+            userData.state.settings.coverColor = lastValue;
+            userData.state.colorHistory = colorHistory;
+            import('./storage.js').then(store => store.saveUserData(currentUser));
         }
 
         function renderHistoryUI() {
@@ -357,11 +349,11 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
-        if(userData.state.settings && userData.state.settings.coverColor) {
+        if(userData.state.settings?.coverColor) {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- GAVETAS E PERSONALIZAÇÃO ---
+        // --- DRAWERS & PERSONALIZATION ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -387,47 +379,29 @@ onAuthStateChanged(auth, async (user) => {
         closeDrawer.onclick = () => customDrawer.classList.remove('open');
         closeSettings.onclick = () => settingsDrawer.classList.remove('open');
 
-        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display"];
         const fontListContainer = document.getElementById('fontList');
-        const fontSearchInput = document.getElementById('fontSearchInput');
 
-        function loadGoogleFont(fontName) {
-            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
-            const id = `font-${fontName.replace(/\s+/g, '-')}`;
-            if (!document.getElementById(id)) {
-                const link = document.createElement('link');
-                link.id = id; 
-                link.rel = 'stylesheet';
-                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
-                document.head.appendChild(link);
-            }
-        }
-
-        function renderFonts(filter = "") {
+        function renderFonts() {
             fontListContainer.innerHTML = "";
-            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
+            googleFonts.forEach(font => {
                 const div = document.createElement('div');
                 div.className = 'font-item';
                 div.textContent = font;
-                loadGoogleFont(font);
                 div.style.fontFamily = `"${font}", sans-serif`;
                 div.onclick = () => {
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    import('./storage.js').then(store => {
-                        if (!store.state.settings) store.state.settings = {};
-                        store.state.settings.font = font;
-                        store.saveUserData(currentUser);
-                    });
+                    if (!userData.state.settings) userData.state.settings = {};
+                    userData.state.settings.font = font;
+                    import('./storage.js').then(store => store.saveUserData(currentUser));
                 };
                 fontListContainer.appendChild(div);
             });
         }
-        fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
         const fontSizeSlider = document.getElementById('fontSizeSlider');
         if (userData.state.settings?.font) {
-            loadGoogleFont(userData.state.settings.font);
             document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
         }
         fontSizeSlider.value = userData.state.settings?.fontSize || "15";
@@ -439,11 +413,9 @@ onAuthStateChanged(auth, async (user) => {
             document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
         };
         fontSizeSlider.onchange = (e) => {
-            import('./storage.js').then(store => {
-                if (!store.state.settings) store.state.settings = {};
-                store.state.settings.fontSize = e.target.value;
-                store.saveUserData(currentUser);
-            });
+            if (!userData.state.settings) userData.state.settings = {};
+            userData.state.settings.fontSize = e.target.value;
+            import('./storage.js').then(store => store.saveUserData(currentUser));
         };
 
         document.getElementById('fontStyleToggle').onclick = () => {
@@ -454,35 +426,39 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- FINALIZAÇÃO E HISTÓRICO COMUM ---
+        // --- FINALIZATION & COMMON HISTORY ---
         function renderHistory() {
             const container = document.getElementById('historyList');
-            import('./storage.js').then(store => {
-                container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
-                store.history.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerHTML = `
-                        <span class="history-date">${new Date(item.timestamp).toLocaleString()}</span>
-                        <strong style="font-size:0.8rem">${item.label}</strong>
-                        <div style="display:flex; gap:5px; margin-top:5px;">
-                            <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
-                            <button class="history-del">✕</button>
-                        </div>`;
-                    div.querySelector('.history-restore').onclick = async () => { if(confirm("Restore?")) { store.applySnapshot(item.plannerConfig, item.pageContent); await store.saveUserData(currentUser); window.location.reload(); } };
-                    div.querySelector('.history-del').onclick = async () => { if(confirm("Delete?")) { await deleteHistoryEntry(currentUser, item.id); renderHistory(); } };
-                    container.appendChild(div);
-                });
+            container.innerHTML = history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
+            history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <span class="history-date">${new Date(item.timestamp).toLocaleString()}</span>
+                    <strong style="font-size:0.8rem">${item.label}</strong>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
+                        <button class="history-del">✕</button>
+                    </div>`;
+                div.querySelector('.history-restore').onclick = async () => { 
+                    if(confirm("Restore this state?")) { 
+                        applySnapshot(item.plannerConfig, item.pageContent); 
+                        import('./storage.js').then(store => store.saveUserData(currentUser).then(() => window.location.reload()));
+                    } 
+                };
+                div.querySelector('.history-del').onclick = async () => { 
+                    if(confirm("Delete this entry?")) { 
+                        await deleteHistoryEntry(currentUser, item.id); renderHistory(); 
+                    } 
+                };
+                container.appendChild(div);
             });
         }
 
         document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
         document.getElementById('addOverviewBlockBtn').onclick = () => import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         document.getElementById('clearHistoryBtn').onclick = async () => {
-            if(confirm("Permanently delete ALL history?")) {
-                await clearAllHistory(currentUser);
-                renderHistory();
-            }
+            if(confirm("Permanently delete ALL history?")) { await clearAllHistory(currentUser); renderHistory(); }
         };
 
         updateProgressBar();
