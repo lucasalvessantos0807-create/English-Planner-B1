@@ -85,6 +85,7 @@ onAuthStateChanged(auth, async (user) => {
         const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
         manageAccountBtn.onclick = () => {
+            const settingsDrawer = document.getElementById('settingsDrawer');
             settingsDrawer.classList.remove('open');
             accountModal.style.display = 'flex';
         };
@@ -136,7 +137,9 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         // --- RENDERIZAÇÃO INICIAL ---
-        import('./planner.js').then(mod => mod.renderDynamicOverviewBlocks(currentUser));
+        import('./planner.js').then(mod => {
+            mod.renderDynamicOverviewBlocks(currentUser);
+        });
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
         
@@ -553,7 +556,10 @@ onAuthStateChanged(auth, async (user) => {
             e.preventDefault();
             addNewMonth(currentUser);
         };
-        document.getElementById('addOverviewBlockBtn').onclick = () => import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+        document.getElementById('addOverviewBlockBtn').onclick = (e) => {
+            e.preventDefault();
+            import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+        };
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history?")) {
                 await clearAllHistory(currentUser);
