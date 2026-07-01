@@ -10,6 +10,7 @@ let sessionInitialDOMSnapshot = {};
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
+
 function refreshUI(uid, targetMonth = null) {
     import('./ui.js').then(mod => {
         mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
@@ -51,12 +52,15 @@ export function performUndo(uid) {
     refreshGlobalTexts();
     if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
     refreshCurrentWeek(uid);
+    renderDynamicOverviewBlocks(uid);
 }
 
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.innerHTML = window.pageContent[id];
+        if (el && !el.id.includes('ov-')) { // Ignora blocos de overview aqui, eles tem lógica própria
+            el.innerHTML = window.pageContent[id];
+        }
     });
 }
 
@@ -79,6 +83,7 @@ export function cancelEdit(uid) {
     });
 
     updateUIEditMode();
+    renderDynamicOverviewBlocks(uid);
     refreshUI(uid);
 }
 
@@ -154,7 +159,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     
     if (!wk || !container) return;
 
-    // Cabeçalho da Semana
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
             <h3>${wk.label}</h3>
@@ -200,7 +204,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
-        // Eventos de Edição
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
@@ -229,7 +232,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 };
             });
 
-            // Persistência de texto nas atividades
             card.querySelectorAll('[contenteditable]').forEach(el => {
                 el.onblur = () => {
                     const path = el.dataset.path;
@@ -262,7 +264,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             });
         }
 
-        // Eventos Comuns (Expandir/Check)
         card.querySelector('.dayhead').onclick = (e) => {
             if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
                 card.querySelector('.daybody').classList.toggle('on');
@@ -310,11 +311,9 @@ export function addNewMonth(uid) {
             })
         };
     }
-    saveUserData(uid).then(() => {
-        // Forçar a reconstrução da estrutura de abas imediatamente
-        refreshUI(uid, nextMonth);
-    });
+    saveUserData(uid).then(() => refreshUI(uid, nextMonth));
 }
+
 export function editMonthStructure(m, uid) {
     let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
     if (dayCountInput === null) return;
@@ -332,7 +331,6 @@ export function editMonthStructure(m, uid) {
         });
     });
 
-    // --- DETECÇÃO DE CONTEÚDO NOS DIAS QUE SERÃO REMOVIDOS ---
     if (dayCount < existingDays.length) {
         let hasCustomContent = false;
         let affectedDays = [];
@@ -361,7 +359,6 @@ export function editMonthStructure(m, uid) {
             if (!confirm(warningMessage)) return;
         }
 
-        // LIMPEZA APENAS DOS DADOS EXCLUÍDOS (Para evitar "fantasmas" se o mês crescer de novo)
         for (let i = dayCount; i < existingDays.length; i++) {
             const dayNum = existingDays[i].n;
             delete window.appState[`m${m}-d${dayNum}`];
@@ -371,7 +368,6 @@ export function editMonthStructure(m, uid) {
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    // Reconstruir estrutura preservando o conteúdo dos dias que ficaram
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -384,10 +380,9 @@ export function editMonthStructure(m, uid) {
             
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum; // Mantém notas e atividades originais
+                preserved.n = newDayNum;
                 weekDays.push(preserved);
             } else {
-                // Dia novo (caso o mês tenha crescido)
                 weekDays.push({ 
                     n: newDayNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
@@ -407,31 +402,30 @@ export function editMonthStructure(m, uid) {
 
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
+
+export function deleteMonth(m, uid) {
+    if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
+         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
+         
+         const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
+         const currentIndex = months.indexOf(m.toString());
+         const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
+ 
+         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+         
+         saveUserData(uid).then(() => refreshUI(uid, targetMonth));
+     }
+ }
+
 export function addOverviewBlock(uid) {
-    const grid = document.getElementById('dynamic-ov-grid');
+    if (!isEditMode) return;
+    pushToUndo();
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
-    const newBlock = document.createElement('div');
-    newBlock.className = 'ov-card cg';
-    newBlock.id = `container-${blockId}`;
-    newBlock.innerHTML = `
-        <button class="del-ov-btn" style="display:flex;">✕</button>
-        <div class="ov-label editable-global" id="${blockId}-title" contenteditable="true">New Phase</div>
-        <div class="ov-body editable-global" id="${blockId}-body" contenteditable="true">Edit...</div>
-    `;
-    newBlock.querySelector('.del-ov-btn').onclick = (e) => {
-        e.stopPropagation();
-        if(confirm("Delete this block?")) {
-            newBlock.remove();
-            window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== blockId);
-            delete window.pageContent[`${blockId}-title`];
-            delete window.pageContent[`${blockId}-body`];
-            saveUserData(uid);
-        }
-    };
-    grid.appendChild(newBlock);
-    saveUserData(uid);
+    
+    // Apenas atualizamos o estado local para permitir o "Cancel"
+    renderDynamicOverviewBlocks(uid);
 }
 
 export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = null) {
@@ -450,7 +444,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
 
     grid.innerHTML = '';
 
-    // Renderizar Padrões (se não estiverem deletados)
     defaults.forEach(def => {
         if (content.hiddenDefaults.includes(def.id)) return;
 
@@ -458,36 +451,42 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         card.className = `ov-card ${def.class}`;
         card.id = `${prefix}container-${def.id}`;
         card.innerHTML = `
-            ${prefix ? '' : '<button class="del-ov-btn" data-type="default" data-id="' + def.id + '" style="display:flex;">✕</button>'}
-            <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label">${content[def.id + '-label'] || def.label}</div>
-            <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body">${content[def.id + '-body'] || def.body}</div>
+            ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="default" data-id="' + def.id + '" style="display:flex;">✕</button>' : ''}
+            <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label" contenteditable="${isEditMode && !prefix}">${content[def.id + '-label'] || def.label}</div>
+            <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body" contenteditable="${isEditMode && !prefix}">${content[def.id + '-body'] || def.body}</div>
         `;
         grid.appendChild(card);
     });
 
-    // Renderizar Novos Blocos Dinâmicos
     if(content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
-                ${prefix ? '' : '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>'}
-                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title">${content[blockId + '-title'] || 'New Phase'}</div>
-                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body">${content[blockId + '-body'] || 'Edit...'}</div>
+                ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'New Phase'}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Edit...'}</div>
             `;
             grid.appendChild(newBlock);
         });
     }
 
-    // RE-ANEXAR LISTENERS DE DELETAR (Padrões e Dinâmicos)
-    if (!prefix) {
+    if (!prefix && isEditMode) {
+        grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                window.pageContent[el.id] = el.innerHTML;
+            };
+        });
+
         grid.querySelectorAll('.del-ov-btn').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const bId = btn.dataset.id;
                 const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
+                    pushToUndo();
                     document.getElementById(`container-${bId}`).remove();
                     if (bType === 'default') {
                         if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
@@ -495,7 +494,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
                     } else {
                         window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
                     }
-                    saveUserData(uid);
                 }
             };
         });
