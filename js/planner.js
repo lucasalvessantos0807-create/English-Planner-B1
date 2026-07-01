@@ -294,7 +294,6 @@ export function editMonthStructure(m, uid) {
     let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
 
-    // Capturar o que existe hoje na ordem correta
     const weeksOfM = Object.keys(window.plannerConfig)
         .filter(k => k.startsWith(`${m}-`))
         .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
@@ -306,30 +305,33 @@ export function editMonthStructure(m, uid) {
         });
     });
 
-    // --- AVISO DE CONTEÚDO ---
+    // --- VERIFICAÇÃO DE CONTEÚDO PARA REDUÇÃO DE DIAS ---
     if (dayCount < existingDays.length) {
         let hasContent = false;
+        let affectedDays = [];
+
         for (let i = dayCount; i < existingDays.length; i++) {
             const dayObj = existingDays[i];
             const stateKey = `m${m}-d${dayObj.n}`;
             const oldKey = `d${dayObj.n}`; 
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
-            if (dayState && (dayState.done || (dayState.notes && dayState.notes.trim() !== ""))) {
+            // Verifica se o dia tem progresso marcado ou notas escritas
+            if (dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""))) {
                 hasContent = true;
-                break;
+                affectedDays.push(dayObj.n);
             }
         }
 
         if (hasContent) {
-            const confirmLoss = confirm(`Warning: You are reducing Month ${m} from ${existingDays.length} to ${dayCount} days. Some removed days contain notes or progress. Proceed?`);
-            if (!confirmLoss) return editMonthStructure(m, uid);
+            const warningMessage = `Warning! Reducing the month to ${dayCount} days will delete content on the following days: ${affectedDays.join(', ')}.\n\nThis content includes saved notes or completed progress markers. Do you want to proceed and PERMANENTLY DELETE this data?`;
+            const confirmLoss = confirm(warningMessage);
+            if (!confirmLoss) return; // Cancela e não faz nada, permitindo ao usuário tentar outra quantidade
         }
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    // Limpar o mês atual da config
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -338,10 +340,10 @@ export function editMonthStructure(m, uid) {
         const weekDays = [];
         
         for (let d = 0; d < daysInW; d++) {
-            const newDayNum = currentDayIdx + 1; // FORÇA DIA 1, 2, 3...
+            const newDayNum = currentDayIdx + 1;
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum; // PADRONIZA O NÚMERO
+                preserved.n = newDayNum;
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
