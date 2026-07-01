@@ -89,7 +89,7 @@ export function toggleEditMode(uid) {
         const currentContentStr = JSON.stringify(window.pageContent);
         const initialContentStr = JSON.stringify(sessionInitialContent);
 
-        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialConfigStr) {
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
             addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
             saveUserData(uid);
         }
@@ -140,7 +140,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
-        // Lógica de Migração: Busca m1-d1 primeiro, depois tenta o legado d1
         const fullKey = `m${m}-${dayKey}`;
         const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
         
@@ -295,11 +294,11 @@ export function editMonthStructure(m, uid) {
     let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
 
+    // Capturar o que existe hoje na ordem correta
     const weeksOfM = Object.keys(window.plannerConfig)
         .filter(k => k.startsWith(`${m}-`))
         .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
 
-    // Extrair os templates de dias atuais na ordem correta
     const existingDays = [];
     weeksOfM.forEach(wk => {
         window.plannerConfig[wk].days.forEach(d => {
@@ -307,7 +306,7 @@ export function editMonthStructure(m, uid) {
         });
     });
 
-    // --- CORREÇÃO DO AVISO ---
+    // --- AVISO DE CONTEÚDO ---
     if (dayCount < existingDays.length) {
         let hasContent = false;
         for (let i = dayCount; i < existingDays.length; i++) {
@@ -323,14 +322,14 @@ export function editMonthStructure(m, uid) {
         }
 
         if (hasContent) {
-            const confirmLoss = confirm(`Warning: You are reducing the month from ${existingDays.length} to ${dayCount} days. Some of the removed days contain notes or progress. Continue and delete this content?`);
+            const confirmLoss = confirm(`Warning: You are reducing Month ${m} from ${existingDays.length} to ${dayCount} days. Some removed days contain notes or progress. Proceed?`);
             if (!confirmLoss) return editMonthStructure(m, uid);
         }
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    // Limpar semanas antigas do Mês m
+    // Limpar o mês atual da config
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -339,17 +338,17 @@ export function editMonthStructure(m, uid) {
         const weekDays = [];
         
         for (let d = 0; d < daysInW; d++) {
-            const dNum = currentDayIdx + 1;
+            const newDayNum = currentDayIdx + 1; // FORÇA DIA 1, 2, 3...
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = dNum; // Força o novo número sequencial (1, 2, 3...)
+                preserved.n = newDayNum; // PADRONIZA O NÚMERO
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
-                    n: dNum, 
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dNum - 1) % 7], 
-                    tag: "Act", 
-                    activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]
+                    n: newDayNum, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
+                    tag: "Daily Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
                 });
             }
             currentDayIdx++;
