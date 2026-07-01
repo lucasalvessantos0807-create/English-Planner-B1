@@ -438,67 +438,64 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!grid) return;
 
     const content = customContent || window.pageContent || {};
+    if (!content.hiddenDefaults) content.hiddenDefaults = [];
 
-    const defaults = {
-        'global-ov-ca-label': 'Month 1 — Foundation',
-        'global-ov-ca-body': 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web',
-        'global-ov-cb-label': 'Month 2 — Building',
-        'global-ov-cb-body': 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey',
-        'global-ov-cg-label': 'Month 3 — Consolidation',
-        'global-ov-cg-body': 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick'
-    };
+    const defaults = [
+        { id: 'global-ov-ca', class: 'ca', label: 'Month 1 — Foundation', body: 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web' },
+        { id: 'global-ov-cb', class: 'cb', label: 'Month 2 — Building', body: 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey' },
+        { id: 'global-ov-cg', class: 'cg', label: 'Month 3 — Consolidation', body: 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick' }
+    ];
 
-    grid.innerHTML = `
-        <div class="ov-card ca">
-          <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-ca-label"></div>
-          <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-ca-body"></div>
-        </div>
-        <div class="ov-card cb">
-          <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-cb-label"></div>
-          <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-cb-body"></div>
-        </div>
-        <div class="ov-card cg">
-          <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-cg-label"></div>
-          <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}global-ov-cg-body"></div>
-        </div>
-    `;
+    grid.innerHTML = '';
 
-    ["ca", "cb", "cg"].forEach(id => {
-        const labelEl = document.getElementById(`${prefix}global-ov-${id}-label`);
-        const bodyEl = document.getElementById(`${prefix}global-ov-${id}-body`);
-        const key = `global-ov-${id}`;
-        if(labelEl) labelEl.innerHTML = content[key + '-label'] || defaults[key + '-label'];
-        if(bodyEl) bodyEl.innerHTML = content[key + '-body'] || defaults[key + '-body'];
+    // Renderizar Padrões (se não estiverem deletados)
+    defaults.forEach(def => {
+        if (content.hiddenDefaults.includes(def.id)) return;
+
+        const card = document.createElement('div');
+        card.className = `ov-card ${def.class}`;
+        card.id = `${prefix}container-${def.id}`;
+        card.innerHTML = `
+            ${prefix ? '' : '<button class="del-ov-btn" data-type="default" data-id="' + def.id + '" style="display:flex;">✕</button>'}
+            <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label">${content[def.id + '-label'] || def.label}</div>
+            <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body">${content[def.id + '-body'] || def.body}</div>
+        `;
+        grid.appendChild(card);
     });
 
+    // Renderizar Novos Blocos Dinâmicos
     if(content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
-                ${prefix ? '' : '<button class="del-ov-btn" data-id="' + blockId + '">✕</button>'}
+                ${prefix ? '' : '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>'}
                 <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title">${content[blockId + '-title'] || 'New Phase'}</div>
                 <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body">${content[blockId + '-body'] || 'Edit...'}</div>
             `;
             grid.appendChild(newBlock);
         });
+    }
 
-        // RE-ANEXAR LISTENERS DE DELETAR (Crucial para o funcionamento do X)
-        if (!prefix) {
-            grid.querySelectorAll('.del-ov-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const bId = btn.dataset.id;
-                    if(confirm("Delete this block?")) {
-                        document.getElementById(`container-${bId}`).remove();
+    // RE-ANEXAR LISTENERS DE DELETAR (Padrões e Dinâmicos)
+    if (!prefix) {
+        grid.querySelectorAll('.del-ov-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const bId = btn.dataset.id;
+                const bType = btn.dataset.type;
+                if(confirm("Delete this block?")) {
+                    document.getElementById(`container-${bId}`).remove();
+                    if (bType === 'default') {
+                        if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
+                        window.pageContent.hiddenDefaults.push(bId);
+                    } else {
                         window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
-                        delete window.pageContent[`${bId}-title`];
-                        delete window.pageContent[`${bId}-body`];
-                        saveUserData(uid);
                     }
-                };
-            });
-        }
+                    saveUserData(uid);
+                }
+            };
+        });
     }
 }
