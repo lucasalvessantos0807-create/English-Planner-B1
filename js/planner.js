@@ -296,7 +296,6 @@ export function editMonthStructure(m, uid) {
     let dayCount = parseInt(dayCountInput);
     if (isNaN(dayCount) || dayCount <= 0) return;
 
-    // 1. Mapear semanas e dias atuais
     const weeksOfM = Object.keys(window.plannerConfig)
         .filter(k => k.startsWith(`${m}-`))
         .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
@@ -308,24 +307,17 @@ export function editMonthStructure(m, uid) {
         });
     });
 
-    // --- LÓGICA DE DETECÇÃO DE CONTEÚDO PERSONALIZADO ---
     if (dayCount < existingDays.length) {
         let hasCustomContent = false;
         let affectedDays = [];
 
-        // Verificar apenas os dias que serão excluídos (do novo limite até o fim)
         for (let i = dayCount; i < existingDays.length; i++) {
             const dayObj = existingDays[i];
-            
-            // A. Verificar Progresso/Notas (State)
             const stateKey = `m${m}-d${dayObj.n}`;
             const oldKey = `d${dayObj.n}`; 
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
             let hasProgress = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
-
-            // B. Verificar se o Plano foi editado (Config)
-            // Comparamos com os valores padrão que o sistema usa ao criar um dia vazio
             let isTagEdited = dayObj.tag !== "Daily Act";
             let areActivitiesEdited = dayObj.activities.some(act => 
                 (act.title !== "Study Topic" && act.title !== "New Activity") || 
@@ -338,18 +330,21 @@ export function editMonthStructure(m, uid) {
             }
         }
 
-        // Se detectou conteúdo, interrompe e pede confirmação extra
         if (hasCustomContent) {
             const warningMessage = `ATTENTION: You are reducing the month to ${dayCount} days, but there is custom content or progress saved on the following days: ${affectedDays.join(', ')}.\n\nIf you proceed, all notes, progress markers, and edited activities for these days will be PERMANENTLY DELETED.\n\nDo you want to continue?`;
             const confirmDeletion = confirm(warningMessage);
-            if (!confirmDeletion) return; // O usuário clicou em Cancelar, então paramos aqui.
+            if (!confirmDeletion) return;
+        }
+
+        // LIMPAR DADOS FANTASMAS (Remove do state os dias que deixaram de existir)
+        for (let i = dayCount; i < existingDays.length; i++) {
+            delete window.appState[`m${m}-d${existingDays[i].n}`];
+            delete window.appState[`d${existingDays[i].n}`];
         }
     }
 
-    // 2. Proceder com a reestruturação após a validação
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    // Limpar semanas atuais do mês
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -362,10 +357,11 @@ export function editMonthStructure(m, uid) {
             
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum; // Mantém o conteúdo original mas atualiza o índice numérico
+                preserved.n = newDayNum;
                 weekDays.push(preserved);
             } else {
-                // Cria dia novo caso a nova quantidade seja maior que a anterior
+                // Ao criar dias novos por aumento de mês, garantimos que não puxe lixo de estados antigos
+                delete window.appState[`m${m}-d${newDayNum}`];
                 weekDays.push({ 
                     n: newDayNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
@@ -383,12 +379,10 @@ export function editMonthStructure(m, uid) {
         };
     }
 
-    // Salvar e atualizar interface
     saveUserData(uid).then(() => {
+        // Forçar renderização completa
         import('./ui.js').then(mod => {
-            mod.renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, uid));
-            
-            // Reabrir o mês que foi editado
+            mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
             setTimeout(() => {
                 const monthButtons = document.querySelectorAll('#monthNav .mbtn');
                 const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${m}`);
