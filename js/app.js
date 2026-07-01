@@ -1,5 +1,5 @@
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase.js';
-import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot } from './storage.js';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, deleteDoc, doc, db, deleteUser } from './firebase.js';
+import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot, saveUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
@@ -76,6 +76,49 @@ onAuthStateChanged(auth, async (user) => {
                 userData.state.customName = newName;
                 document.getElementById("topbarName").textContent = newName;
                 import('./storage.js').then(store => store.saveUserData(currentUser));
+            }
+        };
+        // --- ACCOUNT MANAGEMENT LOGIC ---
+        const accountModal = document.getElementById('accountManagementModal');
+        const manageAccountBtn = document.getElementById('manageAccountBtn');
+        const closeAccountModal = document.getElementById('closeAccountModal');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+        manageAccountBtn.onclick = () => {
+            settingsDrawer.classList.remove('open');
+            accountModal.style.display = 'flex';
+        };
+
+        closeAccountModal.onclick = () => {
+            accountModal.style.display = 'none';
+        };
+
+        deleteAccountBtn.onclick = async () => {
+            const confirmation = confirm("ARE YOU ABSOLUTELY SURE?\n\nThis will delete your entire study progress and your account permanently. This action is irreversible.");
+            if (confirmation) {
+                const finalCheck = prompt("To confirm deletion, type the word 'DELETE' below:");
+                if (finalCheck === "DELETE") {
+                    try {
+                        // 1. Deletar documento no Firestore
+                        await deleteDoc(doc(db, "users", currentUser));
+                        
+                        // 2. Deletar o usuário no Firebase Auth
+                        const user = auth.currentUser;
+                        await deleteUser(user);
+                        
+                        alert("Your account and all data have been successfully deleted.");
+                        window.location.reload();
+                    } catch (error) {
+                        console.error("Error deleting account:", error);
+                        if (error.code === 'auth/requires-recent-login') {
+                            alert("For security reasons, you need to have logged in recently to delete your account. Please logout and login again, then try this action again.");
+                        } else {
+                            alert("An error occurred while deleting your account. Please try again later.");
+                        }
+                    }
+                } else {
+                    alert("Confirmation word incorrect. Deletion cancelled.");
+                }
             }
         };
 
