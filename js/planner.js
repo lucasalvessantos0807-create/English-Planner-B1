@@ -305,14 +305,16 @@ export function addNewMonth(uid) {
                     n: d, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], 
                     tag: "Daily Act", 
-                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Click to edit your activity", time: "20m"}]
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
                 };
             })
         };
     }
-    saveUserData(uid).then(() => refreshUI(uid, nextMonth));
+    saveUserData(uid).then(() => {
+        // Forçar a reconstrução da estrutura de abas imediatamente
+        refreshUI(uid, nextMonth);
+    });
 }
-
 export function editMonthStructure(m, uid) {
     let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
     if (dayCountInput === null) return;
