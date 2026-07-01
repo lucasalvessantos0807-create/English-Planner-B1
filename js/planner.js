@@ -291,9 +291,12 @@ export function addNewMonth(uid) {
 }
 
 export function editMonthStructure(m, uid) {
-    let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
+    let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
+    if (dayCountInput === null) return;
+    let dayCount = parseInt(dayCountInput);
     if (isNaN(dayCount) || dayCount <= 0) return;
 
+    // 1. Mapear semanas e dias atuais
     const weeksOfM = Object.keys(window.plannerConfig)
         .filter(k => k.startsWith(`${m}-`))
         .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
@@ -305,33 +308,48 @@ export function editMonthStructure(m, uid) {
         });
     });
 
-    // --- VERIFICAÇÃO DE CONTEÚDO PARA REDUÇÃO DE DIAS ---
+    // --- LÓGICA DE DETECÇÃO DE CONTEÚDO PERSONALIZADO ---
     if (dayCount < existingDays.length) {
-        let hasContent = false;
+        let hasCustomContent = false;
         let affectedDays = [];
 
+        // Verificar apenas os dias que serão excluídos (do novo limite até o fim)
         for (let i = dayCount; i < existingDays.length; i++) {
             const dayObj = existingDays[i];
+            
+            // A. Verificar Progresso/Notas (State)
             const stateKey = `m${m}-d${dayObj.n}`;
             const oldKey = `d${dayObj.n}`; 
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
-            // Verifica se o dia tem progresso marcado ou notas escritas
-            if (dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""))) {
-                hasContent = true;
+            let hasProgress = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
+
+            // B. Verificar se o Plano foi editado (Config)
+            // Comparamos com os valores padrão que o sistema usa ao criar um dia vazio
+            let isTagEdited = dayObj.tag !== "Daily Act";
+            let areActivitiesEdited = dayObj.activities.some(act => 
+                (act.title !== "Study Topic" && act.title !== "New Activity") || 
+                (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
+            );
+
+            if (hasProgress || isTagEdited || areActivitiesEdited) {
+                hasCustomContent = true;
                 affectedDays.push(dayObj.n);
             }
         }
 
-        if (hasContent) {
-            const warningMessage = `Warning! Reducing the month to ${dayCount} days will delete content on the following days: ${affectedDays.join(', ')}.\n\nThis content includes saved notes or completed progress markers. Do you want to proceed and PERMANENTLY DELETE this data?`;
-            const confirmLoss = confirm(warningMessage);
-            if (!confirmLoss) return; // Cancela e não faz nada, permitindo ao usuário tentar outra quantidade
+        // Se detectou conteúdo, interrompe e pede confirmação extra
+        if (hasCustomContent) {
+            const warningMessage = `ATTENTION: You are reducing the month to ${dayCount} days, but there is custom content or progress saved on the following days: ${affectedDays.join(', ')}.\n\nIf you proceed, all notes, progress markers, and edited activities for these days will be PERMANENTLY DELETED.\n\nDo you want to continue?`;
+            const confirmDeletion = confirm(warningMessage);
+            if (!confirmDeletion) return; // O usuário clicou em Cancelar, então paramos aqui.
         }
     }
 
+    // 2. Proceder com a reestruturação após a validação
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
+    // Limpar semanas atuais do mês
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -341,11 +359,13 @@ export function editMonthStructure(m, uid) {
         
         for (let d = 0; d < daysInW; d++) {
             const newDayNum = currentDayIdx + 1;
+            
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum;
+                preserved.n = newDayNum; // Mantém o conteúdo original mas atualiza o índice numérico
                 weekDays.push(preserved);
             } else {
+                // Cria dia novo caso a nova quantidade seja maior que a anterior
                 weekDays.push({ 
                     n: newDayNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
@@ -362,47 +382,22 @@ export function editMonthStructure(m, uid) {
             days: weekDays
         };
     }
-    saveUserData(uid).then(() => refreshUI(uid, m));
-}
 
-export function deleteMonth(m, uid) {
-   if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
-        addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
-        
-        const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
-        const currentIndex = months.indexOf(m.toString());
-        const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
-
-        Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
-        
-        saveUserData(uid).then(() => refreshUI(uid, targetMonth));
-    }
-}
-
-function refreshUI(uid, targetMonth = null) {
-    import('./ui.js').then(mod => {
-        mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
-        
-        let monthToOpen = targetMonth;
-        if (!monthToOpen) {
-            const available = Object.keys(window.plannerConfig).sort();
-            if (available.length > 0) monthToOpen = available[0].split('-')[0];
-        }
-
-        setTimeout(() => {
-            const monthButtons = document.querySelectorAll('#monthNav .mbtn');
-            const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${monthToOpen}`);
+    // Salvar e atualizar interface
+    saveUserData(uid).then(() => {
+        import('./ui.js').then(mod => {
+            mod.renderStructure(window.plannerConfig, false, (m, w) => buildWeek(m, w, uid));
             
-            if (targetBtn) {
-                targetBtn.click();
-            } else if (monthButtons.length > 0) {
-                monthButtons[0].click();
-            }
-            mod.updateProgressBar();
-        }, 50); 
+            // Reabrir o mês que foi editado
+            setTimeout(() => {
+                const monthButtons = document.querySelectorAll('#monthNav .mbtn');
+                const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${m}`);
+                if (targetBtn) targetBtn.click();
+                mod.updateProgressBar();
+            }, 100);
+        });
     });
 }
-
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     const blockId = 'ov-' + Date.now();
