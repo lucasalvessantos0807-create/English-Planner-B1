@@ -87,7 +87,7 @@ export function addHistoryEntry(label, config, content) {
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
     history.unshift(entry);
-    if (history.length > 50) history.pop();
+    if (history.length > 10) history.pop();
 }
 
 export async function deleteHistoryEntry(uid, entryId) {
