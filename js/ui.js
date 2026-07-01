@@ -135,7 +135,6 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         });
 
         // Event listeners para gestão de meses (escondidos em Preview)
-        // Event listeners para gestão de meses (escondidos em Preview)
         if (!isPreview) {
             const editBtn = mPanel.querySelector('.edit-m-btn');
             const delBtn = mPanel.querySelector('.del-m-btn');
@@ -145,6 +144,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
                     e.preventDefault();
                     e.stopPropagation();
                     const uid = window.auth.currentUser.uid;
+                    // Importação dinâmica para garantir acesso à função exportada
                     import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
                 };
             }
@@ -154,6 +154,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
                     e.preventDefault();
                     e.stopPropagation();
                     const uid = window.auth.currentUser.uid;
+                    // Importação dinâmica para garantir acesso à função exportada
                     import('./planner.js').then(mod => mod.deleteMonth(m, uid));
                 };
             }
