@@ -105,8 +105,9 @@ export async function deleteImportBackup(uid, backupId) {
     await saveUserData(uid);
 }
 
-export function updateState(dayKey, data) {
-    state[dayKey] = { ...state[dayKey], ...data };
+export function updateState(month, dayKey, data) {
+    const fullKey = month ? `m${month}-${dayKey}` : dayKey;
+    state[fullKey] = { ...state[fullKey], ...data };
 }
 
 export function exportData() {
