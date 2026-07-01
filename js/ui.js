@@ -19,10 +19,13 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
     // Só contamos dias marcados como "done" que realmente existem na configuração atual
     Object.keys(state).forEach(key => {
         if (state[key] && state[key].done) {
-            const dayNum = parseInt(key.replace('d', ''));
-            const dayExists = Object.values(config).some(week => 
-                week.days.some(d => d.n === dayNum)
-            );
+           const parts = key.split('-'); // m1-d1
+            const mNum = parts[0].replace('m', '');
+            const dNum = parseInt(parts[1].replace('d', ''));
+            
+            const dayExists = Object.keys(config).some(wkKey => {
+                return wkKey.startsWith(`${mNum}-`) && config[wkKey].days.some(d => d.n === dNum);
+            });
             if (dayExists) done++;
         }
     });
