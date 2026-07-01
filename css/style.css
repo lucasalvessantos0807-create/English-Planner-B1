@@ -488,3 +488,12 @@ body.preview-open {
     width: 100% !important;
     max-width: 900px !important;
 }
+
+#deleteAccountBtn:hover {
+  background: #a30000 !important;
+  box-shadow: 0 4px 12px rgba(204, 0, 0, 0.2);
+}
+
+#accountManagementModal {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
