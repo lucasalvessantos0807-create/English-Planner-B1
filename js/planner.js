@@ -89,7 +89,7 @@ export function toggleEditMode(uid) {
         const currentContentStr = JSON.stringify(window.pageContent);
         const initialContentStr = JSON.stringify(sessionInitialContent);
 
-        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialConfigStr) {
             addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
             saveUserData(uid);
         }
@@ -295,18 +295,27 @@ export function editMonthStructure(m, uid) {
     let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
 
-    const weeksOfM = Object.keys(window.plannerConfig).filter(k => k.startsWith(`${m}-`));
-    let maxExistingDay = 0;
+    const weeksOfM = Object.keys(window.plannerConfig)
+        .filter(k => k.startsWith(`${m}-`))
+        .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+
+    // Extrair os templates de dias atuais na ordem correta
+    const existingDays = [];
     weeksOfM.forEach(wk => {
-        window.plannerConfig[wk].days.forEach(d => { if(d.n > maxExistingDay) maxExistingDay = d.n; });
+        window.plannerConfig[wk].days.forEach(d => {
+            existingDays.push(JSON.parse(JSON.stringify(d)));
+        });
     });
 
-    if (dayCount < maxExistingDay) {
+    // --- CORREÇÃO DO AVISO ---
+    if (dayCount < existingDays.length) {
         let hasContent = false;
-        for (let d = dayCount + 1; d <= maxExistingDay; d++) {
-            const stateKey = `m${m}-d${d}`;
-            const oldKey = `d${d}`; 
+        for (let i = dayCount; i < existingDays.length; i++) {
+            const dayObj = existingDays[i];
+            const stateKey = `m${m}-d${dayObj.n}`;
+            const oldKey = `d${dayObj.n}`; 
             const dayState = window.appState[stateKey] || window.appState[oldKey];
+            
             if (dayState && (dayState.done || (dayState.notes && dayState.notes.trim() !== ""))) {
                 hasContent = true;
                 break;
@@ -314,39 +323,42 @@ export function editMonthStructure(m, uid) {
         }
 
         if (hasContent) {
-            const confirmLoss = confirm(`Warning: Days from ${dayCount + 1} to ${maxExistingDay} contain your personal notes or progress. These will be PERMANENTLY deleted if you proceed with only ${dayCount} days. Continue?`);
+            const confirmLoss = confirm(`Warning: You are reducing the month from ${existingDays.length} to ${dayCount} days. Some of the removed days contain notes or progress. Continue and delete this content?`);
             if (!confirmLoss) return editMonthStructure(m, uid);
         }
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    const preservedDaysTemplate = {};
-    weeksOfM.forEach(wk => {
-        window.plannerConfig[wk].days.forEach(d => {
-            preservedDaysTemplate[d.n] = JSON.parse(JSON.stringify(d)); 
-        });
-        delete window.plannerConfig[wk];
-    });
+    // Limpar semanas antigas do Mês m
+    weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
-    let currentDay = 1;
+    let currentDayIdx = 0;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
-        window.plannerConfig[`${m}-${w}`] = {
-            label: `Week ${w}`, 
-            theme: "Plans Updated",
-            days: Array.from({length: daysInW}, () => {
-                const dNum = currentDay++;
-                if (preservedDaysTemplate[dNum]) {
-                    return preservedDaysTemplate[dNum];
-                }
-                return { 
+        const weekDays = [];
+        
+        for (let d = 0; d < daysInW; d++) {
+            const dNum = currentDayIdx + 1;
+            if (existingDays[currentDayIdx]) {
+                const preserved = existingDays[currentDayIdx];
+                preserved.n = dNum; // Força o novo número sequencial (1, 2, 3...)
+                weekDays.push(preserved);
+            } else {
+                weekDays.push({ 
                     n: dNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dNum - 1) % 7], 
                     tag: "Act", 
                     activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]
-                };
-            })
+                });
+            }
+            currentDayIdx++;
+        }
+
+        window.plannerConfig[`${m}-${w}`] = {
+            label: `Week ${w}`, 
+            theme: "Plans Updated",
+            days: weekDays
         };
     }
     saveUserData(uid).then(() => refreshUI(uid, m));
