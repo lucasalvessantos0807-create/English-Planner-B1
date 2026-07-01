@@ -186,7 +186,7 @@ export const weeksData = {
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Create your Month 1 'power words' list: 20 most useful words you learned this month.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Charlotte's Web",desc:"Read 5 pages. You've read a lot this month — well done!",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow your favourite video from this month. Feel how much more natural it is now.",time:"20 min"},
-      {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something native-level for 15 minutes. No stopping. How much do you understand?",time:"15 min"},
+      {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something native-level for 15 minutes. How much do you understand?",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Introduce yourself fully in English — who you are, your background, your character, your home, your goals. 4–5 minutes.",time:"20 min"},
     ]},
     {n:26,name:"Friday",tag:"Dictation + review",activities:[
@@ -415,8 +415,8 @@ export const weeksData = {
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow as a reward for completing Month 2!",time:"20 min"},
     ]},
     {n:28,name:"Sunday",tag:"⭐ Month 2 Review Day",review:true,activities:[
-      {t:"review",i:"🔁",title:"Grammar review",desc:"Write one showcase paragraph per month: Month 1 (past tenses, used to), Month 2 (modals, conditionals, passives), Month 3 (relative clauses, perfect tenses, question tags). Your best work.",time:"35 min"},
-      {t:"review",i:"📚",title:"Vocabulary celebration",desc:"Read through your entire vocabulary notebook from start to finish. You built this. Every word is yours.",time:"20 min"},
+      {t:"review",i:"🔁",title:"Full grammar review",desc:"Write one paragraph per grammar group: (1) modals (2) passives + reported speech (3) conditionals. Each 5–7 sentences. Use Eleanor & Grey as inspiration.",time:"30 min"},
+      {t:"review",i:"📚",title:"Vocabulary final count",desc:"Count all words. Set Month 3 target. Review power words — can you use them all naturally?",time:"15 min"},
       {t:"review",i:"🎧",title:"Milestone comparison",desc:"Listen to your Day 1 recording, your Day 28 recording, and today's. Write 3 specific improvements.",time:"15 min"},
       {t:"review",i:"✍️",title:"Month 2 reflection",desc:"Write freely about Month 2. What was hardest? What was most useful? What are you proud of?",time:"15 min"},
       {t:"review",i:"🗣️",title:"Preview Month 3",desc:"Read the Month 3 overview aloud. Say the grammar topics out loud. You are very close to B1.",time:"10 min"},
@@ -505,7 +505,7 @@ export const weeksData = {
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Describe one scene using 'looked like', adverbs, and connotation adjectives.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. This is almost your final month — feel how far you have come.",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Watch a film review or political debate clip. Note vocabulary in context.",time:"15 min"},
-      {t:"speaking",i:"🗣️",title:"Speaking",desc:"Review your reading book — plot, characters, your opinion. Use everything: adjectives, adverbs, 'look like', relative clauses. 4–5 minutes.",time:"15 min"},
+      {t:"speaking",i:"🗣️",title:"Speaking",desc:"Review your reading book — plot, characters, your opinion. Use everything: adjectives, adverbs, 'look like', relative clauses. 4–5 minutes.",time:"20 min"},
     ]},
     {n:12,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Full review: political system + books/film/TV + adverb modifiers.",time:"15 min"},
