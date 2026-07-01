@@ -136,24 +136,32 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
 
         // Event listeners para gestão de meses (escondidos em Preview)
         if (!isPreview) {
-            const editBtn = mPanel.querySelector('.edit-m-btn');
-            const delBtn = mPanel.querySelector('.del-m-btn');
+            // Usamos setTimeout(0) para garantir que os elementos já existam no DOM
+            setTimeout(() => {
+                const currentPanel = document.getElementById(`${prefix}mp${m}`);
+                if (!currentPanel) return;
 
-            if (editBtn) {
-                editBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    const uid = window.auth.currentUser.uid;
-                    import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
-                };
-            }
-           
-            if (delBtn) {
-                delBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    const uid = window.auth.currentUser.uid;
-                    import('./planner.js').then(mod => mod.deleteMonth(m, uid));
-                };
-            }
+                const editBtn = currentPanel.querySelector('.edit-m-btn');
+                const delBtn = currentPanel.querySelector('.del-m-btn');
+
+                if (editBtn) {
+                    editBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const uid = window.auth.currentUser.uid;
+                        import('./planner.js').then(mod => mod.editMonthStructure(m, uid));
+                    };
+                }
+            
+                if (delBtn) {
+                    delBtn.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const uid = window.auth.currentUser.uid;
+                        import('./planner.js').then(mod => mod.deleteMonth(m, uid));
+                    };
+                }
+            }, 0);
         }
 
         monthPanels.appendChild(mPanel);
