@@ -231,10 +231,10 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
         if (!isPreview) {
             const textarea = card.querySelector('textarea');
-            textarea.oninput = (e) => { updateState(dayKey, { notes: e.target.value }); saveUserData(uid); };
+            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
             const chk = card.querySelector('input[type="checkbox"]');
             chk.onchange = (e) => {
-                updateState(dayKey, { done: e.target.checked });
+                updateState(m, dayKey, { done: e.target.checked });
                 card.querySelector('.chk').classList.toggle('done', e.target.checked);
                 saveUserData(uid);
                 updateProgressBar();
@@ -247,62 +247,131 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
 // --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days?", "30"));
+    const dayCount = parseInt(prompt("How many days for this new month?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
+    
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
-    const startDay = (Object.values(window.plannerConfig).reduce((acc, curr) => Math.max(acc, curr.days[curr.days.length-1].n), 0) + 1);
-    let currentDay = startDay;
+    
+    // Todo mês novo inicia como Dia 1 por padrão
+    let currentDay = 1;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${Object.keys(window.plannerConfig).length + 1}`, theme: "New Month",
+            label: `Week ${w}`, theme: "New Month Plans",
             days: Array.from({length: daysInW}, () => {
                 const d = currentDay++;
-                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
+                return { 
+                    n: d, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], 
+                    tag: "Daily Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Click to edit your activity", time: "20m"}]
+                };
             })
         };
     }
-    saveUserData(uid).then(() => refreshUI(uid));
+    saveUserData(uid).then(() => refreshUI(uid, nextMonth));
 }
 
 export function editMonthStructure(m, uid) {
-    const dayCount = parseInt(prompt("Total days?", "30")), startDay = parseInt(prompt("Start Day?", "1"));
-    if (isNaN(dayCount)) return;
+    let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
+    if (isNaN(dayCount) || dayCount <= 0) return;
+
+    // Verificar se haverá perda de conteúdo (se diminuir os dias)
+    const weeksOfM = Object.keys(window.plannerConfig).filter(k => k.startsWith(`${m}-`));
+    let maxExistingDay = 0;
+    weeksOfM.forEach(wk => {
+        window.plannerConfig[wk].days.forEach(d => { if(d.n > maxExistingDay) maxExistingDay = d.n; });
+    });
+
+    if (dayCount < maxExistingDay) {
+        let hasContent = false;
+        for (let d = dayCount + 1; d <= maxExistingDay; d++) {
+            const stateKey = `m${m}-d${d}`;
+            const dayState = window.appState[stateKey];
+            if (dayState && (dayState.done || (dayState.notes && dayState.notes.trim() !== ""))) {
+                hasContent = true;
+                break;
+            }
+        }
+
+        if (hasContent) {
+            const confirmLoss = confirm(`Warning: Days from ${dayCount + 1} to ${maxExistingDay} contain notes or completed status. If you restructure with fewer days, this content will be deleted. Do you want to continue?`);
+            if (!confirmLoss) {
+                // Se cancelar, chama a função novamente para permitir trocar o número de dias
+                return editMonthStructure(m, uid);
+            }
+        }
+    }
+
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
-    Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
-    let currentDay = startDay;
+
+    // Mapear conteúdos existentes para preservar
+    const preservedDays = {};
+    weeksOfM.forEach(wk => {
+        window.plannerConfig[wk].days.forEach(d => {
+            preservedDays[d.n] = d; 
+        });
+        delete window.plannerConfig[wk];
+    });
+
+    let currentDay = 1;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${m}-${w}`] = {
-            label: `Week ${w}`, theme: "Adjusted",
+            label: `Week ${w}`, 
+            theme: "Plans Updated",
             days: Array.from({length: daysInW}, () => {
-                const d = currentDay++;
-                return { n: d, name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], tag: "Act", activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]};
+                const dNum = currentDay++;
+                // Se o dia já existia, preserva os dados (atividades e tags)
+                if (preservedDays[dNum]) {
+                    return preservedDays[dNum];
+                }
+                // Se for novo, cria padrão
+                return { 
+                    n: dNum, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dNum - 1) % 7], 
+                    tag: "Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Topic", desc:"Edit", time: "20m"}]
+                };
             })
         };
     }
-    saveUserData(uid).then(() => refreshUI(uid));
+    saveUserData(uid).then(() => refreshUI(uid, m));
 }
 
 export function deleteMonth(m, uid) {
-   if (confirm(`Delete Month ${m}?`)) {
+   if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
+        
+        const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
+        const currentIndex = months.indexOf(m.toString());
+        const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
+
         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
-        saveUserData(uid).then(() => refreshUI(uid));
+        
+        saveUserData(uid).then(() => refreshUI(uid, targetMonth));
     }
 }
 
-function refreshUI(uid) {
+function refreshUI(uid, targetMonth = null) {
     import('./ui.js').then(mod => {
         mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
-        const first = Object.keys(window.plannerConfig).sort()[0];
-        if (first) { const [m, w] = first.split('-'); buildWeek(m, w, uid); }
+        
+        let monthToOpen = targetMonth;
+        if (!monthToOpen) {
+            const available = Object.keys(window.plannerConfig).sort();
+            if (available.length > 0) monthToOpen = available[0].split('-')[0];
+        }
+
+        if (monthToOpen) {
+            const mBtn = Array.from(document.querySelectorAll('#monthNav .mbtn')).find(b => b.textContent.includes(`Month ${monthToOpen}`));
+            if (mBtn) mBtn.click();
+        }
         mod.updateProgressBar();
     });
 }
-
 // --- OVERVIEW DINÂMICO ---
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
