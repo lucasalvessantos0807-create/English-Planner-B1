@@ -212,50 +212,50 @@ export const weeksData = {
   ]
 },
 "2-1":{
-  label:"Week 5",theme:"Grammar: Modal verbs (can, could, should, must) · Vocab: Make & Do, Housework · Book: Eleanor & Grey",review:false,
+  label:"Week 1",theme:"Grammar: Modal verbs (can, could, should, must) · Vocab: Make & Do, Housework · Book: Eleanor & Grey",review:false,
   days:[
-    {n:29,name:"Monday",tag:"Grammar — Modal verbs",activities:[
+    {n:1,name:"Monday",tag:"Grammar — Modal verbs",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"New book, new month! Vocab theme: Make & Do. 5 collocations: make a decision, do homework, make progress, do the dishes, make an effort.",tip:"These are fixed — you can't swap 'make' and 'do'. Learn them as chunks.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read the first 5 pages. Get a feel for the style — it's more conversational than Charlotte's Web.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New video for Month 2. B1 level now — slightly faster, more natural. Listen twice first.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Modal verbs: can, could, should, must",desc:"Can = ability/permission. Could = past ability/polite request. Should = advice. Must = obligation/strong belief. Write 2 sentences per modal.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about your daily routine using modal verbs: 'I must study every day. I should sleep earlier. I can...'",time:"15 min"},
     ]},
-    {n:30,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:2,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review. Add 5 more: make a mess, do the laundry, make an excuse, do research, make a noise.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Listen for modal verbs — they're often weak and fast in natural speech.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: speak 2 minutes about the story so far using modal verbs where you can.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 2–3 times. Modal verbs in speech: 'should' often sounds like 'shəd', 'must' like 'məst'.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Give advice to a new English learner using 'should', 'must', 'can'. 2–3 minutes.",time:"15 min"},
     ]},
-    {n:31,name:"Wednesday",tag:"Grammar — Might, may, would",activities:[
+    {n:3,name:"Wednesday",tag:"Grammar — Might, may, would",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Housework theme: 5 words: vacuum, scrub, dust, mop, tidy up.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Look for any modal verbs in the text.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Same video. Focus on 'would' — in speech it contracts to 'd: 'I'd, she'd, they'd.'",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Might, may, would",desc:"Might/may = possibility. Would = hypothetical / polite. 'It might rain. I may be late. I would love to visit.' Write 6 sentences.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about your plans and possibilities: what might happen, what you would love to do.",time:"15 min"},
     ]},
-    {n:32,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:4,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review make/do collocations + housework. Create a story using 5 of them in one paragraph.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: describe what might happen next in the story.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. How does your B1-level shadowing sound compared to your A2 videos from Month 1?",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to advice or opinion content. Notice modal verbs.",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about what you might do in the future — plans, possibilities, dreams. Use modals throughout. 3 minutes.",time:"15 min"},
     ]},
-    {n:33,name:"Friday",tag:"Dictation + review",activities:[
+    {n:5,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review all week 5 vocabulary. Create your Month 2 power words starter list.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Did you catch all the modal verbs?",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow — enjoy it.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about housework — what you should do, what you hate doing, what you might do this weekend.",time:"15 min"},
     ]},
-    {n:34,name:"Saturday",tag:"Light day",activities:[
+    {n:6,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 words from Eleanor & Grey this week.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 4–5 pages. Enjoy the new book.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Compare Charlotte's Web and Eleanor & Grey. What's different? Which do you prefer? Use modals and past tenses. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:35,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:7,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write 10 sentences using all modal verbs from this week: can, could, should, must, might, may, would. Vary subjects and situations.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Make & Do + Housework full review. Test yourself without looking.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Listen to week 5 speaking recording. One improvement, one focus for week 6.",time:"10 min"},
@@ -265,50 +265,50 @@ export const weeksData = {
   ]
 },
 "2-2":{
-  label:"Week 6",theme:"Grammar: Be able to / manage to, Be allowed to / be supposed to · Vocab: Holidays & Travel · Book: Eleanor & Grey",review:false,
+  label:"Week 2",theme:"Grammar: Be able to / manage to, Be allowed to / be supposed to · Vocab: Holidays & Travel · Book: Eleanor & Grey",review:false,
   days:[
-    {n:36,name:"Monday",tag:"Grammar — Be able to / manage to",activities:[
+    {n:8,name:"Monday",tag:"Grammar — Be able to / manage to",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Travel vocabulary: 5 words: itinerary, departure, customs, resort, excursion.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Note any travel or movement vocabulary.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New video for week 6. Travel topic if possible. Focus on natural rhythm.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Be able to / manage to",desc:"Be able to = general ability (like 'can' but all tenses). Manage to = succeed in doing something difficult. 'I was able to speak English. I managed to finish the exam.' Write 5 sentences.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about a challenge you managed to overcome. Use 'manage to' and 'be able to'.",time:"15 min"},
     ]},
-    {n:37,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:9,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Add 5 more travel words: sightseeing, accommodation, jet lag, currency, souvenir.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation — travel or story clip. Listen for ability expressions.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: what were the characters able to do? What did they manage to do?",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. Focus today on intonation — where does the voice go up and down?",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about a trip you took or would like to take. What were/would you be able to do there?",time:"15 min"},
     ]},
-    {n:38,name:"Wednesday",tag:"Grammar — Be allowed to / be supposed to",activities:[
+    {n:10,name:"Wednesday",tag:"Grammar — Be allowed to / be supposed to",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review travel words. Add: brochurevocabulary — brochure, facilities, all-inclusive, package deal, transfer.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Look for rules, obligations, or things permitted/forbidden.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. Focus on weak forms: 'supposed to' sounds like 'sposta'.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Be allowed to / be supposed to",desc:"Be allowed to = permission. Be supposed to = expectation/rule. 'You're not allowed to smoke here. You're supposed to check in before 3pm.' Write 6 sentences.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about rules — at school, work, or while travelling. Use 'allowed to' and 'supposed to'.",time:"15 min"},
     ]},
-    {n:39,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:11,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Full travel vocabulary review. Create a short holiday itinerary using the vocabulary.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: describe a trip one of the characters might take using travel vocabulary.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. How well can you match the natural rhythm now?",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to travel content — a review, a vlog, a recommendation.",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Describe your dream holiday: where you'd go, what you'd be allowed to do, what you're supposed to bring. 3–4 minutes.",time:"15 min"},
     ]},
-    {n:40,name:"Friday",tag:"Dictation + review",activities:[
+    {n:12,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review all Week 6 vocabulary. Add to your Month 2 power words list.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Check for 'allowed to', 'supposed to', 'manage to'.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about a travel experience using everything from this week: travel vocab, modals, be able to, be supposed to.",time:"15 min"},
     ]},
-    {n:41,name:"Saturday",tag:"Light day",activities:[
+    {n:13,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 words you found interesting this week — from any source.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 4–5 pages. Relaxed.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about Eleanor & Grey — what has happened so far, what might happen. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:42,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:14,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write 10 sentences using: modal verbs, be able to, manage to, be allowed to, be supposed to. Mix past, present, future.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Holidays & Travel full review. Test yourself — cover the English and try to say each word.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Listen to week 6 recording. One specific improvement to note.",time:"10 min"},
@@ -318,50 +318,50 @@ export const weeksData = {
   ]
 },
 "2-3":{
-  label:"Week 7",theme:"Grammar: Passives, Reported speech · Vocab: Illness, Cooking, Weather · Book: Eleanor & Grey",review:false,
+  label:"Week 3",theme:"Grammar: Passives, Reported speech · Vocab: Illness, Cooking, Weather · Book: Eleanor & Grey",review:false,
   days:[
-    {n:43,name:"Monday",tag:"Grammar — Passives",activities:[
+    {n:15,name:"Monday",tag:"Grammar — Passives",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Illness vocabulary: 5 words: symptom, diagnose, prescription, recovery, contagious.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Look for any passive structures ('was built', 'is known', 'was told').",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New video. Passive structures often appear in news and formal speech — find a news clip if possible.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Passives",desc:"Form: be + past participle. 'The book was written in 1952. English is spoken worldwide. The letter was sent.' Write 5 passive sentences about things around you.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about something that happened to you using passives where natural. Or describe how something is made.",time:"15 min"},
     ]},
-    {n:44,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:16,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Cooking vocabulary: 5 words: simmer, grate, dice, marinate, whisk.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Listen for passive structures — does the speaker use them?",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: retell 2 events from the story using passive voice.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. Focus on linking in passive constructions: 'was_asked', 'is_known'.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Describe a recipe using passive and active: 'The onion is chopped. Then you add...' 2–3 minutes.",time:"15 min"},
     ]},
-    {n:45,name:"Wednesday",tag:"Grammar — Reported speech",activities:[
+    {n:17,name:"Wednesday",tag:"Grammar — Reported speech",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Weather vocabulary: 5 words: overcast, drizzle, humidity, forecast, heatwave.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Note any dialogue — reported speech practice starts here.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. Today: focus on the speaker's emotion. Shadow that too.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Reported speech",desc:"Direct: 'I love this city.' Reported: She said she loved the city. Tense shifts back. Write 6 reported speech sentences from imaginary quotes.",tip:"say → said that... tell → told me that...",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a short diary entry reporting a conversation you had: 'She told me that... He said he...'",time:"15 min"},
     ]},
-    {n:46,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:18,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review illness + cooking + weather. Find connections: being ill in bad weather, cooking when sick.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Report a piece of dialogue from the book using reported speech.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. Notice: do you sound more natural than month 1?",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to weather forecast, cooking tutorial, or health advice — real-world content.",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Report a conversation you had recently using reported speech. 3 minutes. Then talk about the weather this week.",time:"15 min"},
     ]},
-    {n:47,name:"Friday",tag:"Dictation + review",activities:[
+    {n:19,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Full review: illness, cooking, weather. Add to power words list.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Listen for reported speech or passive structures.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about an illness or bad weather experience. Use passives, reported speech, and vocabulary from this week.",time:"15 min"},
     ]},
-    {n:48,name:"Saturday",tag:"Light day",activities:[
+    {n:20,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 new words — your choice.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 4–5 pages. Enjoy.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about Eleanor & Grey — report what characters said, use passive to describe events. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:49,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:21,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write 10 sentences: mix passives and reported speech. Write a short 'news report' about your week using both.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Illness + Cooking + Weather review. Focus on the words you hesitated on.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Compare week 5, 6, and 7 recordings. Write one sentence about your Month 2 progress.",time:"10 min"},
@@ -371,50 +371,50 @@ export const weeksData = {
   ]
 },
 "2-4":{
-  label:"Week 8",theme:"Grammar: 1st & 2nd conditionals, Neither/So do I · Vocab: Furniture & Appliances · Review Month 2",review:false,
+  label:"Week 4",theme:"Grammar: 1st & 2nd conditionals, Neither/So do I · Vocab: Furniture & Appliances · Review Month 2",review:false,
   days:[
-    {n:50,name:"Monday",tag:"Grammar — 1st conditional",activities:[
+    {n:22,name:"Monday",tag:"Grammar — 1st conditional",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Furniture: 5 words: armchair, chest of drawers, bookshelf, sideboard, wardrobe.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Note any conditional sentences ('if..., ...will').",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New video — slightly harder. Conditionals appear often in conversation. Listen for 'if'.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — 1st conditional",desc:"If + present simple → will + infinitive. Real/possible situations. 'If I study hard, I will reach B1. If it rains, I'll stay home.' Write 5 sentences about your real plans.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about your English goals using 1st conditional: 'If I practise every day, I will...'",time:"15 min"},
     ]},
-    {n:51,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:23,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Appliances: 5 words: dishwasher, microwave, tumble dryer, freezer, air conditioner.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Listen for conditional 'if' clauses.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. After: write a 1st conditional prediction about a character.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. 'If I' sounds like 'ɪf aɪ' — very linked. Focus on that.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about consequences: 'If I move to an English-speaking country, I will...' Use 1st conditional freely. 3 minutes.",time:"15 min"},
     ]},
-    {n:52,name:"Wednesday",tag:"Grammar — 2nd conditional + Neither/So do I",activities:[
+    {n:24,name:"Wednesday",tag:"Grammar — 2nd conditional + Neither/So do I",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review furniture + appliances. Describe your ideal home using vocabulary.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. Find or imagine places where 2nd conditional would fit the story.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. Full rhythm and emotion.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — 2nd conditional + Neither/So do I",desc:"2nd: If + past simple → would + infinitive. Hypothetical. 'If I were rich, I would travel more.' Neither/So: 'I like coffee. So do I / Neither do I.' Write 5 of each.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about a hypothetical situation: 'If I could live anywhere...' or 'If I had more time...' Use 2nd conditional.",time:"15 min"},
     ]},
-    {n:53,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:25,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Full Month 2 vocabulary review: make/do, housework, travel, illness, cooking, weather, furniture, appliances.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages. You're doing great with this book.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record your Month 2 milestone recording. This is for comparing at the end of Month 3.",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something you enjoy in English — native level. How much do you understand?",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about your ideal life using 2nd conditional: 'If I could change one thing...' 4 minutes.",time:"20 min"},
     ]},
-    {n:54,name:"Friday",tag:"Dictation + review",activities:[
+    {n:26,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Write a paragraph using your Month 2 power words — as many as you can.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Final Month 2 dictation. Compare to Month 1. Notice the difference.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow the first video from Month 2 — notice how natural it is now.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a letter to someone explaining what you would do if you could spend a year abroad learning English.",time:"15 min"},
     ]},
-    {n:55,name:"Saturday",tag:"Light day",activities:[
+    {n:27,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Count your full vocabulary notebook. How many words after Month 2?",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading — Eleanor & Grey",desc:"Read 4–5 pages. Enjoy.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Free talk: your favourite things from Month 2, what you learned, what you enjoyed. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow as a reward for completing Month 2!",time:"20 min"},
     ]},
-    {n:56,name:"Sunday",tag:"⭐ Month 2 Review Day",review:true,activities:[
+    {n:28,name:"Sunday",tag:"⭐ Month 2 Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Full grammar review",desc:"Write one paragraph per grammar group: (1) modals (2) passives + reported speech (3) conditionals. Each 5–7 sentences. Use Eleanor & Grey as inspiration.",time:"30 min"},
       {t:"review",i:"📚",title:"Vocabulary final count",desc:"Count all words. Set Month 3 target. Review power words — can you use them all naturally?",time:"15 min"},
       {t:"review",i:"🎧",title:"Milestone comparison",desc:"Listen to your Day 1 recording, your Day 28 recording, and today's. Write 3 specific improvements.",time:"15 min"},
@@ -424,50 +424,50 @@ export const weeksData = {
   ]
 },
 "3-1":{
-  label:"Week 9",theme:"Grammar: Relative clauses, Adjectives & connotations · Vocab: Crime & Punishment · Book: Romeo & Juliet / Moby Dick",review:false,
+  label:"Week 1",theme:"Grammar: Relative clauses, Adjectives & connotations · Vocab: Crime & Punishment · Book: Romeo & Juliet / Moby Dick",review:false,
   days:[
-    {n:57,name:"Monday",tag:"Grammar — Relative clauses",activities:[
+    {n:1,name:"Monday",tag:"Grammar — Relative clauses",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Crime vocabulary: 5 words: suspect, witness, verdict, sentence, bail.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Start Romeo & Juliet or Moby Dick — whichever you prefer. Read the first 5 pages. Take your time.",tip:"Romeo & Juliet: prose version is easier. Moby Dick: rich and challenging. Your choice!",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Month 3: find a native-level clip, something that feels challenging. TED Talks, documentaries, interviews.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Relative clauses",desc:"Defining: 'The man who called me is my teacher.' Non-defining: 'My teacher, who is French, called me.' Which = things. Who = people. Where = places. Write 5 defining + 2 non-defining.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Describe 5 things in your life using relative clauses: 'The city where I grew up... The book that changed me...'",time:"15 min"},
     ]},
-    {n:58,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:2,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"More crime: arrest, evidence, motive, acquit, penalty.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation — slightly longer clip now. 2 minutes. Write, check, focus on relative pronouns.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Note any relative clauses in the text.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. This is native-level — don't worry if it's hard. Focus on rhythm only.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Describe a crime story (real or fictional) using relative clauses and crime vocabulary. 3 minutes.",time:"15 min"},
     ]},
-    {n:59,name:"Wednesday",tag:"Grammar — Adjectives & connotations",activities:[
+    {n:3,name:"Wednesday",tag:"Grammar — Adjectives & connotations",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Adjective connotations: slim (positive) vs skinny (negative). Confident vs arrogant. Add 6 pairs.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for adjectives — do they have positive or negative connotations in context?",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. Emotional expression: copy the speaker's feeling, not just words.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Adjectives & connotations",desc:"Same meaning, different feeling: thin/slim/skinny · house/home/dump · cheap/affordable/stingy · determined/stubborn. Write sentences showing the connotation difference.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a description of a character. Write it twice: once positively, once negatively. Use adjective connotations.",time:"20 min"},
     ]},
-    {n:60,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:4,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review crime vocabulary + adjective pairs. Create 5 sentences using connotation adjectives naturally.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. After: describe a character using both positive and negative connotation adjectives.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself with the native-level clip. How does it feel compared to Month 1?",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Crime documentary or legal drama clip. Note vocabulary and relative clauses.",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Describe someone you know using adjectives — positive and negative connotations. Then describe a criminal from a story. 4 minutes total.",time:"20 min"},
     ]},
-    {n:61,name:"Friday",tag:"Dictation + review",activities:[
+    {n:5,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Crime vocabulary full review + connotation pairs. Add to Month 3 power words.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Focus on relative pronouns: who, which, where, that.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a short crime story using relative clauses, crime vocabulary, and connotation adjectives. 10–12 sentences.",time:"20 min"},
     ]},
-    {n:62,name:"Saturday",tag:"Light day",activities:[
+    {n:6,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 new words from your current book.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 4–5 pages. Enjoy.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about your book — the story, themes, vocabulary. Record yourself. Compare to Month 1 book summaries.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:63,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:7,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write 8 sentences with relative clauses + 5 sentence pairs showing adjective connotation differences.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Crime vocabulary full review. Connotation adjective pairs. Test yourself.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Listen to week 9 recording. One thing to celebrate. One thing to improve.",time:"10 min"},
@@ -477,30 +477,30 @@ export const weeksData = {
   ]
 },
 "3-2":{
-  label:"Week 10",theme:"Grammar: Look+adj, Look like+noun, Adverbs of manner · Vocab: Political system, Books/Film/TV · Book continues",review:false,
+  label:"Week 2",theme:"Grammar: Look+adj, Look like+noun, Adverbs of manner · Vocab: Political system, Books/Film/TV · Book continues",review:false,
   days:[
-    {n:64,name:"Monday",tag:"Grammar — Look + adj / Look like + noun",activities:[
+    {n:8,name:"Monday",tag:"Grammar — Look + adj / Look like + noun",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Political system: 5 words: parliament, democracy, election, coalition, policy.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for any sensory verbs: look, sound, smell, taste, feel.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New clip for week 10. Interview or discussion format — more dynamic speech.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Look + adj / Look like + noun",desc:"Look + adj: 'She looks tired. That looks delicious.' Look like + noun: 'He looks like a teacher. It looks like rain.' Write 5 of each.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Describe 5 people or situations using 'look + adj' and 'look like + noun' naturally.",time:"15 min"},
     ]},
-    {n:65,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:9,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Books/Films/TV: 5 words: plot, genre, subtitles, sequel, cast.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Film or book review clip. Listen for sensory verbs and adverbs.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. After: describe a character using 'looks like' and 'looks + adjective'.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. Focus on adverbs — they are often said quickly and stressed.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Describe a film or TV show using new vocabulary. Talk about the plot, characters, genre. 3 minutes.",time:"15 min"},
     ]},
-    {n:66,name:"Wednesday",tag:"Grammar — Adverbs of manner & modifiers",activities:[
+    {n:10,name:"Wednesday",tag:"Grammar — Adverbs of manner & modifiers",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"More film/TV/book words: cliffhanger, narrator, flashback, spoiler, adaptation.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Note any adverbs (words ending in -ly).",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow. Focus on adverbs: 'absolutely', 'completely', 'slightly' — how are they stressed?",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Adverbs of manner & modifiers",desc:"Adverbs of manner: quickly, carefully, suddenly, loudly. Modifiers: quite, rather, fairly, extremely, absolutely (with strong adj: absolutely stunning, NOT absolutely good). Write 8 sentences.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a review of your reading book using adverbs of manner and modifiers freely.",time:"15 min"},
     ]},
-    {n:67,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:11,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review politics + books/film/TV. Can you connect them? (Political films, books about democracy?)",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Describe one scene using 'looked like', adverbs, and connotation adjectives.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. This is almost your final month — feel how far you have come.",time:"20 min"},
@@ -514,13 +514,13 @@ export const weeksData = {
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a political opinion piece (any topic) using relative clauses, adverbs, modifiers, and vocabulary from this week.",time:"20 min"},
     ]},
-    {n:69,name:"Saturday",tag:"Light day",activities:[
+    {n:13,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 new words — your choice.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 4–5 pages. Enjoy.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about a political topic or a film/book you love. Use new vocabulary. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:70,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:14,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write a film or book review (10–12 sentences) using: look + adj, look like + noun, adverbs of manner, modifiers, relative clauses.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Politics + Film/TV/Books full review. Test yourself.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Compare week 9 and week 10 recordings. What specific thing has improved?",time:"10 min"},
@@ -530,50 +530,50 @@ export const weeksData = {
   ]
 },
 "3-3":{
-  label:"Week 11",theme:"Grammar: Present perfect continuous, Past perfect simple · Vocab: Family, Animals, Consumer services",review:false,
+  label:"Week 3",theme:"Grammar: Present perfect continuous, Past perfect simple · Vocab: Family, Animals, Consumer services",review:false,
   days:[
-    {n:71,name:"Monday",tag:"Grammar — Present perfect continuous",activities:[
+    {n:15,name:"Monday",tag:"Grammar — Present perfect continuous",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Family relationships: 5 words: sibling, in-law, guardian, descendant, estranged.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for any perfect tense forms.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"New clip. Focus on perfect continuous forms — 'I've been studying', 'she's been waiting'.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Present perfect continuous",desc:"Form: have/has + been + -ing. Use: ongoing actions that started in the past. 'I've been learning English for 3 months. She's been waiting for an hour.' Write 5 sentences about yourself.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about what you have been doing lately — studies, hobbies, life. Use present perfect continuous.",time:"15 min"},
     ]},
-    {n:72,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:16,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Animals: 5 words: predator, habitat, endangered, domestic, breed.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Listen for present perfect continuous — 'has been' sounds like 'həzbɪn'.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. After: write 3 sentences about what characters have been doing.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. 'I've been' links together strongly — practise it.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about your family using new vocabulary. Who have you been spending time with lately? 3 minutes.",time:"15 min"},
     ]},
-    {n:73,name:"Wednesday",tag:"Grammar — Past perfect simple",activities:[
+    {n:17,name:"Wednesday",tag:"Grammar — Past perfect simple",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Consumer services: 5 words: warranty, refund, complaint, checkout, subscription.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for 'had + past participle' (past perfect).",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. 'Had' is often very weak — sounds like 'd' after vowels.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Past perfect simple",desc:"Form: had + past participle. Use: before another past event. 'When I arrived, she had already left. He ate because he hadn't had breakfast.' Write 5 sentences with two past events.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write about a time something had already happened when you arrived somewhere. Use past perfect.",time:"15 min"},
     ]},
-    {n:74,name:"Thursday",tag:"Speaking focus",activities:[
+    {n:18,name:"Thursday",tag:"Speaking focus",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review family + animals + consumer services. Find connections: pet ownership, family consumer habits.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Describe a scene using both present perfect continuous and past perfect.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself. Compare to week 9. How does native-level material feel now?",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to a documentary or story. Note any perfect tense forms.",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Tell a story about something that happened — use past perfect to explain the background. 4 minutes.",time:"15 min"},
     ]},
-    {n:75,name:"Friday",tag:"Dictation + review",activities:[
+    {n:19,name:"Friday",tag:"Dictation + review",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Full review: family, animals, consumer services. Add to power words.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Focus on perfect tense forms.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a story in 10–12 sentences using past simple, past perfect, and present perfect continuous all together.",time:"20 min"},
     ]},
-    {n:76,name:"Saturday",tag:"Light day",activities:[
+    {n:20,name:"Saturday",tag:"Light day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"5 new words — from your book, a film, or daily life.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 4–5 pages. Relax and enjoy.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Talk about your family or pets using new vocabulary and perfect tenses. Record yourself.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for fun.",time:"20 min"},
     ]},
-    {n:77,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
+    {n:21,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write a 12-sentence paragraph: mix present perfect continuous and past perfect. Tell a story that happened over time.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Family + animals + consumer services review. Test yourself without looking.",time:"15 min"},
       {t:"review",i:"🎧",title:"Listen back",desc:"Listen to all 3 months of recordings. Write a paragraph about how you have changed.",time:"15 min"},
@@ -583,50 +583,50 @@ export const weeksData = {
   ]
 },
 "3-4":{
-  label:"Week 12",theme:"Grammar: Question tags, Affixes/Participles, Full review · Vocab: Hotels, Affixes, Participles · Final week",review:false,
+  label:"Week 4",theme:"Grammar: Question tags, Affixes/Participles, Full review · Vocab: Hotels, Affixes, Participles · Final week",review:false,
   days:[
-    {n:78,name:"Monday",tag:"Grammar — Question tags",activities:[
+    {n:22,name:"Monday",tag:"Grammar — Question tags",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Hotel facilities: 5 words: concierge, amenities, complimentary, valet, suite.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Find any question tag forms or imagine where they'd fit.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Final month video. Find something you love and commit to it this week.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Question tags",desc:"Positive → negative tag: 'It's cold, isn't it?' Negative → positive: 'She can't come, can she?' Auxiliary matches the main verb. Write 8 question tags.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a conversation using question tags naturally throughout. Make it sound real.",time:"15 min"},
     ]},
-    {n:79,name:"Tuesday",tag:"Writing + Dictation",activities:[
+    {n:23,name:"Tuesday",tag:"Writing + Dictation",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Affixes: 5 prefixes — un- (unhappy), dis- (disagree), re- (redo), over- (overwork), mis- (misunderstand). Write a word + sentence for each.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Final month dictation. 2 minutes of natural speech. How much can you catch?",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for words with affixes.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow 3 times. Question tags have falling intonation (certainty) or rising (genuine question). Listen for this.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Have an imaginary conversation with yourself using question tags. Make it natural. Record it.",time:"15 min"},
     ]},
-    {n:80,name:"Wednesday",tag:"Grammar — Participles & full integration",activities:[
+    {n:24,name:"Wednesday",tag:"Grammar — Participles & full integration",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Suffixes: 5 — -ness (happiness), -ful (careful), -less (careless), -tion (education), -ly (quickly). Create examples.",time:"10 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. Look for present and past participles used as adjectives: 'boring film', 'excited child', 'running water'.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow all the way through. Full commitment — this is one of your last dedicated sessions.",time:"20 min"},
       {t:"grammar",i:"📐",title:"Grammar — Participles as adjectives",desc:"Present participle (-ing) = active cause: 'The film was boring.' Past participle (-ed) = passive effect: 'I was bored.' Write 8 sentences using 4 pairs: boring/bored, exciting/excited, tiring/tired, surprising/surprised.",time:"20 min"},
-      {t:"writing",i:"✍️",title:"Writing",desc:"Write about a memorable experience using participle adjectives, affixes, and question tags.",time:"15 min"},
+      {t:"writing",i:"✍️",title:"Writing",desc:"Write a memorable experience using participle adjectives, affixes, and question tags.",time:"15 min"},
     ]},
-    {n:81,name:"Thursday",tag:"Full grammar integration",activities:[
+    {n:25,name:"Thursday",tag:"Full grammar integration",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Review all Month 3 vocabulary: crime, politics, film/TV, family, animals, consumer services, hotels, affixes.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read 5 pages. This is your second-to-last reading session of the 3 months. Appreciate it.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Record yourself with your favourite clip from Month 3. This is your final benchmark.",time:"20 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something native-level for 20 minutes. No stopping. How much do you understand?",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Full integration: talk for 5 minutes about any topic using as many grammar structures as you can. It doesn't need to be perfect — it needs to flow.",time:"20 min"},
     ]},
-    {n:82,name:"Friday",tag:"Final review + celebration",activities:[
+    {n:26,name:"Friday",tag:"Final review + celebration",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Final vocabulary count. How many words in your notebook after 3 months? Write the number down.",time:"10 min"},
       {t:"listening",i:"🎧",title:"Listening",desc:"Final dictation. Long clip. Write as much as you can. Compare to Day 2's dictation.",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Final reading session. Read your last pages and enjoy every word.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow your very first video from Day 1 of Month 1. Enjoy how easy it is now.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing — Letter to Day 1 you",desc:"Write a letter to yourself on Day 1. Tell that person what they will learn, how they will feel, and that it was worth it.",time:"20 min"},
     ]},
-    {n:83,name:"Saturday",tag:"Final milestone day",activities:[
+    {n:27,name:"Saturday",tag:"Final milestone day",activities:[
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Choose your all-time top 30 words from the entire 3 months. Read them aloud with confidence.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading",desc:"Read something in English you would have found impossible 3 months ago. Notice the difference.",time:"20 min"},
       {t:"speaking",i:"🗣️",title:"Speaking — Final milestone recording",desc:"Record a 5-minute talk about anything. This is your B1-level proof. Save it. Compare to Day 1. Be proud.",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for joy. You've earned it.",time:"20 min"},
     ]},
-    {n:84,name:"Sunday",tag:"⭐ Final Review Day — You did it!",review:true,activities:[
+    {n:28,name:"Sunday",tag:"⭐ Final Review Day — You did it!",review:true,activities:[
       {t:"review",i:"🏆",title:"Full 3-month grammar review",desc:"Write one showcase paragraph per month: Month 1 (past tenses, used to), Month 2 (modals, conditionals, passives), Month 3 (relative clauses, perfect tenses, question tags). Your best work.",time:"35 min"},
       {t:"review",i:"📚",title:"Vocabulary celebration",desc:"Read through your entire vocabulary notebook from start to finish. You built this. Every word is yours.",time:"20 min"},
       {t:"review",i:"🎧",title:"The full journey",desc:"Listen to Day 1 → Day 28 → Day 56 → today's recording. Write a paragraph about who you were and who you are now.",time:"20 min"},
