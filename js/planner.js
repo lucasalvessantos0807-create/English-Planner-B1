@@ -10,6 +10,29 @@ let sessionInitialDOMSnapshot = {};
 const builtWeeks = new Set();
 const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
+function refreshUI(uid, targetMonth = null) {
+    import('./ui.js').then(mod => {
+        mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
+        
+        let monthToOpen = targetMonth;
+        if (!monthToOpen) {
+            const available = Object.keys(window.plannerConfig).sort();
+            if (available.length > 0) monthToOpen = available[0].split('-')[0];
+        }
+
+        setTimeout(() => {
+            const monthButtons = document.querySelectorAll('#monthNav .mbtn');
+            const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${monthToOpen}`);
+            
+            if (targetBtn) {
+                targetBtn.click();
+            } else if (monthButtons.length > 0) {
+                monthButtons[0].click();
+            }
+            mod.updateProgressBar();
+        }, 100); 
+    });
+}
 
 // --- FUNÇÕES DE UNDO E AUXILIARES ---
 function pushToUndo() {
@@ -307,6 +330,7 @@ export function editMonthStructure(m, uid) {
         });
     });
 
+    // --- DETECÇÃO DE CONTEÚDO NOS DIAS QUE SERÃO REMOVIDOS ---
     if (dayCount < existingDays.length) {
         let hasCustomContent = false;
         let affectedDays = [];
@@ -317,34 +341,35 @@ export function editMonthStructure(m, uid) {
             const oldKey = `d${dayObj.n}`; 
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
-            let hasProgress = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
+            let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
             let isTagEdited = dayObj.tag !== "Daily Act";
             let areActivitiesEdited = dayObj.activities.some(act => 
                 (act.title !== "Study Topic" && act.title !== "New Activity") || 
                 (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
             );
 
-            if (hasProgress || isTagEdited || areActivitiesEdited) {
+            if (hasProgressOrNotes || isTagEdited || areActivitiesEdited) {
                 hasCustomContent = true;
                 affectedDays.push(dayObj.n);
             }
         }
 
         if (hasCustomContent) {
-            const warningMessage = `ATTENTION: You are reducing the month to ${dayCount} days, but there is custom content or progress saved on the following days: ${affectedDays.join(', ')}.\n\nIf you proceed, all notes, progress markers, and edited activities for these days will be PERMANENTLY DELETED.\n\nDo you want to continue?`;
-            const confirmDeletion = confirm(warningMessage);
-            if (!confirmDeletion) return;
+            const warningMessage = `ATTENTION: Reducing to ${dayCount} days will DELETE custom content/notes on days: ${affectedDays.join(', ')}.\n\nDo you want to proceed and PERMANENTLY DELETE this data?`;
+            if (!confirm(warningMessage)) return;
         }
 
-        // LIMPAR DADOS FANTASMAS (Remove do state os dias que deixaram de existir)
+        // LIMPEZA APENAS DOS DADOS EXCLUÍDOS (Para evitar "fantasmas" se o mês crescer de novo)
         for (let i = dayCount; i < existingDays.length; i++) {
-            delete window.appState[`m${m}-d${existingDays[i].n}`];
-            delete window.appState[`d${existingDays[i].n}`];
+            const dayNum = existingDays[i].n;
+            delete window.appState[`m${m}-d${dayNum}`];
+            delete window.appState[`d${dayNum}`];
         }
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
+    // Reconstruir estrutura preservando o conteúdo dos dias que ficaram
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -357,11 +382,10 @@ export function editMonthStructure(m, uid) {
             
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum;
+                preserved.n = newDayNum; // Mantém notas e atividades originais
                 weekDays.push(preserved);
             } else {
-                // Ao criar dias novos por aumento de mês, garantimos que não puxe lixo de estados antigos
-                delete window.appState[`m${m}-d${newDayNum}`];
+                // Dia novo (caso o mês tenha crescido)
                 weekDays.push({ 
                     n: newDayNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
@@ -379,18 +403,7 @@ export function editMonthStructure(m, uid) {
         };
     }
 
-    saveUserData(uid).then(() => {
-        // Forçar renderização completa
-        import('./ui.js').then(mod => {
-            mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
-            setTimeout(() => {
-                const monthButtons = document.querySelectorAll('#monthNav .mbtn');
-                const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${m}`);
-                if (targetBtn) targetBtn.click();
-                mod.updateProgressBar();
-            }, 100);
-        });
-    });
+    saveUserData(uid).then(() => refreshUI(uid, m));
 }
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
