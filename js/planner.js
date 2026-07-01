@@ -140,7 +140,10 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
-        const dayData = activeState[dayKey] || { done: false, notes: "" };
+        // Lógica de Migração: Busca m1-d1 primeiro, depois tenta o legado d1
+        const fullKey = `m${m}-${dayKey}`;
+        const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
+        
         const card = document.createElement("div");
         card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
@@ -175,7 +178,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
-        // Eventos de Edição (Somente se não for Preview)
+        // Eventos de Edição
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
@@ -200,6 +203,21 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                     if (ICON_MAP[emoji]) {
                         titleEl.innerText = ICON_MAP[emoji];
                         window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
+                    }
+                };
+            });
+
+            // Persistência de texto nas atividades
+            card.querySelectorAll('[contenteditable]').forEach(el => {
+                el.onblur = () => {
+                    const path = el.dataset.path;
+                    if (path) {
+                        const [wkK, dI, aI, prop] = path.split('.');
+                        window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText;
+                    } else if (el.dataset.type === 'tag') {
+                        window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText;
+                    } else if (el.dataset.type === 'theme') {
+                        window.plannerConfig[el.dataset.week].theme = el.innerText;
                     }
                 };
             });
@@ -254,7 +272,6 @@ export function addNewMonth(uid) {
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
-    // Todo mês novo inicia como Dia 1 por padrão
     let currentDay = 1;
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
@@ -278,7 +295,6 @@ export function editMonthStructure(m, uid) {
     let dayCount = parseInt(prompt(`How many days should Month ${m} have?`, "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
 
-    // Verificar se haverá perda de conteúdo (se diminuir os dias)
     const weeksOfM = Object.keys(window.plannerConfig).filter(k => k.startsWith(`${m}-`));
     let maxExistingDay = 0;
     weeksOfM.forEach(wk => {
@@ -289,7 +305,8 @@ export function editMonthStructure(m, uid) {
         let hasContent = false;
         for (let d = dayCount + 1; d <= maxExistingDay; d++) {
             const stateKey = `m${m}-d${d}`;
-            const dayState = window.appState[stateKey];
+            const oldKey = `d${d}`; 
+            const dayState = window.appState[stateKey] || window.appState[oldKey];
             if (dayState && (dayState.done || (dayState.notes && dayState.notes.trim() !== ""))) {
                 hasContent = true;
                 break;
@@ -297,21 +314,17 @@ export function editMonthStructure(m, uid) {
         }
 
         if (hasContent) {
-            const confirmLoss = confirm(`Warning: Days from ${dayCount + 1} to ${maxExistingDay} contain notes or completed status. If you restructure with fewer days, this content will be deleted. Do you want to continue?`);
-            if (!confirmLoss) {
-                // Se cancelar, chama a função novamente para permitir trocar o número de dias
-                return editMonthStructure(m, uid);
-            }
+            const confirmLoss = confirm(`Warning: Days from ${dayCount + 1} to ${maxExistingDay} contain your personal notes or progress. These will be PERMANENTLY deleted if you proceed with only ${dayCount} days. Continue?`);
+            if (!confirmLoss) return editMonthStructure(m, uid);
         }
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
 
-    // Mapear conteúdos existentes para preservar
-    const preservedDays = {};
+    const preservedDaysTemplate = {};
     weeksOfM.forEach(wk => {
         window.plannerConfig[wk].days.forEach(d => {
-            preservedDays[d.n] = d; 
+            preservedDaysTemplate[d.n] = JSON.parse(JSON.stringify(d)); 
         });
         delete window.plannerConfig[wk];
     });
@@ -324,11 +337,9 @@ export function editMonthStructure(m, uid) {
             theme: "Plans Updated",
             days: Array.from({length: daysInW}, () => {
                 const dNum = currentDay++;
-                // Se o dia já existia, preserva os dados (atividades e tags)
-                if (preservedDays[dNum]) {
-                    return preservedDays[dNum];
+                if (preservedDaysTemplate[dNum]) {
+                    return preservedDaysTemplate[dNum];
                 }
-                // Se for novo, cria padrão
                 return { 
                     n: dNum, 
                     name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(dNum - 1) % 7], 
@@ -365,14 +376,20 @@ function refreshUI(uid, targetMonth = null) {
             if (available.length > 0) monthToOpen = available[0].split('-')[0];
         }
 
-        if (monthToOpen) {
-            const mBtn = Array.from(document.querySelectorAll('#monthNav .mbtn')).find(b => b.textContent.includes(`Month ${monthToOpen}`));
-            if (mBtn) mBtn.click();
-        }
-        mod.updateProgressBar();
+        setTimeout(() => {
+            const monthButtons = document.querySelectorAll('#monthNav .mbtn');
+            const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${monthToOpen}`);
+            
+            if (targetBtn) {
+                targetBtn.click();
+            } else if (monthButtons.length > 0) {
+                monthButtons[0].click();
+            }
+            mod.updateProgressBar();
+        }, 50); 
     });
 }
-// --- OVERVIEW DINÂMICO ---
+
 export function addOverviewBlock(uid) {
     const grid = document.getElementById('dynamic-ov-grid');
     const blockId = 'ov-' + Date.now();
@@ -431,7 +448,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         </div>
     `;
 
-    // Preencher textos (Estáticos)
     ["ca", "cb", "cg"].forEach(id => {
         const labelEl = document.getElementById(`${prefix}global-ov-${id}-label`);
         const bodyEl = document.getElementById(`${prefix}global-ov-${id}-body`);
@@ -440,7 +456,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         if(bodyEl) bodyEl.innerHTML = content[key + '-body'] || defaults[key + '-body'];
     });
 
-    // Blocos Dinâmicos Extras
     if(content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
