@@ -16,17 +16,20 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
     });
     
     let done = 0;
-    // Só contamos dias marcados como "done" que realmente existem na configuração atual
-    Object.keys(state).forEach(key => {
-        if (state[key] && state[key].done) {
-           const parts = key.split('-'); // m1-d1
-            const mNum = parts[0].replace('m', '');
-            const dNum = parseInt(parts[1].replace('d', ''));
-            
-            const dayExists = Object.keys(config).some(wkKey => {
-                return wkKey.startsWith(`${mNum}-`) && config[wkKey].days.some(d => d.n === dNum);
+    // Percorremos a configuração do planner para verificar o status de cada dia no banco de dados
+    Object.keys(config).forEach(wkKey => {
+        const mNum = wkKey.split('-')[0];
+        if (config[wkKey].days) {
+            config[wkKey].days.forEach(day => {
+                const dayKey = `d${day.n}`;
+                const fullKey = `m${mNum}-${dayKey}`;
+                
+                // Um dia é considerado concluído se estiver marcado no formato novo (m1-d1)
+                // OU no formato legado (d1) para garantir a migração sem perda de dados
+                const isDone = (state[fullKey] && state[fullKey].done) || (state[dayKey] && state[dayKey].done);
+                
+                if (isDone) done++;
             });
-            if (dayExists) done++;
         }
     });
 
@@ -43,7 +46,6 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
     if (pctEl) pctEl.textContent = pctValue + "%";
 
     // Atualiza a frase estatística: "X / Y days"
-    // Buscamos o span que contém o contador específico
     const statsSelector = prefix ? `#sb-dcnt` : `#dcnt`;
     const dcntSpan = document.querySelector(statsSelector);
     if (dcntSpan && dcntSpan.parentElement) {
