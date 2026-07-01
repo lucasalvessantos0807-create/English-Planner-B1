@@ -549,7 +549,10 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        document.getElementById('addMonthBtn').onclick = () => addNewMonth(currentUser);
+        document.getElementById('addMonthBtn').onclick = (e) => {
+            e.preventDefault();
+            addNewMonth(currentUser);
+        };
         document.getElementById('addOverviewBlockBtn').onclick = () => import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history?")) {
