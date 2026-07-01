@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCE4d1pH7qM5X2nqhxqsIbh7qp1bgbwTYc",
@@ -18,4 +18,4 @@ export const auth = getAuth(app);
 window.auth = auth; // Isso permite que o ui.js veja o login
 export const provider = new GoogleAuthProvider();
 
-export { doc, getDoc, setDoc, signInWithPopup, signOut, onAuthStateChanged };
+export { doc, getDoc, setDoc, deleteDoc, signInWithPopup, signOut, onAuthStateChanged, deleteUser };
