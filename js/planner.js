@@ -470,11 +470,28 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
-                ${prefix ? '' : '<button class="del-ov-btn">✕</button>'}
+                ${prefix ? '' : '<button class="del-ov-btn" data-id="' + blockId + '">✕</button>'}
                 <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title">${content[blockId + '-title'] || 'New Phase'}</div>
                 <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body">${content[blockId + '-body'] || 'Edit...'}</div>
             `;
             grid.appendChild(newBlock);
         });
+
+        // RE-ANEXAR LISTENERS DE DELETAR (Crucial para o funcionamento do X)
+        if (!prefix) {
+            grid.querySelectorAll('.del-ov-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const bId = btn.dataset.id;
+                    if(confirm("Delete this block?")) {
+                        document.getElementById(`container-${bId}`).remove();
+                        window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
+                        delete window.pageContent[`${bId}-title`];
+                        delete window.pageContent[`${bId}-body`];
+                        saveUserData(uid);
+                    }
+                };
+            });
+        }
     }
 }
