@@ -99,7 +99,7 @@ export const weeksData = {
     {n:14,name:"Sunday",tag:"⭐ Review Day",review:true,activities:[
       {t:"review",i:"🔁",title:"Grammar review",desc:"Write a paragraph using past simple AND present perfect. Then rewrite 3 sentences switching the tense — notice how the meaning changes.",time:"20 min"},
       {t:"review",i:"📚",title:"Vocabulary review",desc:"Review all 4 weeks vocabulary: Home, Education, Appearance, Clothes. How many do you know instantly?",time:"15 min"},
-      {t:"review",i:"🎧",title:"Listen back",desc:"Listen to your Week 2 speaking recording. One thing that improved. One thing to work on.",time:"10 min"},
+      {t:"review",i:"🎧",title:"Listen back",desc:"Listen to your Week 2 speaking recording. One improvement, one focus for week 6.",time:"10 min"},
       {t:"review",i:"✍️",title:"Weekly reflection",desc:"Write about your 2-week progress. What grammar do you feel confident with? What still trips you up?",time:"15 min"},
       {t:"review",i:"🗣️",title:"Free speaking",desc:"3 minutes on any topic — no prep. Use everything you know.",time:"10 min"},
     ]},
@@ -140,7 +140,7 @@ export const weeksData = {
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Month 1 full vocabulary review so far: Home, Education, Appearance, Clothes, Character. Count how many words you have.",time:"15 min"},
       {t:"listening",i:"🎧",title:"Listening + Dictation",desc:"Dictation. Focus on 'a few' and 'a little' — do you catch them?",time:"20 min"},
       {t:"reading",i:"📖",title:"Reading — Charlotte's Web",desc:"Read 5 pages.",time:"20 min"},
-      {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow for pleasure. Pick something interesting.",time:"20 min"},
+      {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Free shadow — something you enjoy.",time:"20 min"},
       {t:"writing",i:"✍️",title:"Writing",desc:"Write a short character portrait of someone you admire. Use everything from this month so far.",time:"15 min"},
     ]},
     {n:20,name:"Saturday",tag:"Light day",activities:[
@@ -186,7 +186,7 @@ export const weeksData = {
       {t:"vocab",i:"📚",title:"Vocabulary",desc:"Create your Month 1 'power words' list: 20 most useful words you learned this month.",time:"15 min"},
       {t:"reading",i:"📖",title:"Reading — Charlotte's Web",desc:"Read 5 pages. You've read a lot this month — well done!",time:"20 min"},
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow your favourite video from this month. Feel how much more natural it is now.",time:"20 min"},
-      {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something native-level for 15 minutes. How much do you understand?",time:"15 min"},
+      {t:"listening",i:"🎧",title:"Listening",desc:"Listen to something native-level for 15 minutes. No stopping. How much do you understand?",time:"15 min"},
       {t:"speaking",i:"🗣️",title:"Speaking",desc:"Introduce yourself fully in English — who you are, your background, your character, your home, your goals. 4–5 minutes.",time:"20 min"},
     ]},
     {n:26,name:"Friday",tag:"Dictation + review",activities:[
@@ -415,7 +415,7 @@ export const weeksData = {
       {t:"shadowing",i:"🎙️",title:"Shadowing",desc:"Shadow as a reward for completing Month 2!",time:"20 min"},
     ]},
     {n:28,name:"Sunday",tag:"⭐ Month 2 Review Day",review:true,activities:[
-      {t:"review",i:"🔁",title:"Full grammar review",desc:"Write one showcase paragraph per month: Month 1 (past tenses, used to), Month 2 (modals, conditionals, passives), Month 3 (relative clauses, perfect tenses, question tags). Your best work.",time:"35 min"},
+      {t:"review",i:"🔁",title:"Grammar review",desc:"Write one showcase paragraph per month: Month 1 (past tenses, used to), Month 2 (modals, conditionals, passives), Month 3 (relative clauses, perfect tenses, question tags). Your best work.",time:"35 min"},
       {t:"review",i:"📚",title:"Vocabulary celebration",desc:"Read through your entire vocabulary notebook from start to finish. You built this. Every word is yours.",time:"20 min"},
       {t:"review",i:"🎧",title:"Milestone comparison",desc:"Listen to your Day 1 recording, your Day 28 recording, and today's. Write 3 specific improvements.",time:"15 min"},
       {t:"review",i:"✍️",title:"Month 2 reflection",desc:"Write freely about Month 2. What was hardest? What was most useful? What are you proud of?",time:"15 min"},
