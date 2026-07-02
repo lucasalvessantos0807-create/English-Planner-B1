@@ -278,7 +278,9 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             const addBtn = card.querySelector('.add-act-btn');
             if (addBtn) addBtn.onclick = () => {
                 pushToUndo();
-               window.plannerConfig[wkK].days[dI].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
+                const weekKey = addBtn.dataset.week;
+                const dayIndex = addBtn.dataset.dayidx;
+                window.plannerConfig[weekKey].days[dayIndex].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
                 buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
             };
 
@@ -466,7 +468,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!content.hiddenDefaults) content.hiddenDefaults = [];
 
     const defaults = [
-       const defaults = [
         { id: 'global-ov-ca', class: 'ca', label: 'Phase 1', body: 'Description of your first phase, main topics or milestones you want to achieve.' },
         { id: 'global-ov-cb', class: 'cb', label: 'Phase 2', body: 'Description of your second phase, intermediate goals and new challenges.' },
         { id: 'global-ov-cg', class: 'cg', label: 'Phase 3', body: 'Description of your third phase, advanced topics and final consolidation.' }
