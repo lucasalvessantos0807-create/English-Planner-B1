@@ -145,6 +145,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
 
     if (!imported.plannerConfig || !imported.state) throw new Error("Invalid format");
 
+    // Backup do estado atual antes da sobreposição (apenas se não for uma restauração de backup)
     if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
@@ -152,27 +153,52 @@ export async function importData(fileOrData, uid, isRestore = false) {
             filename: fileOrData.name || "System Backup",
             state: JSON.parse(JSON.stringify(state)),
             plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
-            pageContent: JSON.parse(JSON.stringify(pageContent))
+            pageContent: JSON.parse(JSON.stringify(pageContent)),
+            history: JSON.parse(JSON.stringify(history))
         };
         importHistory.unshift(backup);
     }
 
+    // Preservar dados locais sensíveis do usuário que não devem ser sobrescritos
     const localName = state.customName;
     const localPrompted = state.namePrompted;
-    const localColorHistory = state.colorHistory;
+    const localColorHistory = JSON.parse(JSON.stringify(state.colorHistory || { solids: [], gradients: [], pinned: [] }));
+    const localSettings = JSON.parse(JSON.stringify(state.settings || {}));
 
-    state = imported.state;
-    plannerConfig = imported.plannerConfig;
-    pageContent = imported.pageContent || {};
+    // Limpar e atualizar os objetos mantendo as referências originais para outros módulos
+    for (let key in state) delete state[key];
+    Object.assign(state, imported.state);
 
+    for (let key in plannerConfig) delete plannerConfig[key];
+    Object.assign(plannerConfig, imported.plannerConfig);
+
+    for (let key in pageContent) delete pageContent[key];
+    Object.assign(pageContent, imported.pageContent || {});
+
+    // Atualizar histórico de edições (Undo/Redo) se presente no arquivo
+    if (imported.history) {
+        history.length = 0;
+        imported.history.forEach(item => history.push(item));
+    }
+
+    // Restaurar os dados locais preservados
     if (localName) state.customName = localName;
-    state.namePrompted = localPrompted || false;
-    if (localColorHistory) state.colorHistory = localColorHistory;
+    if (localPrompted !== undefined) state.namePrompted = localPrompted;
+    state.colorHistory = localColorHistory;
+    
+    // Mesclar configurações de estilo (fonte/tamanho) se o importado não possuir
+    if (!state.settings) {
+        state.settings = localSettings;
+    } else {
+        state.settings = { ...localSettings, ...state.settings };
+    }
 
+    // Sincronizar referências globais do window
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
 
+    // Persistir no Firebase e retornar
     await saveUserData(uid);
     return true;
 }
