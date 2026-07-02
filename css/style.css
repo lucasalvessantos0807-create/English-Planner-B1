@@ -498,6 +498,9 @@ body.preview-open {
   font-family: system-ui, -apple-system, sans-serif !important;
 }
 /* ── FLOATING ACTION BUTTON STYLES ── */
+#login-screen:not([style*="display: none"]) ~ #fabWrapper {
+  display: none !important;
+}
 .fab-wrapper {
   position: fixed;
   bottom: 30px;
@@ -601,6 +604,10 @@ body.preview-open {
   transition: border-color 0.2s;
 }
 
+.logout-fab:hover .fab-icon {
+  border-color: #cc0000 !important;
+  background-color: #fff5f5 !important;
+}
 .fab-item:hover .fab-icon {
   border-color: var(--accent);
 }
