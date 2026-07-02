@@ -482,7 +482,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         card.className = `ov-card ${def.class}`;
         card.id = `${prefix}container-${def.id}`;
         
-        // Pega o valor do backup ou usa o default
+        // PRIORIDADE: Backup > Manual > Default
         const currentLabel = content[def.id + '-label'] || def.label;
         const currentBody = content[def.id + '-body'] || def.body;
 
@@ -535,8 +535,69 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         });
     }
 }
+
 // --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
-renderDailyTemplate(uid, prefix = "", customContent = null)
+export function renderDailyTemplate(uid, prefix = "", customContent = null) {
+    const listId = prefix + 'dynamic-tpl-list';
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    const content = customContent || window.pageContent || {};
+    if (!content.templateRows) {
+        // IDs padrão iniciais
+        content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+    }
+
+    const defaults = {
+        'tpl-1-t': 'Step/Time', 'tpl-1-a': 'Add your first daily routine task here.',
+        'tpl-2-t': 'Step/Time', 'tpl-2-a': 'Add your second daily routine task here.',
+        'tpl-3-t': 'Step/Time', 'tpl-3-a': 'Add your third daily routine task here.',
+        'tpl-4-t': 'Step/Time', 'tpl-4-a': 'Add your fourth daily routine task here.',
+        'tpl-5-t': 'Step/Time', 'tpl-5-a': 'Add your fifth daily routine task here.',
+        'tpl-6-t': 'Step/Time', 'tpl-6-a': 'Add your sixth daily routine task here.',
+        'tpl-7-t': 'Review', 'tpl-7-a': 'Weekly summary and progress check.'
+    };
+
+    list.innerHTML = '';
+
+    content.templateRows.forEach(rowId => {
+        const row = document.createElement('div');
+        row.className = 'tpl-row';
+        row.id = `${prefix}row-container-${rowId}`;
+
+        // PRIORIDADE: Backup > Manual > Default
+        const currentTime = content[rowId + '-t'] || defaults[rowId + '-t'] || 'Step/Time';
+        const currentAct = content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...';
+
+        row.innerHTML = `
+            ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${currentTime}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${currentAct}</div>
+        `;
+        list.appendChild(row);
+    });
+
+    if (!prefix && isEditMode) {
+        list.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => { 
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML; 
+            };
+        });
+
+        list.querySelectorAll('.del-tpl-btn').forEach(btn => {
+            btn.onclick = () => {
+                const rId = btn.dataset.id;
+                if(confirm("Delete this task from template?")) {
+                    pushToUndo();
+                    window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
+                    renderDailyTemplate(uid);
+                }
+            };
+        });
+    }
+}
 
 // Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
