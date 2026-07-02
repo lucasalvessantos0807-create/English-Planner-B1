@@ -88,15 +88,24 @@ export function cancelEdit(uid) {
 }
 
 function updateUIEditMode() {
-    const btn = document.getElementById('editModeBtn');
+    const saveBtn = document.getElementById('saveChangesBtn');
     const cancelBtn = document.getElementById('cancelEditBtn');
     const undoBtn = document.getElementById('undoBtn');
+    const fab = document.getElementById('fabWrapper');
     
-    btn.textContent = isEditMode ? "✅ Save Changes" : "✎ Edit Mode";
-    btn.style.background = isEditMode ? "var(--green-light)" : "none";
-    btn.style.color = isEditMode ? "var(--green)" : "var(--muted)";
-    cancelBtn.style.display = isEditMode ? "block" : "none";
-    if (!isEditMode) undoBtn.style.display = "none";
+    if (isEditMode) {
+        // Modo Edição ATIVO: Esconde o FAB e mostra os botões de controle no topo (Save/Cancel/Undo)
+        if (fab) fab.classList.add('fab-hidden');
+        if (saveBtn) saveBtn.style.display = "block";
+        if (cancelBtn) cancelBtn.style.display = "block";
+        if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "block" : "none";
+    } else {
+        // Modo Edição DESATIVADO: Mostra o FAB e esconde os botões do topo
+        if (fab) fab.classList.remove('fab-hidden');
+        if (saveBtn) saveBtn.style.display = "none";
+        if (cancelBtn) cancelBtn.style.display = "none";
+        if (undoBtn) undoBtn.style.display = "none";
+    }
 }
 
 export function toggleEditMode(uid) {
