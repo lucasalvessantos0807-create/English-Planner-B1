@@ -94,7 +94,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
-                <p class="${isPreview ? '' : 'editable-global'}" id="${prefix}m-desc-${m}" contenteditable="${isEditMode && !isPreview}">English Study Plan — Continuous Progress</p>
+                <p class="${isPreview ? '' : 'editable-global'}" id="${prefix}m-desc-${m}" contenteditable="${isEditMode && !isPreview}">General Study Plan — Continuous Progress</p>
                 <div style="display: ${isPreview ? 'none' : 'flex'}; gap: 10px;">
                     <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
                     <button class="del-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid #ffcccc; color: #cc0000; border-radius:4px; cursor:pointer;">🗑️ Delete Month</button>
