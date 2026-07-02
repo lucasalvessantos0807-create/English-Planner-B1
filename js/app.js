@@ -145,6 +145,7 @@ onAuthStateChanged(auth, async (user) => {
         
         // --- BOTÕES DA TOPBAR ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
@@ -483,6 +484,7 @@ onAuthStateChanged(auth, async (user) => {
             if (!document.body.classList.contains('preview-mode')) {
                 settingsDrawer.classList.remove('open');
                 customDrawer.classList.add('open');
+                document.getElementById('fabWrapper').classList.add('fab-hidden');
             }
         };
 
@@ -490,12 +492,19 @@ onAuthStateChanged(auth, async (user) => {
             if (!document.body.classList.contains('preview-mode')) {
                 customDrawer.classList.remove('open');
                 settingsDrawer.classList.add('open');
+                document.getElementById('fabWrapper').classList.add('fab-hidden');
                 renderHistory();
             }
         };
 
-        closeDrawer.onclick = () => customDrawer.classList.remove('open');
-        closeSettings.onclick = () => settingsDrawer.classList.remove('open');
+        closeDrawer.onclick = () => {
+            customDrawer.classList.remove('open');
+            document.getElementById('fabWrapper').classList.remove('fab-hidden');
+        };
+        closeSettings.onclick = () => {
+            settingsDrawer.classList.remove('open');
+            document.getElementById('fabWrapper').classList.remove('fab-hidden');
+        };
 
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
