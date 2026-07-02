@@ -149,6 +149,12 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        document.getElementById('switchAccountBtn').onclick = () => {
+            provider.setCustomParameters({ prompt: 'select_account' });
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Error switching account:", error);
+            });
+        };
         const switchAccountBtn = document.getElementById('switchAccountBtn');
         if (switchAccountBtn) {
             switchAccountBtn.onclick = () => {
