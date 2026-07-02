@@ -586,9 +586,11 @@ body.preview-open {
 }
 
 /* Delays para animação de subida */
-.fab-wrapper.open .fab-item:nth-child(1) { transition-delay: 0.15s; }
-.fab-wrapper.open .fab-item:nth-child(2) { transition-delay: 0.1s; }
-.fab-wrapper.open .fab-item:nth-child(3) { transition-delay: 0.05s; }
+/* Delays para animação de subida */
+.fab-wrapper.open .fab-item:nth-child(1) { transition-delay: 0.2s; }
+.fab-wrapper.open .fab-item:nth-child(2) { transition-delay: 0.15s; }
+.fab-wrapper.open .fab-item:nth-child(3) { transition-delay: 0.1s; }
+.fab-wrapper.open .fab-item:nth-child(4) { transition-delay: 0.05s; }
 
 .fab-icon {
   width: 45px;
