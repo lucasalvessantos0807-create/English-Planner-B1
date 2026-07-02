@@ -3,7 +3,7 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
-/// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
+// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || {};
     
@@ -18,27 +18,15 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-template": "Time Blocking Template",
     };
 
-    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
-    
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
-        const cleanId = el.id.replace(targetPrefix, '');
-        
-        // PRIORIDADE: 1. Conteúdo do backup/banco | 2. Texto já existente no HTML | 3. Default
-        if (data[cleanId] !== undefined && data[cleanId] !== null && data[cleanId] !== "") {
-            el.innerHTML = data[cleanId];
-        } else if (!el.innerHTML.trim() && defaults[cleanId]) {
-            el.innerHTML = defaults[cleanId];
-        }
-    });
-}
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
     parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
-        const val = data[cleanId];
-        if (val !== undefined && val !== null && val !== "") {
-            el.innerHTML = val;
+        
+        // PRIORIDADE: 1. Conteúdo do backup/banco | 2. Texto padrão (limpo)
+        if (data[cleanId] !== undefined && data[cleanId] !== null && data[cleanId] !== "") {
+            el.innerHTML = data[cleanId];
         } else if (defaults[cleanId]) {
             el.innerHTML = defaults[cleanId];
         }
@@ -145,12 +133,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-        document.getElementById('switchAccountBtn').onclick = () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Error switching account:", error);
-            });
-        };
+        
         const switchAccountBtn = document.getElementById('switchAccountBtn');
         if (switchAccountBtn) {
             switchAccountBtn.onclick = () => {
@@ -160,6 +143,7 @@ onAuthStateChanged(auth, async (user) => {
                 });
             };
         }
+
         // --- FLOATING ACTION BUTTON LOGIC ---
         const fabWrapper = document.getElementById('fabWrapper');
         const fabMain = document.getElementById('fabMain');
@@ -193,24 +177,21 @@ onAuthStateChanged(auth, async (user) => {
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
-                const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
+                const confirmation = confirm("Importing will overwrite your current planner. A backup will be saved in 'Import History'. Continue?");
                 
                 if (confirmation) {
                     try {
-                        // Import data and wait for the Firebase save to complete
                         const success = await importData(file, currentUser);
                         if (success) {
-                            alert("Data imported successfully! The page will now reload to apply changes.");
+                            alert("Data imported successfully!");
                             window.location.reload();
                         }
                     } catch (err) { 
                         console.error("Import process failed:", err);
                         alert("Import failed: " + err.message); 
-                        // Reset input value so the same file can be selected again
                         importInput.value = "";
                     }
                 } else {
-                    // Reset input if user cancels
                     importInput.value = "";
                 }
             }
@@ -234,9 +215,7 @@ onAuthStateChanged(auth, async (user) => {
                 const lastBackup = importHistory[0];
                 if (confirm(`Undo last import and restore to state from: ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
                     import('./storage.js').then(async (store) => {
-                        // Restaura os dados do backup
                         await store.importData(lastBackup, currentUser, true);
-                        // Remove o backup que foi usado para desfazer, para manter o histórico limpo
                         await store.deleteImportBackup(currentUser, lastBackup.id);
                         window.location.reload();
                     });
@@ -265,7 +244,7 @@ onAuthStateChanged(auth, async (user) => {
                 `;
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Restore and return to this exact state? This will overwrite your current progress.")) {
+                    if (confirm("Restore and return to this exact state?")) {
                         import('./storage.js').then(async (store) => {
                             await store.importData(backup, currentUser, true);
                             window.location.reload();
@@ -280,33 +259,26 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
-                    // 1. Atualizar Textos Globais da Sandbox
                     refreshGlobalDOM(backupContent, "sb-");
 
-                    // 2. Cor da Capa na Sandbox
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
-                    // 3. Renderizar blocos de overview na Sandbox
                     import('./planner.js').then(mod => {
                         mod.renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
                         mod.renderDailyTemplate(currentUser, "sb-", backupContent);
                     });
 
-                    // 4. Barra de Progresso na Sandbox
                     updateProgressBar("sb-", backup.plannerConfig, backupState);
 
-                    // 5. Renderizar Estrutura Mensal dentro da Sandbox
                     renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
 
-                    // 6. Mostrar Sandbox e travar scroll do fundo
                     historyModal.style.display = 'none';
                     sandbox.style.display = 'flex';
                     document.body.classList.add('preview-open');
 
-                    // 7. Lógica do botão de restauração dentro da Sandbox
                     document.getElementById('restoreSandboxBtn').onclick = async () => {
                         if(confirm("Restore this version?")) {
                             import('./storage.js').then(async (store) => {
@@ -333,7 +305,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('importHistoryModal').style.display = 'flex';
         };
 
-        // --- LÓGICA DO COLOR PICKER (COMPLETA E INTEGRAL) ---
+        // --- LÓGICA DO COLOR PICKER ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
@@ -484,7 +456,7 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- GAVETAS E PERSONALIZAÇÃO (INTEGRAL E SEM SIMPLIFICAÇÃO) ---
+        // --- GAVETAS E PERSONALIZAÇÃO ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
@@ -493,20 +465,16 @@ onAuthStateChanged(auth, async (user) => {
         const closeSettings = document.getElementById('closeSettings');
 
         personalizeBtn.onclick = () => {
-            if (!document.body.classList.contains('preview-mode')) {
-                settingsDrawer.classList.remove('open');
-                customDrawer.classList.add('open');
-                document.getElementById('fabWrapper').classList.add('fab-hidden');
-            }
+            settingsDrawer.classList.remove('open');
+            customDrawer.classList.add('open');
+            document.getElementById('fabWrapper').classList.add('fab-hidden');
         };
 
         settingsBtn.onclick = () => {
-            if (!document.body.classList.contains('preview-mode')) {
-                customDrawer.classList.remove('open');
-                settingsDrawer.classList.add('open');
-                document.getElementById('fabWrapper').classList.add('fab-hidden');
-                renderHistory();
-            }
+            customDrawer.classList.remove('open');
+            settingsDrawer.classList.add('open');
+            document.getElementById('fabWrapper').classList.add('fab-hidden');
+            renderHistory();
         };
 
         closeDrawer.onclick = () => {
