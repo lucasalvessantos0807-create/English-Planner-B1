@@ -9,13 +9,13 @@ function refreshGlobalDOM(content, targetPrefix = "") {
     
     // Conteúdos padrão integrais (Daily Template restaurado)
     const defaults = {
-        "global-cover-eye": "Personal English Study Planner",
-        "global-cover-title": "A2+ to B1 Roadmap",
-        "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
-        "global-goal-strong": "🎯 Your Goal",
-        "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
-        "global-sec-overview": "Month Overview",
-        "global-sec-template": "Daily Template",
+        "global-cover-eye": "Personal Study Planner",
+        "global-cover-title": "My Roadmap",
+        "global-cover-sub": "Custom Duration · Daily Goals · Focused Learning",
+        "global-goal-strong": "🎯 My Goal",
+        "global-goal-text": "Click here to define your main objective and what you want to achieve with this planner.",
+        "global-sec-overview": "Phases Overview",
+        "global-sec-template": "Time Blocking Template",
     };
 
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
