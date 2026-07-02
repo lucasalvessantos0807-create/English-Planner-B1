@@ -544,12 +544,12 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 
     const defaults = {
-        'tpl-1-t': 'Step 1', 'tpl-1-a': 'Add your first daily routine task here.',
-        'tpl-2-t': 'Step 2', 'tpl-2-a': 'Add your second daily routine task here.',
-        'tpl-3-t': 'Step 3', 'tpl-3-a': 'Add your third daily routine task here.',
-        'tpl-4-t': 'Step 4', 'tpl-4-a': 'Add your fourth daily routine task here.',
-        'tpl-5-t': 'Step 5', 'tpl-5-a': 'Add your fifth daily routine task here.',
-        'tpl-6-t': 'Step 6', 'tpl-6-a': 'Add your sixth daily routine task here.',
+        'tpl-1-t': 'Step/Time', 'tpl-1-a': 'Add your first daily routine task here.',
+        'tpl-2-t': 'Step/Time', 'tpl-2-a': 'Add your second daily routine task here.',
+        'tpl-3-t': 'Step/Time', 'tpl-3-a': 'Add your third daily routine task here.',
+        'tpl-4-t': 'Step/Time', 'tpl-4-a': 'Add your fourth daily routine task here.',
+        'tpl-5-t': 'Step/Time', 'tpl-5-a': 'Add your fifth daily routine task here.',
+        'tpl-6-t': 'Step/Time', 'tpl-6-a': 'Add your sixth daily routine task here.',
         'tpl-7-t': 'Review', 'tpl-7-a': 'Weekly summary and progress check.'
     };
 
