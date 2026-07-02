@@ -158,14 +158,26 @@ onAuthStateChanged(auth, async (user) => {
 
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
-                if (confirm("Importing will overwrite your current planner. A backup will be saved. Continue?")) {
+                const file = e.target.files[0];
+                const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
+                
+                if (confirmation) {
                     try {
-                        await importData(e.target.files[0], currentUser);
-                        alert("Data imported successfully!");
-                        window.location.reload();
+                        // Import data and wait for the Firebase save to complete
+                        const success = await importData(file, currentUser);
+                        if (success) {
+                            alert("Data imported successfully! The page will now reload to apply changes.");
+                            window.location.reload();
+                        }
                     } catch (err) { 
+                        console.error("Import process failed:", err);
                         alert("Import failed: " + err.message); 
+                        // Reset input value so the same file can be selected again
+                        importInput.value = "";
                     }
+                } else {
+                    // Reset input if user cancels
+                    importInput.value = "";
                 }
             }
         };
