@@ -148,6 +148,28 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        // --- FLOATING ACTION BUTTON LOGIC ---
+        const fabWrapper = document.getElementById('fabWrapper');
+        const fabMain = document.getElementById('fabMain');
+        
+        fabMain.onclick = (e) => {
+            e.stopPropagation();
+            fabWrapper.classList.toggle('open');
+        };
+
+        // Close FAB when clicking anywhere else
+        document.addEventListener('click', (e) => {
+            if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
+                fabWrapper.classList.remove('open');
+            }
+        });
+
+        // Close FAB when an item is clicked
+        document.querySelectorAll('.fab-item').forEach(item => {
+            item.addEventListener('click', () => {
+                fabWrapper.classList.remove('open');
+            });
+        });
 
         // --- EXPORT / IMPORT SYSTEM ---
         const cover = document.getElementById('page-cover');
