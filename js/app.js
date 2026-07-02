@@ -14,26 +14,8 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
         "global-goal-strong": "🎯 Your Goal",
         "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
-        "global-sec-overview": "3-Month Overview",
-        "global-sec-template": "Daily Template (1.5–2 hours)",
-        "tpl-t1": "0–15 min", 
-        "tpl-a1": "📚 <strong>Vocabulary</strong> — Review yesterday's words. Add 5 new ones from today's reading.",
-        "tpl-t2": "15–35 min", 
-        "tpl-a2": "📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.",
-        "tpl-t3": "35–55 min", 
-        "tpl-a3": "🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.",
-        "tpl-t4": "55–75 min", 
-        "tpl-a4": "🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.",
-        "tpl-t5": "75–95 min", 
-        "tpl-a5": "📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)",
-        "tpl-t6": "95–115 min", 
-        "tpl-a6": "🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.",
-        "tpl-t7": "Sunday", 
-        "tpl-a7": "🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.",
-        "global-sec-progress": "Your Progress",
-        "global-prog-lbl": "Days completed",
-        "global-mstat": "Learning Progress",
-        "global-sec-monthly": "Monthly Plans"
+        "global-sec-overview": "Month Overview",
+        "global-sec-template": "Daily Template",
     };
 
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
@@ -139,6 +121,7 @@ onAuthStateChanged(auth, async (user) => {
         // --- RENDERIZAÇÃO INICIAL ---
         import('./planner.js').then(mod => {
             mod.renderDynamicOverviewBlocks(currentUser);
+            mod.renderDailyTemplate(currentUser);
         });
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
@@ -294,6 +277,7 @@ onAuthStateChanged(auth, async (user) => {
                     // 3. Renderizar blocos de overview na Sandbox
                     import('./planner.js').then(mod => {
                         mod.renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
+                        mod.renderDailyTemplate(currentUser, "sb-", backupContent);
                     });
 
                     // 4. Barra de Progresso na Sandbox
