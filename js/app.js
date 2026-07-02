@@ -13,7 +13,7 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-cover-title": "My Roadmap",
         "global-cover-sub": "Custom Duration · Daily Goals · Focused Learning",
         "global-goal-strong": "🎯 My Goal",
-        "global-goal-text": "Click here to define your main objective and what you want to achieve with this planner.",
+        "global-goal-text": "Define your specific learning or project goal here. What do you want to achieve in this roadmap?",
         "global-sec-overview": "Phases Overview",
         "global-sec-template": "Time Blocking Template",
     };
