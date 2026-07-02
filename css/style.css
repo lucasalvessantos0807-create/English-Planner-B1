@@ -617,6 +617,10 @@ body.preview-open {
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
+.fab-wrapper.fab-hidden {
+  display: none !important;
+  pointer-events: none;
+}
 @media (max-width: 600px) {
   .fab-label { display: none; }
 }
