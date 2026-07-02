@@ -53,12 +53,13 @@ export function performUndo(uid) {
     if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
     refreshCurrentWeek(uid);
     renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
 }
 
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el && !el.id.includes('ov-')) { // Ignora blocos de overview aqui, eles tem lógica própria
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
             el.innerHTML = window.pageContent[id];
         }
     });
@@ -74,6 +75,12 @@ export function cancelEdit(uid) {
     isEditMode = false;
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
+    
+    // UI específica do Template Dinâmico
+    const tplList = document.getElementById('dynamic-tpl-list');
+    if (tplList) tplList.classList.remove('edit-active');
+    const addTplBtn = document.getElementById('addTemplateRowBtn');
+    if (addTplBtn) addTplBtn.style.display = 'none';
 
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = "false";
@@ -84,6 +91,7 @@ export function cancelEdit(uid) {
 
     updateUIEditMode();
     renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
     refreshUI(uid);
 }
 
@@ -94,13 +102,11 @@ function updateUIEditMode() {
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        // Modo Edição ATIVO: Esconde o FAB e mostra os botões de controle no topo (Save/Cancel/Undo)
         if (fab) fab.classList.add('fab-hidden');
         if (saveBtn) saveBtn.style.display = "block";
         if (cancelBtn) cancelBtn.style.display = "block";
         if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "block" : "none";
     } else {
-        // Modo Edição DESATIVADO: Mostra o FAB e esconde os botões do topo
         if (fab) fab.classList.remove('fab-hidden');
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
@@ -120,6 +126,13 @@ export function toggleEditMode(uid) {
         isEditMode = true;
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
+        
+        // Ativa botões do Template Dinâmico
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.add('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'block';
+        
     } else {
         const currentConfigStr = JSON.stringify(window.plannerConfig);
         const initialConfigStr = JSON.stringify(sessionInitialConfig);
@@ -133,6 +146,12 @@ export function toggleEditMode(uid) {
         isEditMode = false;
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
+        
+        // Desativa botões do Template Dinâmico
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.remove('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'none';
     }
     updateUIEditMode();
     document.querySelectorAll('.editable-global').forEach(el => {
@@ -147,6 +166,7 @@ export function toggleEditMode(uid) {
     });
     refreshCurrentWeek(uid);
     renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
 }
 
 // --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
@@ -508,3 +528,76 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         });
     }
 }
+
+// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
+export function renderDailyTemplate(uid, prefix = "", customContent = null) {
+    const listId = prefix + 'dynamic-tpl-list';
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    const content = customContent || window.pageContent || {};
+    if (!content.templateRows) {
+        // IDs padrão iniciais
+        content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+    }
+
+    const defaults = {
+        'tpl-1-t': '0–15 min', 'tpl-1-a': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
+        'tpl-2-t': '15–35 min', 'tpl-2-a': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
+        'tpl-3-t': '35–55 min', 'tpl-3-a': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
+        'tpl-4-t': '55–75 min', 'tpl-4-a': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
+        'tpl-5-t': '75–95 min', 'tpl-5-a': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
+        'tpl-6-t': '95–115 min', 'tpl-6-a': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
+        'tpl-7-t': 'Sunday', 'tpl-7-a': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
+    };
+
+    list.innerHTML = '';
+
+    content.templateRows.forEach(rowId => {
+        const row = document.createElement('div');
+        row.className = 'tpl-row';
+        row.id = `${prefix}row-container-${rowId}`;
+        row.innerHTML = `
+            ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || defaults[rowId + '-t'] || 'Time'}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...'}</div>
+        `;
+        list.appendChild(row);
+    });
+
+    if (!prefix && isEditMode) {
+        list.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => { 
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML; 
+            };
+        });
+
+        list.querySelectorAll('.del-tpl-btn').forEach(btn => {
+            btn.onclick = () => {
+                const rId = btn.dataset.id;
+                if(confirm("Delete this task from template?")) {
+                    pushToUndo();
+                    window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
+                    renderDailyTemplate(uid);
+                }
+            };
+        });
+    }
+}
+
+// Listener para o botão de adicionar linha no template
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'addTemplateRowBtn') {
+        import('./storage.js').then(store => {
+            const uid = window.auth.currentUser.uid;
+            if (!isEditMode) return;
+            pushToUndo();
+            const newId = 'tpl-' + Date.now();
+            if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+            window.pageContent.templateRows.push(newId);
+            renderDailyTemplate(uid);
+        });
+    }
+});
