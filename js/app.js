@@ -3,11 +3,11 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
-// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
+/// Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || {};
     
-    // Conteúdos padrão integrais (Daily Template restaurado)
+    // Conteúdos padrão apenas para casos onde o campo está totalmente vazio no banco
     const defaults = {
         "global-cover-eye": "Personal Study Planner",
         "global-cover-title": "My Roadmap",
@@ -18,6 +18,19 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-template": "Time Blocking Template",
     };
 
+    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
+    
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
+        const cleanId = el.id.replace(targetPrefix, '');
+        
+        // PRIORIDADE: 1. Conteúdo do backup/banco | 2. Texto já existente no HTML | 3. Default
+        if (data[cleanId] !== undefined && data[cleanId] !== null && data[cleanId] !== "") {
+            el.innerHTML = data[cleanId];
+        } else if (!el.innerHTML.trim() && defaults[cleanId]) {
+            el.innerHTML = defaults[cleanId];
+        }
+    });
+}
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
