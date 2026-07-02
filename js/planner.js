@@ -278,7 +278,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             const addBtn = card.querySelector('.add-act-btn');
             if (addBtn) addBtn.onclick = () => {
                 pushToUndo();
-                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
+               window.plannerConfig[wkK].days[dI].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
                 buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
             };
 
@@ -466,9 +466,10 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!content.hiddenDefaults) content.hiddenDefaults = [];
 
     const defaults = [
-        { id: 'global-ov-ca', class: 'ca', label: 'Month 1 — Foundation', body: 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web' },
-        { id: 'global-ov-cb', class: 'cb', label: 'Month 2 — Building', body: 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey' },
-        { id: 'global-ov-cg', class: 'cg', label: 'Month 3 — Consolidation', body: 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick' }
+       const defaults = [
+        { id: 'global-ov-ca', class: 'ca', label: 'Phase 1', body: 'Description of your first phase, main topics or milestones you want to achieve.' },
+        { id: 'global-ov-cb', class: 'cb', label: 'Phase 2', body: 'Description of your second phase, intermediate goals and new challenges.' },
+        { id: 'global-ov-cg', class: 'cg', label: 'Phase 3', body: 'Description of your third phase, advanced topics and final consolidation.' }
     ];
 
     grid.innerHTML = '';
@@ -542,13 +543,13 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 
     const defaults = {
-        'tpl-1-t': '0–15 min', 'tpl-1-a': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
-        'tpl-2-t': '15–35 min', 'tpl-2-a': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
-        'tpl-3-t': '35–55 min', 'tpl-3-a': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
-        'tpl-4-t': '55–75 min', 'tpl-4-a': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
-        'tpl-5-t': '75–95 min', 'tpl-5-a': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
-        'tpl-6-t': '95–115 min', 'tpl-6-a': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
-        'tpl-7-t': 'Sunday', 'tpl-7-a': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
+        'tpl-1-t': 'Step 1', 'tpl-1-a': 'Add your first daily routine task here.',
+        'tpl-2-t': 'Step 2', 'tpl-2-a': 'Add your second daily routine task here.',
+        'tpl-3-t': 'Step 3', 'tpl-3-a': 'Add your third daily routine task here.',
+        'tpl-4-t': 'Step 4', 'tpl-4-a': 'Add your fourth daily routine task here.',
+        'tpl-5-t': 'Step 5', 'tpl-5-a': 'Add your fifth daily routine task here.',
+        'tpl-6-t': 'Step 6', 'tpl-6-a': 'Add your sixth daily routine task here.',
+        'tpl-7-t': 'Review', 'tpl-7-a': 'Weekly summary and progress check.'
     };
 
     list.innerHTML = '';
