@@ -7,24 +7,22 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || window.pageContent || {};
     
-    // Conteúdos padrão integrais para o primeiro acesso
+    // Conteúdos padrão integrais (Daily Template restaurado)
     const defaults = {
-        "global-cover-eye": "Personal Study Planner",
-        "global-cover-title": "My Roadmap",
-        "global-cover-sub": "Custom Duration · Daily Goals · Focused Learning",
-        "global-goal-strong": "🎯 My Goal",
-        "global-goal-text": "Define your specific learning or project goal here. What do you want to achieve in this roadmap?",
-        "global-sec-overview": "Phases Overview",
-        "global-sec-template": "Time Blocking Template",
+        "global-cover-eye": "Personal English Study Planner",
+        "global-cover-title": "A2+ to B1 Roadmap",
+        "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
+        "global-goal-strong": "🎯 Your Goal",
+        "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
+        "global-sec-overview": "Month Overview",
+        "global-sec-template": "Daily Template",
     };
 
-    // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
     parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
-        
-        // PRIORIDADE ABSOLUTA: 1. Conteúdo do backup/banco | 2. Texto padrão (limpo)
+        // PRIORIDADE 100%: Se existir no 'data' (backup/banco), usa ele.
         if (data[cleanId] !== undefined && data[cleanId] !== null && data[cleanId] !== "") {
             el.innerHTML = data[cleanId];
         } else if (defaults[cleanId]) {
@@ -177,13 +175,13 @@ onAuthStateChanged(auth, async (user) => {
         importInput.onchange = async (e) => {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
-                const confirmation = confirm("Importing will overwrite your current planner. A backup will be saved in 'Import History'. Continue?");
+                const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
                 
                 if (confirmation) {
                     try {
                         const success = await importData(file, currentUser);
                         if (success) {
-                            alert("Data imported successfully!");
+                            alert("Data imported successfully! The page will now reload to apply changes.");
                             window.location.reload();
                         }
                     } catch (err) { 
@@ -244,7 +242,7 @@ onAuthStateChanged(auth, async (user) => {
                 `;
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Restore and return to this exact state?")) {
+                    if (confirm("Restore and return to this exact state? This will overwrite your current progress.")) {
                         import('./storage.js').then(async (store) => {
                             await store.importData(backup, currentUser, true);
                             window.location.reload();
