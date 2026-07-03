@@ -26,6 +26,8 @@ export function applySnapshot(newConfig, newContent) {
     // Sincroniza as variáveis locais do módulo storage.js para corresponderem
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
+
+    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -40,9 +42,22 @@ export async function loadUserData(uid) {
             history = data.history || [];
             importHistory = data.importHistory || [];
 
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            history = history.filter(item => item.timestamp > thirtyDaysAgo);
+
+            const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
+            importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
+
+            if (!pageContent.dynamicBlocks) pageContent.dynamicBlocks = [];
+
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
+
+            Object.keys(pageContent).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = pageContent[id];
+            });
 
             return { state, plannerConfig, pageContent, history, importHistory };
         }
@@ -97,8 +112,13 @@ export function updateState(month, dayKey, data) {
 }
 
 export function exportData() {
+    const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
+    delete cleanState.customName;
+    delete cleanState.namePrompted;
+    delete cleanState.colorHistory;
+
     const dataToExport = {
-        state: window.appState,
+        state: cleanState,
         plannerConfig: window.plannerConfig,
         pageContent: window.pageContent,
         history: history,
@@ -133,7 +153,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
         throw new Error("Invalid planner data structure");
     }
 
-    // Criar backup antes de importar
+    // Criar backup antes de sobrescrever
     if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
@@ -146,12 +166,17 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
-    // Sincronização forçada dos dados importados para os objetos globais
+    // Preservar identidade local
+    const localName = window.appState.customName;
+    const localPrompted = window.appState.namePrompted;
+    const localColorHistory = window.appState.colorHistory;
+
+    // Sincronização integral e imediata
     window.appState = JSON.parse(JSON.stringify(imported.state));
     window.plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     window.pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    // Sincronizar variáveis locais deste módulo
+    // Atualiza referências do módulo
     state = window.appState;
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
@@ -160,7 +185,12 @@ export async function importData(fileOrData, uid, isRestore = false) {
         history = JSON.parse(JSON.stringify(imported.history));
     }
 
-    // Salvar no Firebase
+    // Restaurar identidade
+    if (localName) window.appState.customName = localName;
+    if (localPrompted !== undefined) window.appState.namePrompted = localPrompted;
+    if (localColorHistory) window.appState.colorHistory = localColorHistory;
+
+    // Persistir no Firebase antes do reload
     await saveUserData(uid);
     return true;
 }
