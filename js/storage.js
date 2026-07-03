@@ -19,15 +19,11 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
-    // Sobrescreve os objetos globais para garantir visibilidade em todos os módulos
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
-    // Sincroniza as variáveis locais do módulo storage.js para corresponderem
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
-
-    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -42,22 +38,9 @@ export async function loadUserData(uid) {
             history = data.history || [];
             importHistory = data.importHistory || [];
 
-            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            history = history.filter(item => item.timestamp > thirtyDaysAgo);
-
-            const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
-            importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
-
-            if (!pageContent.dynamicBlocks) pageContent.dynamicBlocks = [];
-
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
-
-            Object.keys(pageContent).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.innerHTML = pageContent[id];
-            });
 
             return { state, plannerConfig, pageContent, history, importHistory };
         }
@@ -69,9 +52,9 @@ export async function saveUserData(uid) {
     if (!uid) return;
     try {
         await setDoc(doc(db, "users", uid), { 
-            state: state,
-            plannerConfig: plannerConfig,
-            pageContent: pageContent,
+            state: window.appState,
+            plannerConfig: window.plannerConfig,
+            pageContent: window.pageContent,
             history: history,
             importHistory: importHistory
         });
@@ -107,17 +90,13 @@ export async function deleteImportBackup(uid, backupId) {
 
 export function updateState(month, dayKey, data) {
     const fullKey = month ? `m${month}-${dayKey}` : dayKey;
-    state[fullKey] = { ...state[fullKey], ...data };
+    if (!window.appState[fullKey]) window.appState[fullKey] = {};
+    window.appState[fullKey] = { ...window.appState[fullKey], ...data };
 }
 
 export function exportData() {
-    const cleanState = JSON.parse(JSON.stringify(window.appState || {}));
-    delete cleanState.customName;
-    delete cleanState.namePrompted;
-    delete cleanState.colorHistory;
-
     const dataToExport = {
-        state: cleanState,
+        state: window.appState,
         plannerConfig: window.plannerConfig,
         pageContent: window.pageContent,
         history: history,
@@ -143,54 +122,31 @@ export async function importData(fileOrData, uid, isRestore = false) {
         } else {
             imported = fileOrData;
         }
-    } catch (err) {
-        console.error("Failed to parse import file:", err);
-        throw new Error("Invalid JSON format");
-    }
+    } catch (err) { throw new Error("Invalid JSON format"); }
 
     if (!imported.plannerConfig || !imported.state) {
         throw new Error("Invalid planner data structure");
     }
 
-    // Create a backup of the current state before overwriting, unless we are already restoring from a backup
     if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
             timestamp: Date.now(),
             filename: fileOrData.name || "System Backup",
-            state: JSON.parse(JSON.stringify(state)),
-            plannerConfig: JSON.parse(JSON.stringify(plannerConfig)),
-            pageContent: JSON.parse(JSON.stringify(pageContent))
+            state: JSON.parse(JSON.stringify(window.appState)),
+            plannerConfig: JSON.parse(JSON.stringify(window.plannerConfig)),
+            pageContent: JSON.parse(JSON.stringify(window.pageContent))
         };
         importHistory.unshift(backup);
     }
 
-    // Preserve critical local identity settings if they exist in the current state
-    const localName = state.customName;
-    const localPrompted = state.namePrompted;
-    const localColorHistory = state.colorHistory;
-
-    // Overwrite module variables with imported data
-    state = JSON.parse(JSON.stringify(imported.state));
-    plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
-    pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
+    // Sincronização forçada
+    window.appState = JSON.parse(JSON.stringify(imported.state));
+    window.plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
+    window.pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    // Import history if it exists in the file, otherwise keep current
-    if (imported.history && Array.isArray(imported.history)) {
-        history = JSON.parse(JSON.stringify(imported.history));
-    }
+    if (imported.history) history = imported.history;
 
-    // Restore preserved local settings into the newly imported state
-    if (localName) state.customName = localName;
-    if (localPrompted !== undefined) state.namePrompted = localPrompted;
-    if (localColorHistory) state.colorHistory = localColorHistory;
-
-    // Synchronize global window objects immediately
-    window.appState = state;
-    window.plannerConfig = plannerConfig;
-    window.pageContent = pageContent;
-
-    // Persist the imported data to Firebase
     await saveUserData(uid);
     return true;
 }
