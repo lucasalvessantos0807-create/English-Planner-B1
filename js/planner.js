@@ -278,7 +278,9 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             const addBtn = card.querySelector('.add-act-btn');
             if (addBtn) addBtn.onclick = () => {
                 pushToUndo();
-                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
+                const weekKey = addBtn.dataset.week;
+                const dayIndex = addBtn.dataset.dayidx;
+                window.plannerConfig[weekKey].days[dayIndex].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
                 buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
             };
 
@@ -510,7 +512,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
             el.onblur = () => {
-                if (!window.pageContent) window.pageContent = {};
                 window.pageContent[el.id] = el.innerHTML;
             };
         });
@@ -522,7 +523,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
                 const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
                     pushToUndo();
-                    document.getElementById(`container-${bId}`).remove();
+                    const bContainer = document.getElementById(`${prefix}container-${bId}`);
+                    if (bContainer) bContainer.remove();
                     if (bType === 'default') {
                         if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
                         window.pageContent.hiddenDefaults.push(bId);
@@ -601,14 +603,12 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
 // Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
-        import('./storage.js').then(store => {
-            const uid = window.auth.currentUser.uid;
-            if (!isEditMode) return;
-            pushToUndo();
-            const newId = 'tpl-' + Date.now();
-            if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
-            window.pageContent.templateRows.push(newId);
-            renderDailyTemplate(uid);
-        });
+        const currentUserUid = window.auth?.currentUser?.uid;
+        if (!currentUserUid || !isEditMode) return;
+        pushToUndo();
+        const newId = 'tpl-' + Date.now();
+        if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+        window.pageContent.templateRows.push(newId);
+        renderDailyTemplate(currentUserUid);
     }
 });
