@@ -482,7 +482,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         card.className = `ov-card ${def.class}`;
         card.id = `${prefix}container-${def.id}`;
         
-        // PRIORIDADE: Backup > Manual > Default
+        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentLabel = content[def.id + '-label'] || def.label;
         const currentBody = content[def.id + '-body'] || def.body;
 
@@ -564,8 +564,8 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         const row = document.createElement('div');
         row.className = 'tpl-row';
         row.id = `${prefix}row-container-${rowId}`;
-
-        // PRIORIDADE: Backup > Manual > Default
+        
+        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentTime = content[rowId + '-t'] || defaults[rowId + '-t'] || 'Step/Time';
         const currentAct = content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...';
 
