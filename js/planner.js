@@ -41,8 +41,7 @@ function pushToUndo() {
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
         content: JSON.parse(JSON.stringify(window.pageContent || {}))
     });
-    const undoBtn = document.getElementById('undoBtn');
-    if (undoBtn) undoBtn.style.display = 'block';
+    document.getElementById('undoBtn').style.display = 'block';
 }
 
 export function performUndo(uid) {
@@ -51,10 +50,7 @@ export function performUndo(uid) {
     window.plannerConfig = lastState.config;
     window.pageContent = lastState.content;
     refreshGlobalTexts();
-    if (undoStack.length === 0) {
-        const undoBtn = document.getElementById('undoBtn');
-        if (undoBtn) undoBtn.style.display = 'none';
-    }
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
     refreshCurrentWeek(uid);
     renderDynamicOverviewBlocks(uid);
     renderDailyTemplate(uid);
@@ -63,7 +59,7 @@ export function performUndo(uid) {
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) {
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
             el.innerHTML = window.pageContent[id];
         }
     });
@@ -77,15 +73,12 @@ export function cancelEdit(uid) {
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
     
     isEditMode = false;
-    const grid = document.getElementById('dynamic-ov-grid');
-    if (grid) grid.classList.remove('edit-active');
+    document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
+    document.getElementById('addOverviewBlockBtn').style.display = 'none';
     
-    const addOvBtn = document.getElementById('addOverviewBlockBtn');
-    if (addOvBtn) addOvBtn.style.display = 'none';
-    
+    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
-    
     const addTplBtn = document.getElementById('addTemplateRowBtn');
     if (addTplBtn) addTplBtn.style.display = 'none';
 
@@ -131,12 +124,10 @@ export function toggleEditMode(uid) {
         });
         undoStack = [];
         isEditMode = true;
+        document.getElementById('dynamic-ov-grid').classList.add('edit-active');
+        document.getElementById('addOverviewBlockBtn').style.display = 'block';
         
-        const grid = document.getElementById('dynamic-ov-grid');
-        if (grid) grid.classList.add('edit-active');
-        const addOvBtn = document.getElementById('addOverviewBlockBtn');
-        if (addOvBtn) addOvBtn.style.display = 'block';
-        
+        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -153,12 +144,10 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
+        document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
+        document.getElementById('addOverviewBlockBtn').style.display = 'none';
         
-        const grid = document.getElementById('dynamic-ov-grid');
-        if (grid) grid.classList.remove('edit-active');
-        const addOvBtn = document.getElementById('addOverviewBlockBtn');
-        if (addOvBtn) addOvBtn.style.display = 'none';
-        
+        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -287,15 +276,11 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             });
 
             const addBtn = card.querySelector('.add-act-btn');
-            if (addBtn) {
-                addBtn.onclick = () => {
-                    pushToUndo();
-                    const weekKey = addBtn.dataset.week;
-                    const dayIndex = addBtn.dataset.dayidx;
-                    window.plannerConfig[weekKey].days[dayIndex].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
-                    buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
-                };
-            }
+            if (addBtn) addBtn.onclick = () => {
+                pushToUndo();
+                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min"});
+                buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
+            };
 
             card.querySelectorAll('.del-act').forEach(btn => {
                 btn.onclick = () => {
@@ -358,12 +343,117 @@ export function addNewMonth(uid) {
     saveUserData(uid).then(() => refreshUI(uid, nextMonth));
 }
 
+export function editMonthStructure(m, uid) {
+    let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
+    if (dayCountInput === null) return;
+    let dayCount = parseInt(dayCountInput);
+    if (isNaN(dayCount) || dayCount <= 0) return;
+
+    const weeksOfM = Object.keys(window.plannerConfig)
+        .filter(k => k.startsWith(`${m}-`))
+        .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+
+    const existingDays = [];
+    weeksOfM.forEach(wk => {
+        window.plannerConfig[wk].days.forEach(d => {
+            existingDays.push(JSON.parse(JSON.stringify(d)));
+        });
+    });
+
+    if (dayCount < existingDays.length) {
+        let hasCustomContent = false;
+        let affectedDays = [];
+
+        for (let i = dayCount; i < existingDays.length; i++) {
+            const dayObj = existingDays[i];
+            const stateKey = `m${m}-d${dayObj.n}`;
+            const oldKey = `d${dayObj.n}`; 
+            const dayState = window.appState[stateKey] || window.appState[oldKey];
+            
+            let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
+            let isTagEdited = dayObj.tag !== "Daily Act";
+            let areActivitiesEdited = dayObj.activities.some(act => 
+                (act.title !== "Study Topic" && act.title !== "New Activity") || 
+                (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
+            );
+
+            if (hasProgressOrNotes || isTagEdited || areActivitiesEdited) {
+                hasCustomContent = true;
+                affectedDays.push(dayObj.n);
+            }
+        }
+
+        if (hasCustomContent) {
+            const warningMessage = `ATTENTION: Reducing to ${dayCount} days will DELETE custom content/notes on days: ${affectedDays.join(', ')}.\n\nDo you want to proceed and PERMANENTLY DELETE this data?`;
+            if (!confirm(warningMessage)) return;
+        }
+
+        for (let i = dayCount; i < existingDays.length; i++) {
+            const dayNum = existingDays[i].n;
+            delete window.appState[`m${m}-d${dayNum}`];
+            delete window.appState[`d${dayNum}`];
+        }
+    }
+
+    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
+
+    weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
+
+    let currentDayIdx = 0;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        const weekDays = [];
+        
+        for (let d = 0; d < daysInW; d++) {
+            const newDayNum = currentDayIdx + 1;
+            
+            if (existingDays[currentDayIdx]) {
+                const preserved = existingDays[currentDayIdx];
+                preserved.n = newDayNum;
+                weekDays.push(preserved);
+            } else {
+                weekDays.push({ 
+                    n: newDayNum, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
+                    tag: "Daily Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                });
+            }
+            currentDayIdx++;
+        }
+
+        window.plannerConfig[`${m}-${w}`] = {
+            label: `Week ${w}`, 
+            theme: "Plans Updated",
+            days: weekDays
+        };
+    }
+
+    saveUserData(uid).then(() => refreshUI(uid, m));
+}
+
+export function deleteMonth(m, uid) {
+    if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
+         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
+         
+         const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
+         const currentIndex = months.indexOf(m.toString());
+         const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
+ 
+         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+         
+         saveUserData(uid).then(() => refreshUI(uid, targetMonth));
+     }
+ }
+
 export function addOverviewBlock(uid) {
     if (!isEditMode) return;
     pushToUndo();
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
+    
+    // Apenas atualizamos o estado local para permitir o "Cancel"
     renderDynamicOverviewBlocks(uid);
 }
 
@@ -390,6 +480,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         card.className = `ov-card ${def.class}`;
         card.id = `${prefix}container-${def.id}`;
         
+        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentLabel = content[def.id + '-label'] || def.label;
         const currentBody = content[def.id + '-body'] || def.body;
 
@@ -419,6 +510,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
             el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
                 window.pageContent[el.id] = el.innerHTML;
             };
         });
@@ -430,8 +522,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
                 const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
                     pushToUndo();
-                    const target = document.getElementById(`container-${bId}`);
-                    if (target) target.remove();
+                    document.getElementById(`container-${bId}`).remove();
                     if (bType === 'default') {
                         if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
                         window.pageContent.hiddenDefaults.push(bId);
@@ -444,6 +535,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
+// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
@@ -451,6 +543,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
 
     const content = customContent || window.pageContent || {};
     if (!content.templateRows) {
+        // IDs padrão iniciais
         content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
     }
 
@@ -471,6 +564,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.className = 'tpl-row';
         row.id = `${prefix}row-container-${rowId}`;
         
+        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentTime = content[rowId + '-t'] || defaults[rowId + '-t'] || 'Step/Time';
         const currentAct = content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...';
 
@@ -504,14 +598,17 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
+// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
-        if (!isEditMode) return;
-        pushToUndo();
-        const newId = 'tpl-' + Date.now();
-        if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
-        window.pageContent.templateRows.push(newId);
-        const uid = window.auth?.currentUser?.uid;
-        if (uid) renderDailyTemplate(uid);
+        import('./storage.js').then(store => {
+            const uid = window.auth.currentUser.uid;
+            if (!isEditMode) return;
+            pushToUndo();
+            const newId = 'tpl-' + Date.now();
+            if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+            window.pageContent.templateRows.push(newId);
+            renderDailyTemplate(uid);
+        });
     }
 });
