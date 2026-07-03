@@ -5,9 +5,9 @@ import { renderStructure, updateProgressBar } from './ui.js';
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
-    const data = content || {};
+    const data = content || window.pageContent || {};
     
-    // Conteúdos padrão apenas para casos onde o campo está totalmente vazio no banco
+    // Conteúdos padrão integrais para o primeiro acesso
     const defaults = {
         "global-cover-eye": "Personal Study Planner",
         "global-cover-title": "My Roadmap",
@@ -24,7 +24,7 @@ function refreshGlobalDOM(content, targetPrefix = "") {
     parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         
-        // PRIORIDADE: 1. Conteúdo do backup/banco | 2. Texto padrão (limpo)
+        // PRIORIDADE ABSOLUTA: 1. Conteúdo do backup/banco | 2. Texto padrão (limpo)
         if (data[cleanId] !== undefined && data[cleanId] !== null && data[cleanId] !== "") {
             el.innerHTML = data[cleanId];
         } else if (defaults[cleanId]) {
@@ -133,7 +133,12 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-        
+        document.getElementById('switchAccountBtn').onclick = () => {
+            provider.setCustomParameters({ prompt: 'select_account' });
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Error switching account:", error);
+            });
+        };
         const switchAccountBtn = document.getElementById('switchAccountBtn');
         if (switchAccountBtn) {
             switchAccountBtn.onclick = () => {
@@ -143,7 +148,6 @@ onAuthStateChanged(auth, async (user) => {
                 });
             };
         }
-
         // --- FLOATING ACTION BUTTON LOGIC ---
         const fabWrapper = document.getElementById('fabWrapper');
         const fabMain = document.getElementById('fabMain');
@@ -259,18 +263,23 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
+                    // Atualizar Textos Globais da Sandbox com prioridade de backup
                     refreshGlobalDOM(backupContent, "sb-");
 
+                    // Cor da Capa na Sandbox
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
+                    // Renderizar blocos de overview na Sandbox
                     import('./planner.js').then(mod => {
                         mod.renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
                         mod.renderDailyTemplate(currentUser, "sb-", backupContent);
                     });
 
+                    // Barra de Progresso na Sandbox
                     updateProgressBar("sb-", backup.plannerConfig, backupState);
 
+                    // Renderizar Estrutura Mensal dentro da Sandbox
                     renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
@@ -465,16 +474,20 @@ onAuthStateChanged(auth, async (user) => {
         const closeSettings = document.getElementById('closeSettings');
 
         personalizeBtn.onclick = () => {
-            settingsDrawer.classList.remove('open');
-            customDrawer.classList.add('open');
-            document.getElementById('fabWrapper').classList.add('fab-hidden');
+            if (!document.body.classList.contains('preview-mode')) {
+                settingsDrawer.classList.remove('open');
+                customDrawer.classList.add('open');
+                document.getElementById('fabWrapper').classList.add('fab-hidden');
+            }
         };
 
         settingsBtn.onclick = () => {
-            customDrawer.classList.remove('open');
-            settingsDrawer.classList.add('open');
-            document.getElementById('fabWrapper').classList.add('fab-hidden');
-            renderHistory();
+            if (!document.body.classList.contains('preview-mode')) {
+                customDrawer.classList.remove('open');
+                settingsDrawer.classList.open('open');
+                document.getElementById('fabWrapper').classList.add('fab-hidden');
+                renderHistory();
+            }
         };
 
         closeDrawer.onclick = () => {
