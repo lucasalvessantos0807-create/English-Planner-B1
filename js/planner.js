@@ -41,7 +41,8 @@ function pushToUndo() {
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
         content: JSON.parse(JSON.stringify(window.pageContent || {}))
     });
-    document.getElementById('undoBtn').style.display = 'block';
+    const undoBtn = document.getElementById('undoBtn');
+    if (undoBtn) undoBtn.style.display = 'block';
 }
 
 export function performUndo(uid) {
@@ -50,7 +51,10 @@ export function performUndo(uid) {
     window.plannerConfig = lastState.config;
     window.pageContent = lastState.content;
     refreshGlobalTexts();
-    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    if (undoStack.length === 0) {
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) undoBtn.style.display = 'none';
+    }
     refreshCurrentWeek(uid);
     renderDynamicOverviewBlocks(uid);
     renderDailyTemplate(uid);
@@ -59,7 +63,7 @@ export function performUndo(uid) {
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { 
             el.innerHTML = window.pageContent[id];
         }
     });
@@ -73,10 +77,11 @@ export function cancelEdit(uid) {
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
     
     isEditMode = false;
-    document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
-    document.getElementById('addOverviewBlockBtn').style.display = 'none';
+    const grid = document.getElementById('dynamic-ov-grid');
+    if (grid) grid.classList.remove('edit-active');
+    const addOvBtn = document.getElementById('addOverviewBlockBtn');
+    if (addOvBtn) addOvBtn.style.display = 'none';
     
-    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
     const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -124,10 +129,11 @@ export function toggleEditMode(uid) {
         });
         undoStack = [];
         isEditMode = true;
-        document.getElementById('dynamic-ov-grid').classList.add('edit-active');
-        document.getElementById('addOverviewBlockBtn').style.display = 'block';
+        const grid = document.getElementById('dynamic-ov-grid');
+        if (grid) grid.classList.add('edit-active');
+        const addOvBtn = document.getElementById('addOverviewBlockBtn');
+        if (addOvBtn) addOvBtn.style.display = 'block';
         
-        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -144,10 +150,11 @@ export function toggleEditMode(uid) {
             saveUserData(uid);
         }
         isEditMode = false;
-        document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
-        document.getElementById('addOverviewBlockBtn').style.display = 'none';
+        const grid = document.getElementById('dynamic-ov-grid');
+        if (grid) grid.classList.remove('edit-active');
+        const addOvBtn = document.getElementById('addOverviewBlockBtn');
+        if (addOvBtn) addOvBtn.style.display = 'none';
         
-        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -454,8 +461,6 @@ export function addOverviewBlock(uid) {
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
-    
-    // Apenas atualizamos o estado local para permitir o "Cancel"
     renderDynamicOverviewBlocks(uid);
 }
 
@@ -482,7 +487,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
         card.className = `ov-card ${def.class}`;
         card.id = `${prefix}container-${def.id}`;
         
-        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentLabel = content[def.id + '-label'] || def.label;
         const currentBody = content[def.id + '-body'] || def.body;
 
@@ -523,8 +527,9 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
                 const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
                     pushToUndo();
-                    const bContainer = document.getElementById(`${prefix}container-${bId}`);
-                    if (bContainer) bContainer.remove();
+                    const containerId = `${prefix}container-${bId}`;
+                    const targetEl = document.getElementById(containerId);
+                    if (targetEl) targetEl.remove();
                     if (bType === 'default') {
                         if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
                         window.pageContent.hiddenDefaults.push(bId);
@@ -537,7 +542,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
-// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
@@ -545,7 +549,6 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
 
     const content = customContent || window.pageContent || {};
     if (!content.templateRows) {
-        // IDs padrão iniciais
         content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
     }
 
@@ -566,7 +569,6 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.className = 'tpl-row';
         row.id = `${prefix}row-container-${rowId}`;
         
-        // PRIORIDADE ABSOLUTA: Backup > Padrão Limpo
         const currentTime = content[rowId + '-t'] || defaults[rowId + '-t'] || 'Step/Time';
         const currentAct = content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...';
 
@@ -600,15 +602,14 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
-// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
-        const currentUserUid = window.auth?.currentUser?.uid;
-        if (!currentUserUid || !isEditMode) return;
+        const currUid = window.auth?.currentUser?.uid;
+        if (!currUid || !isEditMode) return;
         pushToUndo();
         const newId = 'tpl-' + Date.now();
         if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
         window.pageContent.templateRows.push(newId);
-        renderDailyTemplate(currentUserUid);
+        renderDailyTemplate(currUid);
     }
 });
