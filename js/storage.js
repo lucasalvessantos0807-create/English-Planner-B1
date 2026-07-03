@@ -153,7 +153,6 @@ export async function importData(fileOrData, uid, isRestore = false) {
         throw new Error("Invalid planner data structure");
     }
 
-    // Criar backup antes de sobrescrever
     if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
@@ -166,17 +165,14 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
-    // Preservar identidade local
     const localName = window.appState.customName;
     const localPrompted = window.appState.namePrompted;
     const localColorHistory = window.appState.colorHistory;
 
-    // Sincronização integral e imediata
     window.appState = JSON.parse(JSON.stringify(imported.state));
     window.plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     window.pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    // Atualiza referências do módulo
     state = window.appState;
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
@@ -185,12 +181,10 @@ export async function importData(fileOrData, uid, isRestore = false) {
         history = JSON.parse(JSON.stringify(imported.history));
     }
 
-    // Restaurar identidade
     if (localName) window.appState.customName = localName;
     if (localPrompted !== undefined) window.appState.namePrompted = localPrompted;
     if (localColorHistory) window.appState.colorHistory = localColorHistory;
 
-    // Persistir no Firebase antes do reload
     await saveUserData(uid);
     return true;
 }
