@@ -19,9 +19,11 @@ export function resetLocalData() {
 }
 
 export function applySnapshot(newConfig, newContent) {
+    // Sobrescreve os objetos globais para garantir visibilidade em todos os módulos
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
     
+    // Sincroniza as variáveis locais do módulo storage.js para corresponderem
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
 }
@@ -122,12 +124,16 @@ export async function importData(fileOrData, uid, isRestore = false) {
         } else {
             imported = fileOrData;
         }
-    } catch (err) { throw new Error("Invalid JSON format"); }
+    } catch (err) {
+        console.error("Failed to parse import file:", err);
+        throw new Error("Invalid JSON format");
+    }
 
     if (!imported.plannerConfig || !imported.state) {
         throw new Error("Invalid planner data structure");
     }
 
+    // Criar backup antes de importar
     if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
@@ -140,13 +146,21 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
-    // Sincronização forçada
+    // Sincronização forçada dos dados importados para os objetos globais
     window.appState = JSON.parse(JSON.stringify(imported.state));
     window.plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     window.pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    if (imported.history) history = imported.history;
+    // Sincronizar variáveis locais deste módulo
+    state = window.appState;
+    plannerConfig = window.plannerConfig;
+    pageContent = window.pageContent;
 
+    if (imported.history && Array.isArray(imported.history)) {
+        history = JSON.parse(JSON.stringify(imported.history));
+    }
+
+    // Salvar no Firebase
     await saveUserData(uid);
     return true;
 }
