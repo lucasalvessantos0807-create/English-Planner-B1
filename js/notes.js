@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCreateFolder = document.getElementById('btn-create-folder');
 
     // Attach click events to menu items
-    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeMenu(); createDocument(); };
+    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeMenu(); openNotebookModal(); };
     if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeMenu(); createDocument(); };
     if (btnNewWhiteboard) btnNewWhiteboard.onclick = () => { closeMenu(); createDocument(); };
     if (btnCreateFolder) btnCreateFolder.onclick = () => { closeMenu(); createFolder(); };
@@ -433,4 +433,67 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
         if (activeBtn) activeBtn.classList.add('active');
     }
+    // --- NOTEBOOK MODAL LOGIC ---
+    const nbModal = document.getElementById('notebook-modal');
+    const nbCancel = document.getElementById('nb-cancel');
+    const nbCreate = document.getElementById('nb-create');
+    const nbNameInput = document.getElementById('nb-name-input');
+    const nbPaperPreview = document.getElementById('nb-paper-preview');
+    const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
+    const paperCards = document.querySelectorAll('.nb-paper-card');
+
+    function openNotebookModal() {
+        if (nbModal) nbModal.style.display = 'flex';
+        if (nbNameInput) nbNameInput.value = "";
+    }
+
+    function closeNotebookModal() {
+        if (nbModal) nbModal.style.display = 'none';
+    }
+
+    if (nbCancel) nbCancel.onclick = closeNotebookModal;
+
+    if (nbCreate) {
+        nbCreate.onclick = () => {
+            const name = nbNameInput.value.trim() || "Untitled Notebook";
+            const paperType = nbSelectedPaperName.innerText;
+            
+            // Criar o documento com as propriedades do modal
+            const newDoc = {
+                id: 'doc_' + Date.now(),
+                name: name,
+                paperType: paperType,
+                parentId: currentFolderId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                favorite: false,
+                shared: false,
+                data: null 
+            };
+
+            if (!library.documents) library.documents = [];
+            library.documents.push(newDoc);
+            
+            saveLibrary();
+            closeNotebookModal();
+            openDocument(newDoc);
+        };
+    }
+
+    // Paper selection logic
+    paperCards.forEach(card => {
+        card.onclick = () => {
+            paperCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            const paper = card.dataset.paper;
+            nbSelectedPaperName.innerText = paper;
+            
+            // Update preview style based on class
+            const thumb = card.querySelector('.nb-paper-thumb');
+            const thumbClass = Array.from(thumb.classList).find(c => c.startsWith('thumb-'));
+            
+            nbPaperPreview.className = 'nb-preview-box ' + thumbClass.replace('thumb-', 'paper-');
+        };
+    });
 });
