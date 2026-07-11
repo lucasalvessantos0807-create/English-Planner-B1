@@ -14,48 +14,103 @@ const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowin
 function refreshUI(uid, targetMonth = null) {
     import('./ui.js').then(mod => {
         mod.renderStructure(window.plannerConfig, isEditMode, (m, w) => buildWeek(m, w, uid));
-        let mKey = targetMonth || (Object.keys(window.plannerConfig).sort()[0]?.split('-')[0]);
+        
+        let monthToOpen = targetMonth;
+        if (!monthToOpen) {
+            const available = Object.keys(window.plannerConfig).sort();
+            if (available.length > 0) monthToOpen = available[0].split('-')[0];
+        }
+
         setTimeout(() => {
-            const btn = Array.from(document.querySelectorAll('#monthNav .mbtn')).find(b => b.textContent.trim() === `Month ${mKey}`);
-            if (btn) btn.click();
+            const monthButtons = document.querySelectorAll('#monthNav .mbtn');
+            const targetBtn = Array.from(monthButtons).find(b => b.textContent.trim() === `Month ${monthToOpen}`);
+            
+            if (targetBtn) {
+                targetBtn.click();
+            } else if (monthButtons.length > 0) {
+                monthButtons[0].click();
+            }
             mod.updateProgressBar();
         }, 100); 
     });
 }
 
+// --- FUNÇÕES DE UNDO E AUXILIARES ---
 function pushToUndo() {
-    undoStack.push({ config: JSON.parse(JSON.stringify(window.plannerConfig)), content: JSON.parse(JSON.stringify(window.pageContent || {})) });
-    const uBtn = document.getElementById('undoBtn');
-    if (uBtn) uBtn.style.display = 'block';
+    undoStack.push({
+        config: JSON.parse(JSON.stringify(window.plannerConfig)),
+        content: JSON.parse(JSON.stringify(window.pageContent || {}))
+    });
+    document.getElementById('undoBtn').style.display = 'block';
 }
 
 export function performUndo(uid) {
     if (undoStack.length === 0) return;
-    const last = undoStack.pop();
-    window.plannerConfig = last.config; window.pageContent = last.content;
-    if (undoStack.length === 0 && document.getElementById('undoBtn')) document.getElementById('undoBtn').style.display = 'none';
-    refreshCurrentWeek(uid); renderDynamicOverviewBlocks(uid); renderDailyTemplate(uid);
+    const lastState = undoStack.pop();
+    window.plannerConfig = lastState.config;
+    window.pageContent = lastState.content;
+    refreshGlobalTexts();
+    if (undoStack.length === 0) document.getElementById('undoBtn').style.display = 'none';
+    refreshCurrentWeek(uid);
+    renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
 }
 
+function refreshGlobalTexts() {
+    Object.keys(window.pageContent || {}).forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
+            el.innerHTML = window.pageContent[id];
+        }
+    });
+}
+
+// --- CONTROLE DO MODO DE EDIÇÃO ---
 export function cancelEdit(uid) {
-    if (!confirm("Discard all changes?")) return;
+    if (!confirm("Discard all changes made in this session?")) return;
+    
     window.plannerConfig = JSON.parse(JSON.stringify(sessionInitialConfig));
     window.pageContent = JSON.parse(JSON.stringify(sessionInitialContent));
-    isEditMode = false; updateUIEditMode();
-    renderDynamicOverviewBlocks(uid); renderDailyTemplate(uid); refreshUI(uid);
+    
+    isEditMode = false;
+    document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
+    document.getElementById('addOverviewBlockBtn').style.display = 'none';
+    
+    // UI específica do Template Dinâmico
+    const tplList = document.getElementById('dynamic-tpl-list');
+    if (tplList) tplList.classList.remove('edit-active');
+    const addTplBtn = document.getElementById('addTemplateRowBtn');
+    if (addTplBtn) addTplBtn.style.display = 'none';
+
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = "false";
+        if (sessionInitialDOMSnapshot[el.id] !== undefined) {
+            el.innerHTML = sessionInitialDOMSnapshot[el.id];
+        }
+    });
+
+    updateUIEditMode();
+    renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
+    refreshUI(uid);
 }
 
 function updateUIEditMode() {
     const saveBtn = document.getElementById('saveChangesBtn');
     const cancelBtn = document.getElementById('cancelEditBtn');
+    const undoBtn = document.getElementById('undoBtn');
     const fab = document.getElementById('fabWrapper');
+    
     if (isEditMode) {
-        fab?.classList.add('fab-hidden');
-        saveBtn.style.display = "block"; cancelBtn.style.display = "block";
+        if (fab) fab.classList.add('fab-hidden');
+        if (saveBtn) saveBtn.style.display = "block";
+        if (cancelBtn) cancelBtn.style.display = "block";
+        if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "block" : "none";
     } else {
-        fab?.classList.remove('fab-hidden');
-        saveBtn.style.display = "none"; cancelBtn.style.display = "none";
-        if(document.getElementById('undoBtn')) document.getElementById('undoBtn').style.display = "none";
+        if (fab) fab.classList.remove('fab-hidden');
+        if (saveBtn) saveBtn.style.display = "none";
+        if (cancelBtn) cancelBtn.style.display = "none";
+        if (undoBtn) undoBtn.style.display = "none";
     }
 }
 
@@ -63,53 +118,98 @@ export function toggleEditMode(uid) {
     if (!isEditMode) {
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
         sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
-        undoStack = []; isEditMode = true;
+        sessionInitialDOMSnapshot = {};
+        document.querySelectorAll('.editable-global').forEach(el => {
+            sessionInitialDOMSnapshot[el.id] = el.innerHTML;
+        });
+        undoStack = [];
+        isEditMode = true;
+        document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
-        document.getElementById('addTemplateRowBtn').style.display = 'block';
+        
+        // Ativa botões do Template Dinâmico
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.add('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'block';
+        
     } else {
-        addHistoryEntry("Manual Edit", sessionInitialConfig, sessionInitialContent);
-        saveUserData(uid); isEditMode = false;
+        const currentConfigStr = JSON.stringify(window.plannerConfig);
+        const initialConfigStr = JSON.stringify(sessionInitialConfig);
+        const currentContentStr = JSON.stringify(window.pageContent);
+        const initialContentStr = JSON.stringify(sessionInitialContent);
+
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
+            addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
+            saveUserData(uid);
+        }
+        isEditMode = false;
+        document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
-        document.getElementById('addTemplateRowBtn').style.display = 'none';
+        
+        // Desativa botões do Template Dinâmico
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.remove('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'none';
     }
     updateUIEditMode();
     document.querySelectorAll('.editable-global').forEach(el => {
         el.contentEditable = isEditMode;
-        if (isEditMode) el.onblur = () => { window.pageContent[el.id] = el.innerHTML; };
+        if (isEditMode) {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML;
+            };
+        }
     });
-    refreshCurrentWeek(uid); renderDynamicOverviewBlocks(uid); renderDailyTemplate(uid);
+    refreshCurrentWeek(uid);
+    renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
 }
 
+// --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
 function refreshCurrentWeek(uid) {
-    const act = document.querySelector('.mpanel.on .wpanel.on');
-    if (act) {
-        const p = act.id.replace('wp', '').split('-');
-        buildWeek(p[0], p[1], uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+    builtWeeks.clear();
+    const active = document.querySelector('.mpanel.on .wpanel.on');
+    if (active) {
+        const idParts = active.id.replace('wp', '').split('-');
+        buildWeek(idParts[0], idParts[1], uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
     }
 }
 
 export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = "", customConfig = null, customState = null) {
     const config = customConfig || window.plannerConfig;
     const activeState = customState || window.appState;
-    const key = `${m}-${w}`; const wk = config[key];
+    const key = `${m}-${w}`;
+    const wk = config[key];
     const container = document.getElementById(`${prefix}wp${m}-${w}`);
+    
     if (!wk || !container) return;
 
-    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${wk.label}</h3><p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
+    container.innerHTML = `
+        <div class="wkbar ${wk.review ? 'rv' : ''}">
+            <h3>${wk.label}</h3>
+            <p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p>
+        </div>`;
 
     wk.days.forEach((day, dIdx) => {
-        const dKey = `d${day.n}`; const fKey = `m${m}-${dKey}`;
-        const dData = activeState[fKey] || activeState[dKey] || { done: false, notes: "" };
-        const card = document.createElement("div"); card.className = "daycard";
+        const dayKey = `d${day.n}`;
+        const fullKey = `m${m}-${dayKey}`;
+        const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
+        
+        const card = document.createElement("div");
+        card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
 
-        const actsHtml = day.activities.map((act, aIdx) => {
-            let sugHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(e => `<span class="suggest-emoji" data-emoji="${e}">${e}</span>`).join('')}</div>` : '';
+        const activitiesHtml = day.activities.map((act, aIdx) => {
+            let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
             return `
                 <div class="act">
                     <div class="aico-wrapper">
                         <div class="aico ${act.t}" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
-                        ${sugHtml}
+                        ${suggestionsHtml}
                     </div>
                     <div class="acont">
                         <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
@@ -121,124 +221,383 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         }).join('');
 
         card.innerHTML = `
-            <div class="dayhead ${day.review ? 'rv' : ''}"><div class="daynum">${day.n}</div><div class="dayname">${day.name}</div><div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div></div>
+            <div class="dayhead ${day.review ? 'rv' : ''}">
+                <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
+                <div class="dayname">${day.name}</div>
+                <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
+            </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
-                <div class="acts-cont">${actsHtml}</div>
+                <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" placeholder="Notes..." ${isPreview ? 'readonly' : ''}>${dData.notes || ""}</textarea>
-                <label class="chk ${dData.done ? 'done' : ''}"><input type="checkbox" ${dData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day completed</span></label>
+                <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
             </div>`;
 
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = (e) => { e.stopPropagation(); const w = icon.closest('.aico-wrapper'); w.classList.toggle('show-suggestions'); };
-            });
-            card.querySelectorAll('.suggest-emoji').forEach(s => {
-                s.onclick = (e) => {
-                    pushToUndo(); const emoji = e.target.dataset.emoji;
-                    const path = e.target.closest('.act').querySelector('.atitle').dataset.path;
-                    const [wkK, dI, aI] = path.split('.'); window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                    if(ICON_MAP[emoji]) window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
-                    buildWeek(m, w, uid, [day.n.toString()]);
+                icon.onclick = (e) => {
+                    e.stopPropagation();
+                    const wrapper = icon.closest('.aico-wrapper');
+                    const wasOpen = wrapper.classList.contains('show-suggestions');
+                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                    if (!wasOpen) wrapper.classList.add('show-suggestions');
                 };
             });
+
+            card.querySelectorAll('.suggest-emoji').forEach(sug => {
+                sug.onclick = (e) => {
+                    pushToUndo();
+                    const emoji = e.target.dataset.emoji;
+                    const act = e.target.closest('.act');
+                    const titleEl = act.querySelector('.atitle');
+                    const path = titleEl.dataset.path;
+                    const [wkK, dI, aI] = path.split('.');
+                    act.querySelector('.aico').innerText = emoji;
+                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                    if (ICON_MAP[emoji]) {
+                        titleEl.innerText = ICON_MAP[emoji];
+                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
+                    }
+                };
+            });
+
             card.querySelectorAll('[contenteditable]').forEach(el => {
                 el.onblur = () => {
-                    const p = el.dataset.path;
-                    if (p) { const [wkK, dI, aI, prop] = p.split('.'); window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText; }
-                    else if (el.dataset.type === 'tag') { window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText; }
+                    const path = el.dataset.path;
+                    if (path) {
+                        const [wkK, dI, aI, prop] = path.split('.');
+                        window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText;
+                    } else if (el.dataset.type === 'tag') {
+                        window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText;
+                    } else if (el.dataset.type === 'theme') {
+                        window.plannerConfig[el.dataset.week].theme = el.innerText;
+                    }
                 };
             });
-            card.querySelector('.add-act-btn').onclick = () => { pushToUndo(); window.plannerConfig[key].days[dIdx].activities.push({t: "grammar", i: "📝", title: "New", desc: "Edit", time: "20 min"}); buildWeek(m, w, uid, [day.n.toString()]); };
+
+            const addBtn = card.querySelector('.add-act-btn');
+            if (addBtn) addBtn.onclick = () => {
+                pushToUndo();
+                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
+                buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
+            };
+
+            card.querySelectorAll('.del-act').forEach(btn => {
+                btn.onclick = () => {
+                    if(confirm("Delete this activity?")) {
+                        pushToUndo();
+                        window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
+                        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
+                    }
+                };
+            });
         }
-        card.querySelector('.dayhead').onclick = (e) => { if(!e.target.hasAttribute('contenteditable')) card.querySelector('.daybody').classList.toggle('on'); };
+
+        card.querySelector('.dayhead').onclick = (e) => {
+            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
+                card.querySelector('.daybody').classList.toggle('on');
+            }
+        };
+
         if (!isPreview) {
-            card.querySelector('textarea').oninput = (e) => { updateState(m, dKey, { notes: e.target.value }); saveUserData(uid); };
-            card.querySelector('input').onchange = (e) => { updateState(m, dKey, { done: e.target.checked }); saveUserData(uid); updateProgressBar(); };
+            const textarea = card.querySelector('textarea');
+            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
+            const chk = card.querySelector('input[type="checkbox"]');
+            chk.onchange = (e) => {
+                updateState(m, dayKey, { done: e.target.checked });
+                card.querySelector('.chk').classList.toggle('done', e.target.checked);
+                saveUserData(uid);
+                updateProgressBar();
+            };
         }
+
         container.appendChild(card);
     });
 }
 
+// --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
-    const days = parseInt(prompt("How many days?", "30")); if (isNaN(days) || days <= 0) return;
-    addHistoryEntry("Add Month", window.plannerConfig, window.pageContent);
-    const ms = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
-    const nxt = ms.length > 0 ? Math.max(...ms.map(Number)) + 1 : 1;
-    let cd = 1;
-    for (let w = 1; w <= Math.ceil(days / 7); w++) {
-        const dInW = Math.min(7, days - ((w - 1) * 7));
-        window.plannerConfig[`${nxt}-${w}`] = { label: `Week ${w}`, theme: "New", days: Array.from({length: dInW}, () => ({ n: cd++, name: "Day", tag: "Daily", activities: [{t:"vocab", i:"📚", title:"Study", desc:"Edit", time:"20m"}] })) };
+    const dayCount = parseInt(prompt("How many days for this new month?", "30"));
+    if (isNaN(dayCount) || dayCount <= 0) return;
+    
+    addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
+    const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
+    const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
+    
+    let currentDay = 1;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        window.plannerConfig[`${nextMonth}-${w}`] = {
+            label: `Week ${w}`, theme: "New Month Plans",
+            days: Array.from({length: daysInW}, () => {
+                const d = currentDay++;
+                return { 
+                    n: d, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], 
+                    tag: "Daily Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                };
+            })
+        };
     }
-    saveUserData(uid).then(() => refreshUI(uid, nxt));
+    saveUserData(uid).then(() => refreshUI(uid, nextMonth));
 }
 
 export function editMonthStructure(m, uid) {
-    const days = parseInt(prompt(`New day count for Month ${m}?`, "30")); if (isNaN(days)) return;
-    addHistoryEntry(`Restructure Month ${m}`, window.plannerConfig, window.pageContent);
-    const existing = []; Object.keys(window.plannerConfig).filter(k => k.startsWith(`${m}-`)).forEach(k => { existing.push(...window.plannerConfig[k].days); delete window.plannerConfig[k]; });
-    let cd = 1;
-    for (let w = 1; w <= Math.ceil(days / 7); w++) {
-        const dInW = Math.min(7, days - ((w - 1) * 7)); const wDays = [];
-        for (let i=0; i<dInW; i++) {
-            if(existing[cd-1]) { let d = existing[cd-1]; d.n = cd; wDays.push(d); }
-            else wDays.push({ n:cd, name:"Day", tag:"Daily", activities:[] });
-            cd++;
+    let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
+    if (dayCountInput === null) return;
+    let dayCount = parseInt(dayCountInput);
+    if (isNaN(dayCount) || dayCount <= 0) return;
+
+    const weeksOfM = Object.keys(window.plannerConfig)
+        .filter(k => k.startsWith(`${m}-`))
+        .sort((a, b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+
+    const existingDays = [];
+    weeksOfM.forEach(wk => {
+        window.plannerConfig[wk].days.forEach(d => {
+            existingDays.push(JSON.parse(JSON.stringify(d)));
+        });
+    });
+
+    if (dayCount < existingDays.length) {
+        let hasCustomContent = false;
+        let affectedDays = [];
+
+        for (let i = dayCount; i < existingDays.length; i++) {
+            const dayObj = existingDays[i];
+            const stateKey = `m${m}-d${dayObj.n}`;
+            const oldKey = `d${dayObj.n}`; 
+            const dayState = window.appState[stateKey] || window.appState[oldKey];
+            
+            let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
+            let isTagEdited = dayObj.tag !== "Daily Act";
+            let areActivitiesEdited = dayObj.activities.some(act => 
+                (act.title !== "Study Topic" && act.title !== "New Activity") || 
+                (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
+            );
+
+            if (hasProgressOrNotes || isTagEdited || areActivitiesEdited) {
+                hasCustomContent = true;
+                affectedDays.push(dayObj.n);
+            }
         }
-        window.plannerConfig[`${m}-${w}`] = { label: `Week ${w}`, theme: "Updated", days: wDays };
+
+        if (hasCustomContent) {
+            const warningMessage = `ATTENTION: Reducing to ${dayCount} days will DELETE custom content/notes on days: ${affectedDays.join(', ')}.\n\nDo you want to proceed and PERMANENTLY DELETE this data?`;
+            if (!confirm(warningMessage)) return;
+        }
+
+        for (let i = dayCount; i < existingDays.length; i++) {
+            const dayNum = existingDays[i].n;
+            delete window.appState[`m${m}-d${dayNum}`];
+            delete window.appState[`d${dayNum}`];
+        }
     }
+
+    addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
+
+    weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
+
+    let currentDayIdx = 0;
+    for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
+        const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
+        const weekDays = [];
+        
+        for (let d = 0; d < daysInW; d++) {
+            const newDayNum = currentDayIdx + 1;
+            
+            if (existingDays[currentDayIdx]) {
+                const preserved = existingDays[currentDayIdx];
+                preserved.n = newDayNum;
+                weekDays.push(preserved);
+            } else {
+                weekDays.push({ 
+                    n: newDayNum, 
+                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
+                    tag: "Daily Act", 
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                });
+            }
+            currentDayIdx++;
+        }
+
+        window.plannerConfig[`${m}-${w}`] = {
+            label: `Week ${w}`, 
+            theme: "Plans Updated",
+            days: weekDays
+        };
+    }
+
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
 
 export function deleteMonth(m, uid) {
-    if (confirm(`Delete Month ${m}?`)) {
-        addHistoryEntry(`Delete Month ${m}`, window.plannerConfig, window.pageContent);
-        Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
-        saveUserData(uid).then(() => refreshUI(uid));
-    }
-}
+    if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
+         addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
+         
+         const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
+         const currentIndex = months.indexOf(m.toString());
+         const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
+ 
+         Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
+         
+         saveUserData(uid).then(() => refreshUI(uid, targetMonth));
+     }
+ }
 
-export function addOverviewBlock(uid) { pushToUndo(); const id = 'ov-' + Date.now(); if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = []; window.pageContent.dynamicBlocks.push(id); renderDynamicOverviewBlocks(uid); }
+export function addOverviewBlock(uid) {
+    if (!isEditMode) return;
+    pushToUndo();
+    const blockId = 'ov-' + Date.now();
+    if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
+    window.pageContent.dynamicBlocks.push(blockId);
+    
+    // Apenas atualizamos o estado local para permitir o "Cancel"
+    renderDynamicOverviewBlocks(uid);
+}
 
 export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = null) {
-    const grid = document.getElementById(prefix + 'dynamic-ov-grid'); if (!grid) return;
+    const gridId = prefix + 'dynamic-ov-grid';
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+
     const content = customContent || window.pageContent || {};
+    if (!content.hiddenDefaults) content.hiddenDefaults = [];
+
     const defaults = [
-        { id: 'global-ov-ca', class: 'ca', label: 'Phase 1', body: 'Edit phase description...' },
-        { id: 'global-ov-cb', class: 'cb', label: 'Phase 2', body: 'Edit phase description...' },
-        { id: 'global-ov-cg', class: 'cg', label: 'Phase 3', body: 'Edit phase description...' }
+        { id: 'global-ov-ca', class: 'ca', label: 'Month 1 — Foundation', body: 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web' },
+        { id: 'global-ov-cb', class: 'cb', label: 'Month 2 — Building', body: 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey' },
+        { id: 'global-ov-cg', class: 'cg', label: 'Month 3 — Consolidation', body: 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick' }
     ];
+
     grid.innerHTML = '';
+
     defaults.forEach(def => {
-        if (content.hiddenDefaults?.includes(def.id)) return;
-        const card = document.createElement('div'); card.className = `ov-card ${def.class}`; card.id = `${prefix}container-${def.id}`;
-        const lbl = content[def.id + '-label'] || def.label; const bdy = content[def.id + '-body'] || def.body;
-        card.innerHTML = `${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-id="'+def.id+'">✕</button>' : ''}<div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label" contenteditable="${isEditMode && !prefix}">${lbl}</div><div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body" contenteditable="${isEditMode && !prefix}">${bdy}</div>`;
+        if (content.hiddenDefaults.includes(def.id)) return;
+
+        const card = document.createElement('div');
+        card.className = `ov-card ${def.class}`;
+        card.id = `${prefix}container-${def.id}`;
+        card.innerHTML = `
+            ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="default" data-id="' + def.id + '" style="display:flex;">✕</button>' : ''}
+            <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label" contenteditable="${isEditMode && !prefix}">${content[def.id + '-label'] || def.label}</div>
+            <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body" contenteditable="${isEditMode && !prefix}">${content[def.id + '-body'] || def.body}</div>
+        `;
         grid.appendChild(card);
     });
-    content.dynamicBlocks?.forEach(bId => {
-        const card = document.createElement('div'); card.className = 'ov-card cg'; card.id = `${prefix}container-${bId}`;
-        card.innerHTML = `${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-id="'+bId+'">✕</button>' : ''}<div class="ov-label editable-global" id="${prefix}${bId}-title" contenteditable="${isEditMode && !prefix}">${content[bId + '-title'] || 'New'}</div><div class="ov-body editable-global" id="${prefix}${bId}-body" contenteditable="${isEditMode && !prefix}">${content[bId + '-body'] || 'Edit...'}</div>`;
-        grid.appendChild(card);
-    });
-    if(!prefix && isEditMode) {
-        grid.querySelectorAll('.del-ov-btn').forEach(b => b.onclick = () => { pushToUndo(); const id = b.dataset.id; if(id.startsWith('ov-')) window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(x => x !== id); else { if(!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = []; window.pageContent.hiddenDefaults.push(id); } renderDynamicOverviewBlocks(uid); });
+
+    if(content.dynamicBlocks) {
+        content.dynamicBlocks.forEach(blockId => {
+            const newBlock = document.createElement('div');
+            newBlock.className = 'ov-card cg';
+            newBlock.id = `${prefix}container-${blockId}`;
+            newBlock.innerHTML = `
+                ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'New Phase'}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Edit...'}</div>
+            `;
+            grid.appendChild(newBlock);
+        });
+    }
+
+    if (!prefix && isEditMode) {
+        grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                window.pageContent[el.id] = el.innerHTML;
+            };
+        });
+
+        grid.querySelectorAll('.del-ov-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const bId = btn.dataset.id;
+                const bType = btn.dataset.type;
+                if(confirm("Delete this block?")) {
+                    pushToUndo();
+                    document.getElementById(`container-${bId}`).remove();
+                    if (bType === 'default') {
+                        if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
+                        window.pageContent.hiddenDefaults.push(bId);
+                    } else {
+                        window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
+                    }
+                }
+            };
+        });
     }
 }
 
+// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
-    const list = document.getElementById(prefix + 'dynamic-tpl-list'); if (!list) return;
+    const listId = prefix + 'dynamic-tpl-list';
+    const list = document.getElementById(listId);
+    if (!list) return;
+
     const content = customContent || window.pageContent || {};
-    const rows = content.templateRows || ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
-    const defs = { 'tpl-1-t': 'Step/Time', 'tpl-1-a': 'Add activity...', 'tpl-7-t': 'Review', 'tpl-7-a': 'Summary...' };
+    if (!content.templateRows) {
+        // IDs padrão iniciais
+        content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+    }
+
+    const defaults = {
+        'tpl-1-t': '0–15 min', 'tpl-1-a': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
+        'tpl-2-t': '15–35 min', 'tpl-2-a': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
+        'tpl-3-t': '35–55 min', 'tpl-3-a': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
+        'tpl-4-t': '55–75 min', 'tpl-4-a': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
+        'tpl-5-t': '75–95 min', 'tpl-5-a': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
+        'tpl-6-t': '95–115 min', 'tpl-6-a': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
+        'tpl-7-t': 'Sunday', 'tpl-7-a': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
+    };
+
     list.innerHTML = '';
-    rows.forEach(rId => {
-        const row = document.createElement('div'); row.className = 'tpl-row';
-        const t = content[rId + '-t'] || defs[rId + '-t'] || 'Step/Time'; const a = content[rId + '-a'] || defs[rId + '-a'] || 'Activity...';
-        row.innerHTML = `${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rId}">✕</button>` : ''}<div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rId}-t" contenteditable="${isEditMode && !prefix}">${t}</div><div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rId}-a" contenteditable="${isEditMode && !prefix}">${a}</div>`;
+
+    content.templateRows.forEach(rowId => {
+        const row = document.createElement('div');
+        row.className = 'tpl-row';
+        row.id = `${prefix}row-container-${rowId}`;
+        row.innerHTML = `
+            ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || defaults[rowId + '-t'] || 'Time'}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...'}</div>
+        `;
         list.appendChild(row);
     });
+
     if (!prefix && isEditMode) {
-        list.querySelectorAll('.del-tpl-btn').forEach(b => b.onclick = () => { pushToUndo(); window.pageContent.templateRows = rows.filter(x => x !== b.dataset.id); renderDailyTemplate(uid); });
+        list.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => { 
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML; 
+            };
+        });
+
+        list.querySelectorAll('.del-tpl-btn').forEach(btn => {
+            btn.onclick = () => {
+                const rId = btn.dataset.id;
+                if(confirm("Delete this task from template?")) {
+                    pushToUndo();
+                    window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
+                    renderDailyTemplate(uid);
+                }
+            };
+        });
     }
 }
+
+// Listener para o botão de adicionar linha no template
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'addTemplateRowBtn') {
+        import('./storage.js').then(store => {
+            const uid = window.auth.currentUser.uid;
+            if (!isEditMode) return;
+            pushToUndo();
+            const newId = 'tpl-' + Date.now();
+            if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+            window.pageContent.templateRows.push(newId);
+            renderDailyTemplate(uid);
+        });
+    }
+});
