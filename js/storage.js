@@ -100,7 +100,7 @@ export async function loadUserData(uid) {
             await saveUserData(uid);
         }
     } catch (e) { console.error("Error loading user data:", e); }
-    return { state, plannerConfig, pageContent, history, importHistory, library };;
+    return { state, plannerConfig, pageContent, history, importHistory, library };
 }
 
 export async function saveUserData(uid) {
