@@ -79,6 +79,9 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             library = data.library || { folders: [], documents: [] };
+            // Ensure internal arrays exist to prevent map/filter errors
+            if (!library.folders) library.folders = [];
+            if (!library.documents) library.documents = [];
             state = data.state || {};
             plannerConfig = data.plannerConfig || plannerConfig;
             pageContent = data.pageContent || pageContent;
