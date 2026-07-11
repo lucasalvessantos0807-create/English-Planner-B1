@@ -156,6 +156,38 @@ button, input, select, textarea {
   font-weight: 600;
 }
 
+.sidebar-footer {
+  padding: 15px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  background: #f0ede7;
+}
+
+#sidebar-toggle-btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: transform 0.3s;
+}
+
+/* Estado recolhido da barra lateral */
+.notes-sidebar.collapsed {
+  width: 70px;
+}
+.notes-sidebar.collapsed .sidebar-text {
+  display: none;
+}
+.notes-sidebar.collapsed .snav-btn {
+  justify-content: center;
+  padding: 12px 0;
+}
+.notes-sidebar.collapsed #sidebar-toggle-btn {
+  transform: rotate(180deg);
+}
+
 /* Library Grid */
 .notes-grid {
   display: grid;
@@ -780,13 +812,23 @@ body.preview-open {
 
 .fab-menu {
   display: flex;
-  flex-direction: column; /* Itens sobem em coluna */
+  flex-direction: column;
   align-items: flex-end;
   gap: 12px;
   visibility: hidden;
+  opacity: 0;
   pointer-events: none;
   margin-bottom: 5px;
-  order: 1; /* Garante que o menu fique acima do botão */
+  order: 1;
+  transition: opacity 0.2s, visibility 0.2s, transform 0.3s;
+  transform: translateY(10px);
+}
+
+.fab-wrapper.open .fab-menu {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .fab-wrapper.open .fab-menu {
@@ -803,7 +845,7 @@ body.preview-open {
   border: none;
   padding: 0;
   cursor: pointer;
-  opacity: 0;
+  opacity: 1;
   transform: translateY(20px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
