@@ -2,7 +2,6 @@ import { saveUserData, library } from './storage.js';
 
 /**
  * NOTES & LIBRARY SYSTEM
- * Functionality inspired by Goodnotes for Web
  */
 
 let currentFolderId = null; // null means Root
@@ -12,7 +11,6 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
-let isNewMenuOpen = false;
 let currentView = 'all'; // 'all', 'favorites', 'shared'
 
 // --- 1. LIBRARY MANAGEMENT ---
@@ -25,7 +23,6 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Safety check for breadcrumb element to prevent "null" errors
     if (breadcrumb) {
         if (currentView === 'favorites') {
             breadcrumb.innerText = 'Favorites';
@@ -48,7 +45,6 @@ export function renderLibrary() {
         }
     }
 
-    // Filter items logic with safety arrays
     let foldersToShow = [];
     let docsToShow = [];
 
@@ -61,7 +57,6 @@ export function renderLibrary() {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
-    // Sorting Logic
     const sortFn = (a, b) => {
         if (sortVal === 'name') return a.name.localeCompare(b.name);
         if (sortVal === 'date') return (b.updatedAt || 0) - (a.updatedAt || 0);
@@ -76,7 +71,6 @@ export function renderLibrary() {
     foldersToShow.sort(sortFn);
     docsToShow.sort(sortFn);
 
-    // Render Folders
     foldersToShow.forEach(folder => {
         const item = document.createElement('div');
         item.className = 'note-item';
@@ -99,7 +93,6 @@ export function renderLibrary() {
         grid.appendChild(item);
     });
 
-    // Render Documents
     docsToShow.forEach(doc => {
         const item = document.createElement('div');
         item.className = 'note-item';
@@ -131,7 +124,6 @@ export function renderLibrary() {
 export function createFolder() {
     const name = prompt("Enter folder name:", "New Folder");
     if (!name) return;
-
     const newFolder = {
         id: 'fld_' + Date.now(),
         name: name,
@@ -139,7 +131,6 @@ export function createFolder() {
         createdAt: Date.now(),
         updatedAt: Date.now()
     };
-
     if (!library.folders) library.folders = [];
     library.folders.push(newFolder);
     saveLibrary();
@@ -148,7 +139,6 @@ export function createFolder() {
 export function createDocument() {
     const name = prompt("Enter document name:", "Untitled Note");
     if (!name) return;
-
     const newDoc = {
         id: 'doc_' + Date.now(),
         name: name,
@@ -157,9 +147,9 @@ export function createDocument() {
         updatedAt: Date.now(),
         favorite: false,
         shared: false,
+        paperType: 'Blank',
         data: null 
     };
-
     if (!library.documents) library.documents = [];
     library.documents.push(newDoc);
     saveLibrary();
@@ -185,7 +175,7 @@ async function saveLibrary() {
     }
 }
 
-// --- 2. CANVAS / DRAWING SYSTEM (Bluetooth Pen Support) ---
+// --- 2. CANVAS / DRAWING SYSTEM ---
 
 function openDocument(doc) {
     currentDoc = doc;
@@ -198,23 +188,20 @@ function openDocument(doc) {
     if (notesSidebar) notesSidebar.style.display = 'none';
     if (docEditor) docEditor.style.display = 'flex';
     if (docTitle) docTitle.innerText = doc.name;
+
+    initCanvas();
+
     // Apply paper background to canvas
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
-        // Remove existing paper classes
         canvasEl.className = ""; 
-        // Add the new paper class based on the document's paperType
         const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
     }
-
-    initCanvas();
     
     if (doc.data) {
         const img = new Image();
-        img.onload = () => {
-            if (ctx) ctx.drawImage(img, 0, 0);
-        };
+        img.onload = () => { if (ctx) ctx.drawImage(img, 0, 0); };
         img.src = doc.data;
     }
 }
@@ -223,14 +210,12 @@ function initCanvas() {
     canvas = document.getElementById('note-canvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-
     const ratio = window.devicePixelRatio || 1;
     canvas.width = 850 * ratio;
     canvas.height = 1100 * ratio;
     canvas.style.width = '850px';
     canvas.style.height = '1100px';
     ctx.scale(ratio, ratio);
-
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -252,7 +237,6 @@ function draw(e) {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left);
     const y = (e.clientY - rect.top);
-
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
@@ -269,16 +253,13 @@ function draw(e) {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.lineWidth = 30;
     }
-
     ctx.stroke();
     [lastX, lastY] = [x, y];
 }
 
 function stopDrawing() {
     isDrawing = false;
-    if (currentDoc && canvas) {
-        currentDoc.data = canvas.toDataURL();
-    }
+    if (currentDoc && canvas) { currentDoc.data = canvas.toDataURL(); }
 }
 
 export function closeEditor() {
@@ -290,14 +271,11 @@ export function closeEditor() {
     const docEditor = document.getElementById('doc-editor');
     const notesArea = document.getElementById('notes-area');
     const notesSidebar = document.getElementById('notes-sidebar');
-
     if (docEditor) docEditor.style.display = 'none';
     if (notesArea) notesArea.style.display = 'flex';
     if (notesSidebar) notesSidebar.style.display = 'flex';
     currentDoc = null;
 }
-
-// --- 3. EXPORT / IMPORT ---
 
 export function exportLibrary() {
     const dataStr = JSON.stringify(library, null, 2);
@@ -310,15 +288,13 @@ export function exportLibrary() {
     URL.revokeObjectURL(url);
 }
 
-// --- 4. INITIALIZATION ---
+// --- 3. INITIALIZATION & UI LOGIC ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const mainNewBtn = document.getElementById('main-new-btn');
     const newMenu = document.getElementById('new-options-menu');
     const closeBtn = document.getElementById('close-editor-btn');
     const saveDocBtn = document.getElementById('save-doc-btn');
-    const penBtn = document.getElementById('tool-pen');
-    const eraserBtn = document.getElementById('tool-eraser');
     const sortSelect = document.getElementById('sort-docs-select');
 
     // Toggle Menu dropdown logic
@@ -330,47 +306,74 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Close menu when clicking anywhere else
     document.addEventListener('click', (e) => {
         if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) {
             newMenu.style.display = 'none';
         }
     });
 
-    // Helper function to close menu after action
-    const closeMenu = () => {
-        if (newMenu) newMenu.style.display = 'none';
-    };
+    const closeMenu = () => { if (newMenu) newMenu.style.display = 'none'; };
 
-    // Mapping Menu Buttons to Functions
+    // Notebook Modal Elements
+    const nbModal = document.getElementById('notebook-modal');
+    const nbCancel = document.getElementById('nb-cancel');
+    const nbCreate = document.getElementById('nb-create');
+    const nbNameInput = document.getElementById('nb-name-input');
+    const nbPaperPreview = document.getElementById('nb-paper-preview');
+    const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
+    const paperCards = document.querySelectorAll('.nb-paper-card');
+
+    function openNotebookModal() {
+        if (nbModal) nbModal.style.display = 'flex';
+        if (nbNameInput) nbNameInput.value = "";
+    }
+
+    function closeNotebookModal() { if (nbModal) nbModal.style.display = 'none'; }
+
+    // Mapping Menu Buttons
     const btnNewNotebook = document.getElementById('btn-new-notebook');
     const btnNewTextDoc = document.getElementById('btn-new-text-doc');
-    const btnNewWhiteboard = document.getElementById('btn-new-whiteboard');
-    const btnImportDoc = document.getElementById('btn-import-doc');
-    const btnQuickRecord = document.getElementById('btn-quick-record');
-    const btnQuickNote = document.getElementById('btn-quick-note');
-    const btnScanDoc = document.getElementById('btn-scan-doc');
-    const btnStudySet = document.getElementById('btn-study-set');
-    const btnAddImage = document.getElementById('btn-add-image');
-    const btnTakePhoto = document.getElementById('btn-take-photo');
     const btnCreateFolder = document.getElementById('btn-create-folder');
 
-    // Attach click events to menu items
     if (btnNewNotebook) btnNewNotebook.onclick = () => { closeMenu(); openNotebookModal(); };
     if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeMenu(); createDocument(); };
-    if (btnNewWhiteboard) btnNewWhiteboard.onclick = () => { closeMenu(); createDocument(); };
     if (btnCreateFolder) btnCreateFolder.onclick = () => { closeMenu(); createFolder(); };
-    
-    // Future implementations for other buttons
-    if (btnQuickNote) btnQuickNote.onclick = () => { closeMenu(); alert("QuickNote feature coming soon."); };
-    if (btnScanDoc) btnScanDoc.onclick = () => { closeMenu(); alert("Scanner feature coming soon."); };
-    if (btnImportDoc) btnImportDoc.onclick = () => { closeMenu(); alert("Import feature coming soon."); };
-    if (btnQuickRecord) btnQuickRecord.onclick = () => { closeMenu(); alert("Voice Recording feature coming soon."); };
-    if (btnStudySet) btnStudySet.onclick = () => { closeMenu(); alert("Study Set feature coming soon."); };
-    if (btnAddImage) btnAddImage.onclick = () => { closeMenu(); alert("Image Import feature coming soon."); };
-    if (btnTakePhoto) btnTakePhoto.onclick = () => { closeMenu(); alert("Camera feature coming soon."); };
+    if (nbCancel) nbCancel.onclick = closeNotebookModal;
 
-    // Editor Controls
+    if (nbCreate) {
+        nbCreate.onclick = () => {
+            const name = nbNameInput.value.trim() || "Untitled Notebook";
+            const paperType = nbSelectedPaperName.innerText;
+            const newDoc = {
+                id: 'doc_' + Date.now(),
+                name: name,
+                paperType: paperType,
+                parentId: currentFolderId,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                favorite: false,
+                shared: false,
+                data: null 
+            };
+            if (!library.documents) library.documents = [];
+            library.documents.push(newDoc);
+            saveLibrary();
+            closeNotebookModal();
+            openDocument(newDoc);
+        };
+    }
+
+    paperCards.forEach(card => {
+        card.onclick = () => {
+            paperCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            const paper = card.dataset.paper;
+            nbSelectedPaperName.innerText = paper;
+            const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
+            if (nbPaperPreview) { nbPaperPreview.className = 'nb-preview-box ' + paperClass; }
+        };
+    });
+
     if (closeBtn) closeBtn.onclick = closeEditor;
     if (saveDocBtn) saveDocBtn.onclick = closeEditor;
     if (sortSelect) sortSelect.onchange = renderLibrary;
@@ -392,12 +395,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         try {
                             const imported = JSON.parse(event.target.result);
                             if (imported.folders && imported.documents) {
-                                if (confirm("Merge imported library with current?")) {
-                                    library.folders = [...library.folders, ...imported.folders];
-                                    library.documents = [...library.documents, ...imported.documents];
-                                    await saveLibrary();
-                                    alert("Library merged!");
-                                }
+                                library.folders = [...(library.folders || []), ...imported.folders];
+                                library.documents = [...(library.documents || []), ...imported.documents];
+                                await saveLibrary();
                             }
                         } catch (err) { alert("Invalid file"); }
                     };
@@ -408,7 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Navigation Filters
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
     const navShared = document.getElementById('nav-shared');
@@ -421,7 +420,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLibrary();
         };
     }
-
     if (navFav) {
         navFav.onclick = () => {
             currentView = 'favorites';
@@ -429,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
             renderLibrary();
         };
     }
-
     if (navShared) {
         navShared.onclick = () => {
             currentView = 'shared';
@@ -442,68 +439,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
         if (activeBtn) activeBtn.classList.add('active');
     }
-    // --- NOTEBOOK MODAL LOGIC ---
-    const nbModal = document.getElementById('notebook-modal');
-    const nbCancel = document.getElementById('nb-cancel');
-    const nbCreate = document.getElementById('nb-create');
-    const nbNameInput = document.getElementById('nb-name-input');
-    const nbPaperPreview = document.getElementById('nb-paper-preview');
-    const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
-    const paperCards = document.querySelectorAll('.nb-paper-card');
-
-    function openNotebookModal() {
-        if (nbModal) nbModal.style.display = 'flex';
-        if (nbNameInput) nbNameInput.value = "";
-    }
-
-    function closeNotebookModal() {
-        if (nbModal) nbModal.style.display = 'none';
-    }
-
-    if (nbCancel) nbCancel.onclick = closeNotebookModal;
-
-    if (nbCreate) {
-        nbCreate.onclick = () => {
-            const name = nbNameInput.value.trim() || "Untitled Notebook";
-            const paperType = nbSelectedPaperName.innerText;
-            
-            // Criar o documento com as propriedades do modal
-            const newDoc = {
-                id: 'doc_' + Date.now(),
-                name: name,
-                paperType: paperType,
-                parentId: currentFolderId,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                favorite: false,
-                shared: false,
-                data: null 
-            };
-
-            if (!library.documents) library.documents = [];
-            library.documents.push(newDoc);
-            
-            saveLibrary();
-            closeNotebookModal();
-            openDocument(newDoc);
-        };
-    }
-
-    // Paper selection logic
-    paperCards.forEach(card => {
-        card.onclick = () => {
-            paperCards.forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-            
-            const paper = card.dataset.paper;
-            nbSelectedPaperName.innerText = paper;
-            
-            // Update preview style based on the paper name
-            const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
-            
-            if (nbPaperPreview) {
-                // Limpa as classes anteriores e adiciona a nova do papel
-                nbPaperPreview.className = 'nb-preview-box ' + paperClass;
-            }
-        };
-    });
+});
