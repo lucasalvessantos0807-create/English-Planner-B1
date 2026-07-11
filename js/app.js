@@ -168,7 +168,7 @@ if (manageAccountBtn) {
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // Switch to Library View
+                    // Entrar nas Notas
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
                     plannerContent.style.display = 'none';
@@ -178,7 +178,7 @@ if (manageAccountBtn) {
                     
                     renderLibrary();
                 } else {
-                    // Return to Planner View
+                    // Voltar ao Planner
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
                     plannerContent.style.display = 'block';
@@ -186,8 +186,6 @@ if (manageAccountBtn) {
                     if (fabLabel) fabLabel.textContent = "Notes & Library";
                     if (fabIcon) fabIcon.textContent = "📓";
                 }
-                // Garante que a página nova sempre comece no topo
-                plannerContent.scrollTop = 0;
             };
         }
 
