@@ -7,8 +7,7 @@ import { renderStructure, updateProgressBar } from './ui.js';
 function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || {};
     
-    // Conteúdos padrão integrais (Daily Template restaurado)
-   const defaults = {
+    const defaults = {
         "global-cover-eye": "Personal Study Planner",
         "global-cover-title": "Your Roadmap",
         "global-cover-sub": "Custom Duration · Daily Goals · Your Focus",
@@ -18,13 +17,14 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-template": "Daily Template",
     };
 
-    // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
     parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
-        if (val !== undefined && val !== null && val !== "") {
+        
+        // Se houver valor no backup/conteúdo, usa ele. Se não, usa o default.
+        if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
             el.innerHTML = val;
         } else if (defaults[cleanId]) {
             el.innerHTML = defaults[cleanId];
