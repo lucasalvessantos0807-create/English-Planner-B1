@@ -169,9 +169,10 @@ if (manageAccountBtn) {
 
                 if (!isNotesOpen) {
                     // Switch to Library View
-                    notesArea.style.display = 'flex';
-                    notesSidebar.style.display = 'flex';
-                    plannerContent.style.display = 'none';
+                   notesArea.style.display = 'flex';
+                    notesArea.style.flexDirection = 'column';
+                    notesArea.style.justifyContent = 'flex-start';
+                    notesArea.style.alignItems = 'stretch';
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
