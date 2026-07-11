@@ -168,8 +168,8 @@ if (manageAccountBtn) {
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // Entrar nas Notas
-                    notesArea.style.display = 'flex';
+                    // Abrir Notas
+                    notesArea.style.setProperty('display', 'flex', 'important');
                     notesArea.style.flexDirection = 'column';
                     notesSidebar.style.display = 'flex';
                     plannerContent.style.display = 'none';
