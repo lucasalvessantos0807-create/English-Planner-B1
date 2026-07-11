@@ -9,7 +9,31 @@ export let importHistory = [];
 
 export function resetLocalData() {
     state = {};
-    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
+    const starterConfig = {};
+    
+    // Gerar 3 meses automáticos no primeiro acesso (30 dias cada)
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    for (let m = 1; m <= 3; m++) {
+        let currentDay = 1;
+        for (let w = 1; w <= 5; w++) {
+            const daysInW = (w === 5) ? 2 : 7; // Semana 5 com 2 dias para totalizar 30
+            starterConfig[`${m}-${w}`] = {
+                label: `Week ${w}`,
+                theme: "Month Plans",
+                days: Array.from({length: daysInW}, (_, i) => {
+                    const d = currentDay++;
+                    return { 
+                        n: d, 
+                        name: dayNames[i % 7], 
+                        tag: "Daily Activity", 
+                        activities: [{t:"grammar", i:"📝", title:"Study Topic", desc:"Edit details", time: "20m"}]
+                    };
+                })
+            };
+        }
+    }
+
+    plannerConfig = starterConfig;
     pageContent = {
         "global-cover-eye": "Personal Study Planner",
         "global-cover-title": "Your Roadmap",
@@ -18,18 +42,16 @@ export function resetLocalData() {
         "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
         "global-sec-overview": "Overview",
         "global-sec-template": "Daily Template",
-        // IDs iniciais para os 3 blocos vazios no primeiro acesso
-        "dynamicBlocks": ["ov-init-1", "ov-init-2", "ov-init-3"],
-        "ov-init-1-title": "Phase 1",
-        "ov-init-1-body": "Edit focus...",
-        "ov-init-2-title": "Phase 2",
-        "ov-init-2-body": "Edit focus...",
-        "ov-init-3-title": "Phase 3",
-        "ov-init-3-body": "Edit focus...",
-        // ID inicial para a linha do template
-        "templateRows": ["tpl-init-1"],
-        "tpl-init-1-t": "00:00",
-        "tpl-init-1-a": "Edit task description..."
+        "dynamicBlocks": ["ov-first-1", "ov-first-2", "ov-first-3"],
+        "ov-first-1-title": "Phase 1",
+        "ov-first-1-body": "Edit focus...",
+        "ov-first-2-title": "Phase 2",
+        "ov-first-2-body": "Edit focus...",
+        "ov-first-3-title": "Phase 3",
+        "ov-first-3-body": "Edit focus...",
+        "templateRows": ["tpl-first-1"],
+        "tpl-first-1-t": "00:00",
+        "tpl-first-1-a": "Edit task description..."
     };
     history = [];
     importHistory = [];
@@ -52,21 +74,19 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             state = data.state || {};
-            plannerConfig = data.plannerConfig || {};
-            pageContent = data.pageContent || {};
+            plannerConfig = data.plannerConfig || plannerConfig;
+            pageContent = data.pageContent || pageContent;
             history = data.history || [];
             importHistory = data.importHistory || [];
-
-            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            history = history.filter(item => item.timestamp > thirtyDaysAgo);
-            const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
-            importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
 
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
 
             return { state, plannerConfig, pageContent, history, importHistory };
+        } else {
+            // Se o usuário não existe, salva o estado inicial gerado no resetLocalData
+            await saveUserData(uid);
         }
     } catch (e) { console.error("Error loading user data:", e); }
     return { state, plannerConfig, pageContent, history, importHistory };
@@ -150,13 +170,9 @@ export async function importData(fileOrData, uid, isRestore = false) {
         } else {
             imported = fileOrData;
         }
-    } catch (err) {
-        throw new Error("Invalid JSON format");
-    }
+    } catch (err) { throw new Error("Invalid JSON"); }
 
-    if (!imported.plannerConfig || !imported.state) {
-        throw new Error("Invalid planner data structure");
-    }
+    if (!imported.plannerConfig || !imported.state) { throw new Error("Invalid structure"); }
 
     if (!isRestore) {
         const backup = {
@@ -174,8 +190,6 @@ export async function importData(fileOrData, uid, isRestore = false) {
     plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    if (imported.history) history = JSON.parse(JSON.stringify(imported.history));
-
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
