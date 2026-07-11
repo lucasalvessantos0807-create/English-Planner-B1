@@ -154,29 +154,54 @@ onAuthStateChanged(auth, async (user) => {
         const plannerPage = document.querySelector('.page');
         const coverContainer = document.getElementById('page-cover-container');
         const topbar = document.querySelector('.topbar');
+        const openNotesBtn = document.getElementById('openNotesBtn');
+        const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
-        if (document.getElementById('openNotesBtn')) {
-            document.getElementById('openNotesBtn').onclick = () => {
-                if (notesArea && notesSidebar) {
+        if (openNotesBtn) {
+            openNotesBtn.onclick = () => {
+                const isNotesOpen = notesArea.style.display === 'flex';
+                const fabLabel = openNotesBtn.querySelector('.fab-label');
+                const fabIcon = openNotesBtn.querySelector('.fab-icon');
+
+                if (!isNotesOpen) {
+                    // Abrir Notas & Biblioteca
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
                     plannerPage.style.display = 'none';
                     if (coverContainer) coverContainer.style.display = 'none';
                     if (topbar) topbar.style.display = 'none';
-                    renderLibrary(); 
-                }
-            };
-        }
-
-        if (document.getElementById('close-notes-btn')) {
-            document.getElementById('close-notes-btn').onclick = () => {
-                if (notesArea && notesSidebar) {
+                    
+                    // Mudar FAB para "Voltar ao Planner"
+                    if (fabLabel) fabLabel.textContent = "Back to Planner";
+                    if (fabIcon) fabIcon.textContent = "📅";
+                    
+                    renderLibrary();
+                } else {
+                    // Voltar ao Planner
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
                     plannerPage.style.display = 'block';
                     if (coverContainer) coverContainer.style.display = 'block';
                     if (topbar) topbar.style.display = 'flex';
+                    
+                    // Restaurar FAB para "Notes & Library"
+                    if (fabLabel) fabLabel.textContent = "Notes & Library";
+                    if (fabIcon) fabIcon.textContent = "📓";
                 }
+            };
+        }
+
+        // Lógica de recolher barra lateral
+        if (sidebarToggle) {
+            sidebarToggle.onclick = () => {
+                notesSidebar.classList.toggle('collapsed');
+            };
+        }
+
+        // O botão "Back to Planner" dentro da topbar das notas agora também faz o toggle
+        if (document.getElementById('close-notes-btn')) {
+            document.getElementById('close-notes-btn').onclick = () => {
+                openNotesBtn.click();
             };
         }
         // --- END OF NOTES SYSTEM UI LOGIC ---
