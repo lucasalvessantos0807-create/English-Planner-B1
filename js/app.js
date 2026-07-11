@@ -152,6 +152,7 @@ onAuthStateChanged(auth, async (user) => {
         const notesArea = document.getElementById('notes-area');
         const notesSidebar = document.getElementById('notes-sidebar');
         const plannerPage = document.querySelector('.page');
+        const coverContainer = document.getElementById('page-cover-container');
         const topbar = document.querySelector('.topbar');
 
         if (document.getElementById('openNotesBtn')) {
@@ -160,7 +161,8 @@ onAuthStateChanged(auth, async (user) => {
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
                     plannerPage.style.display = 'none';
-                    topbar.style.display = 'none';
+                    if (coverContainer) coverContainer.style.display = 'none';
+                    if (topbar) topbar.style.display = 'none';
                     renderLibrary(); 
                 }
             };
@@ -172,7 +174,8 @@ onAuthStateChanged(auth, async (user) => {
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
                     plannerPage.style.display = 'block';
-                    topbar.style.display = 'flex';
+                    if (coverContainer) coverContainer.style.display = 'block';
+                    if (topbar) topbar.style.display = 'flex';
                 }
             };
         }
