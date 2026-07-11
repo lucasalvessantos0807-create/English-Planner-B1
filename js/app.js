@@ -44,7 +44,7 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user.uid;
         document.getElementById("login-screen").style.display = "none";
-        document.getElementById("planner").style.display = "block";
+        document.getElementById("planner").style.display = "flex";
         
         const userData = await loadUserData(currentUser);
 
