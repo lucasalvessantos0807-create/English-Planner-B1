@@ -68,7 +68,7 @@
     </div>
     <nav class="sidebar-nav">
       <button class="snav-btn active" id="nav-all-docs"><span>📁</span> <span class="sidebar-text">All Documents</span></button>
-      <button class="snav-btn" id="nav-shared"><span>👥</span> <span class="sidebar-text">Shared</span></button>
+      <button class="snav-btn" id="nav-shared"><span>👥</span> <span class="sidebar-text">Shared Documents</span></button>
       <button class="snav-btn" id="nav-favorites"><span>⭐</span> <span class="sidebar-text">Favorites</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -79,16 +79,16 @@
   <!-- Notes Dashboard / Library View -->
   <main id="notes-area" style="display:none; flex: 1; flex-direction: column; overflow: hidden; height: 100vh;">
     <div class="notes-topbar">
-      <div class="notes-breadcrumb" id="notes-breadcrumb">Documents</div>
       <div class="notes-actions">
         <select id="sort-docs-select" class="notes-select">
           <option value="name">Sort by Name</option>
-          <option value="date">Sort by Date</option>
+          <option value="date">Sort by Last Modified</option>
           <option value="size">Sort by Size</option>
         </select>
         <button class="nbtn-primary" id="new-folder-btn">+ New Folder</button>
         <button class="nbtn-primary" id="new-doc-btn">+ New Document</button>
-        <button class="nbtn-secondary" id="import-note-btn">Import</button>
+        <button class="nbtn-secondary" id="import-library-btn">Import Library</button>
+        <button class="nbtn-secondary" id="export-library-btn">Export Library</button>
         <button class="nbtn-close" id="close-notes-btn">Back to Planner</button>
       </div>
     </div>
