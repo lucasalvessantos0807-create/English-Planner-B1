@@ -8,7 +8,7 @@ let sessionInitialContent = null;
 let sessionInitialDOMSnapshot = {}; 
 
 const builtWeeks = new Set();
-const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
+const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','順','⭐','✅','📝','📍'];
 const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
 
 function refreshUI(uid, targetMonth = null) {
@@ -322,17 +322,19 @@ export function addNewMonth(uid) {
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
     let currentDay = 1;
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${w}`, theme: "New Month Plans",
-            days: Array.from({length: daysInW}, () => {
+            label: `Week ${w}`, theme: "Click to edit your weekly theme",
+            days: Array.from({length: daysInW}, (_, i) => {
                 const d = currentDay++;
                 return { 
                     n: d, 
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(d - 1) % 7], 
-                    tag: "Daily Act", 
-                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                    name: dayNames[i], 
+                    tag: "Daily Activity", 
+                    activities: [{t:"grammar", i:"📝", title:"New Activity", desc:"Edit", time: "20m"}]
                 };
             })
         };
@@ -368,7 +370,7 @@ export function editMonthStructure(m, uid) {
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
             let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
-            let isTagEdited = dayObj.tag !== "Daily Act";
+            let isTagEdited = dayObj.tag !== "Daily Activity";
             let areActivitiesEdited = dayObj.activities.some(act => 
                 (act.title !== "Study Topic" && act.title !== "New Activity") || 
                 (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
@@ -397,6 +399,7 @@ export function editMonthStructure(m, uid) {
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         const weekDays = [];
@@ -407,13 +410,14 @@ export function editMonthStructure(m, uid) {
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
                 preserved.n = newDayNum;
+                preserved.name = dayNames[d];
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
                     n: newDayNum, 
-                    name: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][(newDayNum - 1) % 7], 
-                    tag: "Daily Act", 
-                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                    name: dayNames[d], 
+                    tag: "Daily Activity", 
+                    activities: [{t:"grammar", i:"📝", title:"New Activity", desc:"Edit", time: "20m"}]
                 });
             }
             currentDayIdx++;
@@ -461,7 +465,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     const content = customContent || window.pageContent || {};
     if (!content.hiddenDefaults) content.hiddenDefaults = [];
 
-    // Limpado: removidos os blocos padrão de Inglês
     const defaults = [];
 
     grid.innerHTML = '';
@@ -487,8 +490,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
-                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'New Phase'}</div>
-                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Edit...'}</div>
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'Phase X'}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Month focus...'}</div>
             `;
             grid.appendChild(newBlock);
         });
@@ -531,12 +534,10 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
 
     const content = customContent || window.pageContent || {};
     
-    // Limpado: Iniciado como array vazio para não carregar as 7 tarefas de inglês
     if (!content.templateRows) {
         content.templateRows = [];
     }
 
-    // Limpado: Removidos textos padrão de inglês
     const defaults = {};
 
     list.innerHTML = '';
@@ -547,8 +548,8 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.id = `${prefix}row-container-${rowId}`;
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
-            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || defaults[rowId + '-t'] || 'Time'}</div>
-            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || defaults[rowId + '-a'] || 'Activity details...'}</div>
+            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || defaults[rowId + '-t'] || '00:00'}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || defaults[rowId + '-a'] || 'Task description...'}</div>
         `;
         list.appendChild(row);
     });
@@ -575,7 +576,6 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
-// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
