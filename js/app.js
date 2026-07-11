@@ -650,4 +650,7 @@ if (manageAccountBtn) {
     }
 });
 
-document.getElementById('googleLoginBtn').onclick = () => signInWithPopup(auth, provider);
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+        if (googleLoginBtn) {
+            googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
+        }
