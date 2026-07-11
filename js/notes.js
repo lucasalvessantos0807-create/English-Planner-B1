@@ -317,16 +317,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveDocBtn) saveDocBtn.onclick = closeEditor;
     if (sortSelect) sortSelect.onchange = renderLibrary;
 
-    if (penBtn) penBtn.onclick = () => {
-        currentTool = 'pen';
-        penBtn.classList.add('active');
-        if (eraserBtn) eraserBtn.classList.remove('active');
-    };
-    if (eraserBtn) eraserBtn.onclick = () => {
-        currentTool = 'eraser';
-        eraserBtn.classList.add('active');
-        if (penBtn) penBtn.classList.remove('active');
-    };
+    const exportLibraryBtn = document.getElementById('export-library-btn');
+    if (exportLibraryBtn) exportLibraryBtn.onclick = exportLibrary;
+
+    const importLibraryBtn = document.getElementById('import-library-btn');
+    if (importLibraryBtn) {
+        importLibraryBtn.onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        try {
+                            const imported = JSON.parse(event.target.result);
+                            if (imported.folders && imported.documents) {
+                                if (confirm("Merge imported library with current?")) {
+                                    library.folders = [...library.folders, ...imported.folders];
+                                    library.documents = [...library.documents, ...imported.documents];
+                                    await saveLibrary();
+                                    alert("Library merged!");
+                                }
+                            }
+                        } catch (err) { alert("Invalid file"); }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+    }
 
     // Navigation Filters
     const navAll = document.getElementById('nav-all-docs');
