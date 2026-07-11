@@ -56,6 +56,7 @@ export function resetLocalData() {
     };
     history = [];
     importHistory = [];
+    library = { folders: [], documents: [] };
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
@@ -110,7 +111,7 @@ export async function saveUserData(uid) {
             plannerConfig: plannerConfig,
             pageContent: pageContent,
             history: history,
-            importHistory: importHistory
+           importHistory: importHistory,
             library: library
         });
     } catch (e) { console.error("Error saving data:", e); }
