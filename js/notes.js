@@ -198,6 +198,15 @@ function openDocument(doc) {
     if (notesSidebar) notesSidebar.style.display = 'none';
     if (docEditor) docEditor.style.display = 'flex';
     if (docTitle) docTitle.innerText = doc.name;
+    // Apply paper background to canvas
+    const canvasEl = document.getElementById('note-canvas');
+    if (canvasEl) {
+        // Remove existing paper classes
+        canvasEl.className = ""; 
+        // Add the new paper class based on the document's paperType
+        const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+        canvasEl.classList.add(paperClass);
+    }
 
     initCanvas();
     
