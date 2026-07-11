@@ -146,51 +146,38 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // --- BOTÕES DA TOPBAR E FAB ITEMS ---
-        document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
-        // Logic to switch between Planner and Notes Library
+       document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+
+        // --- NOTES SYSTEM UI LOGIC ---
         const notesArea = document.getElementById('notes-area');
         const notesSidebar = document.getElementById('notes-sidebar');
         const plannerPage = document.querySelector('.page');
         const topbar = document.querySelector('.topbar');
 
-        document.getElementById('openNotesBtn').onclick = () => {
-            if (notesArea && notesSidebar) {
-                notesArea.style.display = 'flex';
-                notesSidebar.style.display = 'flex';
-                plannerPage.style.display = 'none';
-                topbar.style.display = 'none';
-                renderLibrary(); // Re-render library when opening
-            }
-        };
+        if (document.getElementById('openNotesBtn')) {
+            document.getElementById('openNotesBtn').onclick = () => {
+                if (notesArea && notesSidebar) {
+                    notesArea.style.display = 'flex';
+                    notesSidebar.style.display = 'flex';
+                    plannerPage.style.display = 'none';
+                    topbar.style.display = 'none';
+                    renderLibrary(); 
+                }
+            };
+        }
 
-        document.getElementById('close-notes-btn').onclick = () => {
-            if (notesArea && notesSidebar) {
-                notesArea.style.display = 'none';
-                notesSidebar.style.display = 'none';
-                plannerPage.style.display = 'block';
-                topbar.style.display = 'flex';
-            }
-        };
+        if (document.getElementById('close-notes-btn')) {
+            document.getElementById('close-notes-btn').onclick = () => {
+                if (notesArea && notesSidebar) {
+                    notesArea.style.display = 'none';
+                    notesSidebar.style.display = 'none';
+                    plannerPage.style.display = 'block';
+                    topbar.style.display = 'flex';
+                }
+            };
+        }
+        // --- END OF NOTES SYSTEM UI LOGIC ---
         
-        const notesArea = document.getElementById('notes-area');
-        const notesSidebar = document.getElementById('notes-sidebar');
-        const plannerPage = document.querySelector('.page');
-        const topbar = document.querySelector('.topbar');
-
-        document.getElementById('openNotesBtn').onclick = () => {
-            notesArea.style.display = 'flex';
-            notesSidebar.style.display = 'flex';
-            plannerPage.style.display = 'none';
-            topbar.style.display = 'none';
-            // Aqui chamaremos a renderização da biblioteca na próxima etapa
-        };
-
-        document.getElementById('close-notes-btn').onclick = () => {
-            notesArea.style.display = 'none';
-            notesSidebar.style.display = 'none';
-            plannerPage.style.display = 'block';
-            topbar.style.display = 'flex';
-        };
         document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
@@ -617,7 +604,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
-        renderLibrary();
+       renderLibrary();
         updateProgressBar();
         
     } else {
