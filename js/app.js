@@ -189,6 +189,22 @@ if (manageAccountBtn) {
             };
         }
 
+        const closeNotesBtn = document.getElementById('close-notes-btn');
+        if (closeNotesBtn) {
+            closeNotesBtn.onclick = () => {
+                notesArea.style.display = 'none';
+                notesSidebar.style.display = 'none';
+                plannerContent.style.display = 'block';
+                
+                if (openNotesBtn) {
+                    const fabLabel = openNotesBtn.querySelector('.fab-label');
+                    const fabIcon = openNotesBtn.querySelector('.fab-icon');
+                    if (fabLabel) fabLabel.textContent = "Notes & Library";
+                    if (fabIcon) fabIcon.textContent = "📓";
+                }
+            };
+        }
+
         if (sidebarToggle && notesSidebar) {
             sidebarToggle.onclick = (e) => {
                 e.stopPropagation();
