@@ -151,60 +151,54 @@ onAuthStateChanged(auth, async (user) => {
         // --- NOTES SYSTEM UI LOGIC ---
         const notesArea = document.getElementById('notes-area');
         const notesSidebar = document.getElementById('notes-sidebar');
-        const plannerPage = document.querySelector('.page');
-        const coverContainer = document.getElementById('page-cover-container');
-        const topbar = document.querySelector('.topbar');
+        const plannerContent = document.getElementById('planner-content');
         const openNotesBtn = document.getElementById('openNotesBtn');
         const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
         if (openNotesBtn) {
             openNotesBtn.onclick = () => {
+                // Verificação de segurança para garantir que os elementos existem
+                if (!notesArea || !notesSidebar || !plannerContent) return;
+
                 const isNotesOpen = notesArea.style.display === 'flex';
                 const fabLabel = openNotesBtn.querySelector('.fab-label');
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // Abrir Notas & Biblioteca
+                    // MUDAR PARA MODO NOTAS
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
-                    plannerPage.style.display = 'none';
-                    if (coverContainer) coverContainer.style.display = 'none';
-                    if (topbar) topbar.style.display = 'none';
+                    plannerContent.style.display = 'none';
                     
-                    // Mudar FAB para "Voltar ao Planner"
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
                     
                     renderLibrary();
                 } else {
-                    // Voltar ao Planner
+                    // VOLTAR PARA MODO PLANNER
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
-                    plannerPage.style.display = 'block';
-                    if (coverContainer) coverContainer.style.display = 'block';
-                    if (topbar) topbar.style.display = 'flex';
+                    plannerContent.style.display = 'block';
                     
-                    // Restaurar FAB para "Notes & Library"
                     if (fabLabel) fabLabel.textContent = "Notes & Library";
                     if (fabIcon) fabIcon.textContent = "📓";
                 }
             };
         }
 
-        // Lógica de recolher barra lateral
-        if (sidebarToggle) {
-            sidebarToggle.onclick = () => {
+        if (sidebarToggle && notesSidebar) {
+            sidebarToggle.onclick = (e) => {
+                e.stopPropagation();
                 notesSidebar.classList.toggle('collapsed');
             };
         }
 
-        // O botão "Back to Planner" dentro da topbar das notas agora também faz o toggle
         if (document.getElementById('close-notes-btn')) {
             document.getElementById('close-notes-btn').onclick = () => {
-                openNotesBtn.click();
+                if (openNotesBtn) openNotesBtn.click();
             };
         }
-        // --- END OF NOTES SYSTEM UI LOGIC ---
+        // --- END OF NOTES SYSTEM UI LOGIC ----
         
         document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
