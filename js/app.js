@@ -21,7 +21,7 @@ function refreshGlobalDOM(content, targetPrefix = "") {
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
         if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
@@ -364,7 +364,7 @@ onAuthStateChanged(auth, async (user) => {
         function applySolid(color) {
             document.getElementById('page-cover').style.background = color;
             if (!colorHistory.solids.includes(color)) {
-                colorHistory. solids.unshift(color);
+                colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
             }
             saveAllColorData(color);
