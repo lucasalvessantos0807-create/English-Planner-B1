@@ -95,12 +95,12 @@ export async function loadUserData(uid) {
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
 
-            return { state, plannerConfig, pageContent, history, importHistory };
+            return { state, plannerConfig, pageContent, history, importHistory, library };
         } else {
             await saveUserData(uid);
         }
     } catch (e) { console.error("Error loading user data:", e); }
-    return { state, plannerConfig, pageContent, history, importHistory };
+    return { state, plannerConfig, pageContent, history, importHistory, library };;
 }
 
 export async function saveUserData(uid) {
