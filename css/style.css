@@ -361,6 +361,111 @@ canvas {
   align-items: center;
   gap: 12px;
 }
+/* --- NEW MENU DROPDOWN STYLES --- */
+.new-options-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 280px;
+  background: #f2f2f7; /* Cor de fundo estilo iOS/iPadOS */
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  z-index: 2000;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.grid-item {
+  background: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.grid-item:hover { background: #e5e5ea; }
+
+.grid-icon { font-size: 1.4rem; }
+.grid-text { font-size: 0.65rem; font-weight: 500; color: #333; text-align: center; }
+
+.new-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.5rem;
+  background: #e5e5ea;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #666;
+}
+
+.menu-row-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.row-btn {
+  background: white;
+  border: none;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.row-icon { font-size: 1.2rem; }
+.row-text { font-size: 0.75rem; font-weight: 500; color: #333; }
+
+.menu-list, .menu-footer {
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.list-item {
+  background: white;
+  border: none;
+  border-bottom: 1px solid #f2f2f7;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.list-item:hover { background: #f9f9f9; }
+.list-item:last-child { border-bottom: none; }
+
+.list-icon { font-size: 1.1rem; color: #555; width: 24px; text-align: center; }
+.list-text { font-size: 0.85rem; font-weight: 400; color: #000; }
+
+.menu-footer { margin-top: 5px; }
 
 /* Estilização Individual dos Botões da Barra de Ações */
 .nbtn-primary, .nbtn-secondary, .nbtn-close, .notes-select {
