@@ -170,6 +170,7 @@ if (manageAccountBtn) {
                 if (!isNotesOpen) {
                     // Entrar nas Notas
                     notesArea.style.display = 'flex';
+                    notesArea.style.flexDirection = 'column';
                     notesSidebar.style.display = 'flex';
                     plannerContent.style.display = 'none';
                     
