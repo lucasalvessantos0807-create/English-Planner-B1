@@ -24,7 +24,7 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Safety check for breadcrumb element
+    // Safety check for breadcrumb element to prevent "null" errors
     if (breadcrumb) {
         if (currentView === 'favorites') {
             breadcrumb.innerText = 'Favorites';
@@ -33,10 +33,9 @@ export function renderLibrary() {
         } else if (!currentFolderId) {
             breadcrumb.innerText = 'Documents';
         } else {
-            const folder = library.folders.find(f => f.id === currentFolderId);
+            const folder = (library.folders || []).find(f => f.id === currentFolderId);
             breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
             
-            // Re-attach event to the dynamic "back-to-root" span
             const backBtn = document.getElementById('back-to-root');
             if (backBtn) {
                 backBtn.onclick = () => {
@@ -48,7 +47,7 @@ export function renderLibrary() {
         }
     }
 
-    // Filter items logic
+    // Filter items logic with safety arrays
     let foldersToShow = [];
     let docsToShow = [];
 
@@ -167,13 +166,13 @@ export function createDocument() {
 }
 
 function deleteDocument(id) {
-    library.documents = library.documents.filter(d => d.id !== id);
+    library.documents = (library.documents || []).filter(d => d.id !== id);
     saveLibrary();
 }
 
 function deleteFolder(id) {
-    library.documents = library.documents.filter(d => d.parentId !== id);
-    library.folders = library.folders.filter(f => f.id !== id);
+    library.documents = (library.documents || []).filter(d => d.parentId !== id);
+    library.folders = (library.folders || []).filter(f => f.id !== id);
     saveLibrary();
 }
 
@@ -189,16 +188,23 @@ async function saveLibrary() {
 
 function openDocument(doc) {
     currentDoc = doc;
-    document.getElementById('notes-area').style.display = 'none';
-    document.getElementById('notes-sidebar').style.display = 'none';
-    document.getElementById('doc-editor').style.display = 'flex';
-    document.getElementById('current-doc-title').innerText = doc.name;
+    const notesArea = document.getElementById('notes-area');
+    const notesSidebar = document.getElementById('notes-sidebar');
+    const docEditor = document.getElementById('doc-editor');
+    const docTitle = document.getElementById('current-doc-title');
+
+    if (notesArea) notesArea.style.display = 'none';
+    if (notesSidebar) notesSidebar.style.display = 'none';
+    if (docEditor) docEditor.style.display = 'flex';
+    if (docTitle) docTitle.innerText = doc.name;
 
     initCanvas();
     
     if (doc.data) {
         const img = new Image();
-        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.onload = () => {
+            if (ctx) ctx.drawImage(img, 0, 0);
+        };
         img.src = doc.data;
     }
 }
@@ -243,9 +249,12 @@ function draw(e) {
 
     if (currentTool === 'pen') {
         ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = document.getElementById('pen-color').value;
+        const penColor = document.getElementById('pen-color');
+        ctx.strokeStyle = penColor ? penColor.value : "#000000";
+        const penWidth = document.getElementById('pen-width');
+        const baseWidth = penWidth ? penWidth.value : 2;
         const pressure = e.pressure !== undefined && e.pressure > 0 ? e.pressure : 1;
-        ctx.lineWidth = document.getElementById('pen-width').value * pressure;
+        ctx.lineWidth = baseWidth * pressure;
     } else {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.lineWidth = 30;
@@ -257,20 +266,24 @@ function draw(e) {
 
 function stopDrawing() {
     isDrawing = false;
-    if (currentDoc) {
+    if (currentDoc && canvas) {
         currentDoc.data = canvas.toDataURL();
     }
 }
 
 export function closeEditor() {
-    if (currentDoc) {
+    if (currentDoc && canvas) {
         currentDoc.data = canvas.toDataURL();
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
-    document.getElementById('doc-editor').style.display = 'none';
-    document.getElementById('notes-area').style.display = 'flex';
-    document.getElementById('notes-sidebar').style.display = 'flex';
+    const docEditor = document.getElementById('doc-editor');
+    const notesArea = document.getElementById('notes-area');
+    const notesSidebar = document.getElementById('notes-sidebar');
+
+    if (docEditor) docEditor.style.display = 'none';
+    if (notesArea) notesArea.style.display = 'flex';
+    if (notesSidebar) notesSidebar.style.display = 'flex';
     currentDoc = null;
 }
 
@@ -307,12 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (penBtn) penBtn.onclick = () => {
         currentTool = 'pen';
         penBtn.classList.add('active');
-        eraserBtn.classList.remove('active');
+        if (eraserBtn) eraserBtn.classList.remove('active');
     };
     if (eraserBtn) eraserBtn.onclick = () => {
         currentTool = 'eraser';
         eraserBtn.classList.add('active');
-        penBtn.classList.remove('active');
+        if (penBtn) penBtn.classList.remove('active');
     };
 
     // Navigation Filters
