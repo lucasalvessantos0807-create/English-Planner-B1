@@ -498,11 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const paper = card.dataset.paper;
             nbSelectedPaperName.innerText = paper;
             
-            // Update preview style based on class
-            const thumb = card.querySelector('.nb-paper-thumb');
-            const thumbClass = Array.from(thumb.classList).find(c => c.startsWith('thumb-'));
+            // Update preview style based on the paper name
+            const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
             
-            nbPaperPreview.className = 'nb-preview-box ' + thumbClass.replace('thumb-', 'paper-');
+            if (nbPaperPreview) {
+                // Limpa as classes anteriores e adiciona a nova do papel
+                nbPaperPreview.className = 'nb-preview-box ' + paperClass;
+            }
         };
     });
-});
