@@ -1,28 +1,17 @@
 import { db, doc, getDoc, setDoc } from './firebase.js';
 import { weeksData as initialWeeksData } from './weeks.js';
 
-export let state = {};
-export let plannerConfig = {};
-export let pageContent = {};
-export let history = [];
-export let importHistory = [];
+export let state = {}; export let plannerConfig = {}; export let pageContent = {}; export let history = []; export let importHistory = [];
 
 export function resetLocalData() {
-    state = {};
-    plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
-    pageContent = {};
-    history = [];
-    importHistory = [];
-    window.appState = state;
-    window.plannerConfig = plannerConfig;
-    window.pageContent = pageContent;
+    state = {}; plannerConfig = JSON.parse(JSON.stringify(initialWeeksData)); pageContent = {}; history = []; importHistory = [];
+    window.appState = state; window.plannerConfig = plannerConfig; window.pageContent = pageContent;
 }
 
 export function applySnapshot(newConfig, newContent) {
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
-    plannerConfig = window.plannerConfig;
-    pageContent = window.pageContent;
+    plannerConfig = window.plannerConfig; pageContent = window.pageContent;
 }
 
 export async function loadUserData(uid) {
@@ -31,14 +20,9 @@ export async function loadUserData(uid) {
         const snap = await getDoc(doc(db, "users", uid));
         if (snap.exists()) {
             const data = snap.data();
-            state = data.state || {};
-            plannerConfig = data.plannerConfig || initialWeeksData;
-            pageContent = data.pageContent || {};
-            history = data.history || [];
-            importHistory = data.importHistory || [];
-            window.appState = state;
-            window.plannerConfig = plannerConfig;
-            window.pageContent = pageContent;
+            state = data.state || {}; plannerConfig = data.plannerConfig || initialWeeksData; pageContent = data.pageContent || {};
+            history = data.history || []; importHistory = data.importHistory || [];
+            window.appState = state; window.plannerConfig = plannerConfig; window.pageContent = pageContent;
             return { state, plannerConfig, pageContent, history, importHistory };
         }
     } catch (e) { console.error(e); }
@@ -47,15 +31,8 @@ export async function loadUserData(uid) {
 
 export async function saveUserData(uid) {
     if (!uid) return;
-    try {
-        await setDoc(doc(db, "users", uid), { 
-            state: window.appState,
-            plannerConfig: window.plannerConfig,
-            pageContent: window.pageContent,
-            history: history,
-            importHistory: importHistory
-        });
-    } catch (e) { console.error(e); }
+    try { await setDoc(doc(db, "users", uid), { state: window.appState, plannerConfig: window.plannerConfig, pageContent: window.pageContent, history, importHistory }); }
+    catch (e) { console.error(e); }
 }
 
 export function addHistoryEntry(label, config, content) {
@@ -63,34 +40,20 @@ export function addHistoryEntry(label, config, content) {
     if (history.length > 50) history.pop();
 }
 
-export async function deleteHistoryEntry(uid, entryId) {
-    history = history.filter(item => item.id !== entryId);
-    await saveUserData(uid);
-}
+export async function deleteHistoryEntry(uid, id) { history = history.filter(i => i.id !== id); await saveUserData(uid); }
+export async function clearAllHistory(uid) { history = []; await saveUserData(uid); }
+export async function deleteImportBackup(uid, id) { importHistory = importHistory.filter(i => i.id !== id); await saveUserData(uid); }
 
-export async function clearAllHistory(uid) {
-    history = [];
-    await saveUserData(uid);
-}
-
-export async function deleteImportBackup(uid, backupId) {
-    importHistory = importHistory.filter(b => b.id !== backupId);
-    await saveUserData(uid);
-}
-
-export function updateState(month, dayKey, data) {
-    const fullKey = month ? `m${month}-${dayKey}` : dayKey;
-    if (!window.appState[fullKey]) window.appState[fullKey] = {};
-    window.appState[fullKey] = { ...window.appState[fullKey], ...data };
+export function updateState(m, dKey, data) {
+    const fKey = m ? `m${m}-${dKey}` : dKey;
+    if (!window.appState[fKey]) window.appState[fKey] = {};
+    window.appState[fKey] = { ...window.appState[fKey], ...data };
 }
 
 export function exportData() {
     const data = { state: window.appState, plannerConfig: window.plannerConfig, pageContent: window.pageContent, history };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `planner_backup.json`;
-    a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
 }
 
 export async function importData(fileOrData, uid, isRestore = false) {
@@ -99,19 +62,13 @@ export async function importData(fileOrData, uid, isRestore = false) {
         if (fileOrData instanceof File || fileOrData instanceof Blob) imported = JSON.parse(await fileOrData.text());
         else imported = fileOrData;
     } catch (err) { throw new Error("Invalid format"); }
-
     if (!isRestore) {
         importHistory.unshift({ id: "imp_" + Date.now(), timestamp: Date.now(), filename: fileOrData.name || "Backup", state: JSON.parse(JSON.stringify(window.appState)), plannerConfig: JSON.parse(JSON.stringify(window.plannerConfig)), pageContent: JSON.parse(JSON.stringify(window.pageContent)) });
     }
-
     window.appState = JSON.parse(JSON.stringify(imported.state));
     window.plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     window.pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
-    
-    state = window.appState;
-    plannerConfig = window.plannerConfig;
-    pageContent = window.pageContent;
-
+    state = window.appState; plannerConfig = window.plannerConfig; pageContent = window.pageContent;
     await saveUserData(uid);
     return true;
 }
