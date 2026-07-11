@@ -10,7 +10,17 @@ export let importHistory = [];
 export function resetLocalData() {
     state = {};
     plannerConfig = JSON.parse(JSON.stringify(initialWeeksData));
-    pageContent = {};
+    pageContent = {
+        "global-cover-eye": "Personal Study Planner",
+        "global-cover-title": "Your Roadmap",
+        "global-cover-sub": "Custom Duration · Daily Goals · Your Focus",
+        "global-goal-strong": "🎯 Your Goal",
+        "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
+        "global-sec-overview": "Overview",
+        "global-sec-template": "Daily Template",
+        "dynamicBlocks": [],
+        "templateRows": []
+    };
     history = [];
     importHistory = [];
     window.appState = state;
