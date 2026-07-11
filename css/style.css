@@ -334,18 +334,18 @@ canvas {
 }
 
 .notes-topbar {
-  padding: 0 25px;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
-  display: flex;
+  display: flex !important;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  height: 70px; /* Altura fixa garantida */
-  min-height: 70px;
-  flex-shrink: 0; /* Impede que a barra "suma" se o conteúdo crescer */
+  height: 80px;
+  min-height: 80px;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 25px;
+  flex-shrink: 0;
   position: relative;
-  z-index: 10;
+  z-index: 100;
 }
 
 .notes-breadcrumb {
@@ -358,12 +358,22 @@ canvas {
 .notes-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.notes-actions select, .notes-actions button {
+/* Estilos para garantir que os botões dentro da barra sejam visíveis */
+.nbtn-primary, .nbtn-secondary, .nbtn-close, .notes-select {
   font-family: var(--main-font);
+  font-size: 0.85rem;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
 }
+
+.nbtn-primary { background: var(--accent); color: white; border: none; font-weight: 600; }
+.nbtn-secondary { background: var(--white); border: 1px solid var(--border); color: var(--ink); }
+.nbtn-close { background: #333; color: white; border: none; }
+.notes-select { background: white; border: 1px solid var(--border); outline: none; }
 
 /* ── PLANNER ── */
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
