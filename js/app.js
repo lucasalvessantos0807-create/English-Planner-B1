@@ -1,6 +1,6 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, deleteDoc, doc, db, deleteUser } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot, saveUserData } from './storage.js';
-import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate } from './planner.js';
+import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate, addOverviewBlock } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
@@ -18,10 +18,10 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-template": "Daily Template",
     };
 
-    // No modo Sandbox, procuramos elementos dentro do previewSandbox
+    // No modo Sandbox ou Normal, procuramos os elementos alvo
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
         if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
@@ -31,12 +31,10 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         }
     });
 
-    // CORREÇÃO DO BACKUP: Forçar a renderização dos blocos dinâmicos com os dados vindos do backup (content)
-    const uid = auth.currentUser ? auth.currentUser.uid : null;
-    if (uid) {
-        renderDynamicOverviewBlocks(uid, targetPrefix, data);
-        renderDailyTemplate(uid, targetPrefix, data);
-    }
+    // CORREÇÃO DA PREVIEW SANDBOX: Passar explicitamente o objeto 'data' (do backup) para renderizar os blocos dinâmicos
+    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
+    renderDynamicOverviewBlocks(uid, targetPrefix, data);
+    renderDailyTemplate(uid, targetPrefix, data);
 }
 
 let currentUser = null;
@@ -250,13 +248,11 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
+                    // CORREÇÃO: Limpar o DOM da Sandbox e injetar o Roadmap, Overview e Template do BACKUP
                     refreshGlobalDOM(backupContent, "sb-");
 
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
-
-                    renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
-                    renderDailyTemplate(currentUser, "sb-", backupContent);
 
                     updateProgressBar("sb-", backup.plannerConfig, backupState);
 
@@ -407,7 +403,13 @@ onAuthStateChanged(auth, async (user) => {
                 row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
                 row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
-                row.querySelector('span').onclick = () => pinGradient(g);
+                row.querySelector('span').onclick = () => {
+                    if (colorHistory.pinned.length < 2) {
+                        colorHistory.pinned.push(g);
+                        saveAllColorData(document.getElementById('page-cover').style.background);
+                        renderHistoryUI();
+                    }
+                };
                 gradContainer.appendChild(row);
             });
             pinnedContainer.innerHTML = '';
@@ -423,14 +425,6 @@ onAuthStateChanged(auth, async (user) => {
                 };
                 pinnedContainer.appendChild(row);
             });
-        }
-
-        function pinGradient(g) {
-            if (!colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2) && colorHistory.pinned.length < 2) {
-                colorHistory.pinned.push(g);
-                saveAllColorData(document.getElementById('page-cover').style.background);
-                renderHistoryUI();
-            }
         }
 
         const coverEl = document.getElementById('page-cover');
@@ -567,8 +561,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('addMonthBtn').onclick = (e) => {
             e.preventDefault(); addNewMonth(currentUser);
         };
+        // CORREÇÃO: Vinculação correta do botão de Adicionar Blocos de Overview
         document.getElementById('addOverviewBlockBtn').onclick = (e) => {
-            e.preventDefault(); renderDynamicOverviewBlocks(currentUser);
+            e.preventDefault(); addOverviewBlock(currentUser);
         };
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history?")) {
