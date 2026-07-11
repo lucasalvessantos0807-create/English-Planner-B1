@@ -63,8 +63,11 @@ export function resetLocalData() {
 export function applySnapshot(newConfig, newContent) {
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
+    
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
+
+    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -79,13 +82,18 @@ export async function loadUserData(uid) {
             history = data.history || [];
             importHistory = data.importHistory || [];
 
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            history = history.filter(item => item.timestamp > thirtyDaysAgo);
+
+            const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
+            importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
+
             window.appState = state;
             window.plannerConfig = plannerConfig;
             window.pageContent = pageContent;
 
             return { state, plannerConfig, pageContent, history, importHistory };
         } else {
-            // Se o usuário não existe, salva o estado inicial gerado no resetLocalData
             await saveUserData(uid);
         }
     } catch (e) { console.error("Error loading user data:", e); }
@@ -170,9 +178,14 @@ export async function importData(fileOrData, uid, isRestore = false) {
         } else {
             imported = fileOrData;
         }
-    } catch (err) { throw new Error("Invalid JSON"); }
+    } catch (err) {
+        console.error("Failed to parse import file:", err);
+        throw new Error("Invalid JSON format");
+    }
 
-    if (!imported.plannerConfig || !imported.state) { throw new Error("Invalid structure"); }
+    if (!imported.plannerConfig || !imported.state) {
+        throw new Error("Invalid planner data structure");
+    }
 
     if (!isRestore) {
         const backup = {
@@ -186,10 +199,22 @@ export async function importData(fileOrData, uid, isRestore = false) {
         importHistory.unshift(backup);
     }
 
+    const localName = state.customName;
+    const localPrompted = state.namePrompted;
+    const localColorHistory = state.colorHistory;
+
     state = JSON.parse(JSON.stringify(imported.state));
     plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
+    if (imported.history && Array.isArray(imported.history)) {
+        history = JSON.parse(JSON.stringify(imported.history));
+    }
+
+    if (localName) state.customName = localName;
+    if (localPrompted !== undefined) state.namePrompted = localPrompted;
+    if (localColorHistory) state.colorHistory = localColorHistory;
+
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
