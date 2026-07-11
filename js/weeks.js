@@ -1,17 +1,4 @@
-export const weeksData = {
-  // --- MONTH 1 (30 DAYS) ---
-  "1-1": {
-    label: "Week 1", theme: "Click to edit your weekly theme", review: false,
-    days: [
-      { n: 1, name: "Monday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 2, name: "Tuesday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 3, name: "Wednesday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 4, name: "Thursday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 5, name: "Friday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 6, name: "Saturday", tag: "Daily Activity", activities: [{ t: "grammar", i: "📝", title: "New Activity", desc: "Click to edit your activity", time: "20 min" }] },
-      { n: 7, name: "Sunday", tag: "⭐ Review Day", review: true, activities: [{ t: "review", i: "🔁", title: "Review Day", desc: "Weekly summary and progress check", time: "20 min" }] }
-    ]
-  },
+export const weeksData = {};
   "1-2": {
     label: "Week 2", theme: "Click to edit your weekly theme", review: false,
     days: [
