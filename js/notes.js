@@ -306,42 +306,62 @@ export function exportLibrary() {
 document.addEventListener('DOMContentLoaded', () => {
     const mainNewBtn = document.getElementById('main-new-btn');
     const newMenu = document.getElementById('new-options-menu');
-
-    // Toggle Menu
-    if (mainNewBtn) {
-        mainNewBtn.onclick = (e) => {
-            e.stopPropagation();
-            isNewMenuOpen = !isNewMenuOpen;
-            newMenu.style.display = isNewMenuOpen ? 'flex' : 'none';
-        };
-    }
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) {
-            isNewMenuOpen = false;
-            newMenu.style.display = 'none';
-        }
-    });
-
-    // Mapeamento dos botões do menu para as funções existentes (ou futuras)
-    const btnNewNotebook = document.getElementById('btn-new-notebook');
-    const btnNewTextDoc = document.getElementById('btn-new-text-doc');
-    const btnCreateFolder = document.getElementById('btn-create-folder');
-
-    if (btnNewNotebook) btnNewNotebook.onclick = () => { createDocument(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
-    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { createDocument(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
-    if (btnCreateFolder) btnCreateFolder.onclick = () => { createFolder(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
-
-    // As demais opções (Scan, Study Set, etc) serão implementadas funcionalmente nas próximas etapas
     const closeBtn = document.getElementById('close-editor-btn');
     const saveDocBtn = document.getElementById('save-doc-btn');
     const penBtn = document.getElementById('tool-pen');
     const eraserBtn = document.getElementById('tool-eraser');
     const sortSelect = document.getElementById('sort-docs-select');
 
-    if (newFolderBtn) newFolderBtn.onclick = createFolder;
-    if (newDocBtn) newDocBtn.onclick = createDocument;
+    // Toggle Menu dropdown logic
+    if (mainNewBtn && newMenu) {
+        mainNewBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = newMenu.style.display === 'flex';
+            newMenu.style.display = isOpen ? 'none' : 'flex';
+        };
+    }
+
+    // Close menu when clicking anywhere else
+    document.addEventListener('click', (e) => {
+        if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) {
+            newMenu.style.display = 'none';
+        }
+    });
+
+    // Helper function to close menu after action
+    const closeMenu = () => {
+        if (newMenu) newMenu.style.display = 'none';
+    };
+
+    // Mapping Menu Buttons to Functions
+    const btnNewNotebook = document.getElementById('btn-new-notebook');
+    const btnNewTextDoc = document.getElementById('btn-new-text-doc');
+    const btnNewWhiteboard = document.getElementById('btn-new-whiteboard');
+    const btnImportDoc = document.getElementById('btn-import-doc');
+    const btnQuickRecord = document.getElementById('btn-quick-record');
+    const btnQuickNote = document.getElementById('btn-quick-note');
+    const btnScanDoc = document.getElementById('btn-scan-doc');
+    const btnStudySet = document.getElementById('btn-study-set');
+    const btnAddImage = document.getElementById('btn-add-image');
+    const btnTakePhoto = document.getElementById('btn-take-photo');
+    const btnCreateFolder = document.getElementById('btn-create-folder');
+
+    // Attach click events to menu items
+    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeMenu(); createDocument(); };
+    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeMenu(); createDocument(); };
+    if (btnNewWhiteboard) btnNewWhiteboard.onclick = () => { closeMenu(); createDocument(); };
+    if (btnCreateFolder) btnCreateFolder.onclick = () => { closeMenu(); createFolder(); };
+    
+    // Future implementations for other buttons
+    if (btnQuickNote) btnQuickNote.onclick = () => { closeMenu(); alert("QuickNote feature coming soon."); };
+    if (btnScanDoc) btnScanDoc.onclick = () => { closeMenu(); alert("Scanner feature coming soon."); };
+    if (btnImportDoc) btnImportDoc.onclick = () => { closeMenu(); alert("Import feature coming soon."); };
+    if (btnQuickRecord) btnQuickRecord.onclick = () => { closeMenu(); alert("Voice Recording feature coming soon."); };
+    if (btnStudySet) btnStudySet.onclick = () => { closeMenu(); alert("Study Set feature coming soon."); };
+    if (btnAddImage) btnAddImage.onclick = () => { closeMenu(); alert("Image Import feature coming soon."); };
+    if (btnTakePhoto) btnTakePhoto.onclick = () => { closeMenu(); alert("Camera feature coming soon."); };
+
+    // Editor Controls
     if (closeBtn) closeBtn.onclick = closeEditor;
     if (saveDocBtn) saveDocBtn.onclick = closeEditor;
     if (sortSelect) sortSelect.onchange = renderLibrary;
