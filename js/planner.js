@@ -59,7 +59,7 @@ export function performUndo(uid) {
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { 
             el.innerHTML = window.pageContent[id];
         }
     });
@@ -76,7 +76,6 @@ export function cancelEdit(uid) {
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
     
-    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
     const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -127,7 +126,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         
-        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -147,7 +145,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         
-        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -453,7 +450,6 @@ export function addOverviewBlock(uid) {
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
     
-    // Apenas atualizamos o estado local para permitir o "Cancel"
     renderDynamicOverviewBlocks(uid);
 }
 
@@ -465,11 +461,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     const content = customContent || window.pageContent || {};
     if (!content.hiddenDefaults) content.hiddenDefaults = [];
 
-    const defaults = [
-        { id: 'global-ov-ca', class: 'ca', label: 'Month 1 — Foundation', body: 'Past simple · Present perfect · Used to · A few/a little · Although/despite · Have/have got<br><br>Vocab: Home, Education, Appearance, Clothes, Character<br><br>📖 Charlotte\'s Web' },
-        { id: 'global-ov-cb', class: 'cb', label: 'Month 2 — Building', body: 'Modal verbs · Passives · Reported speech · Conditionals · Neither/So do I · Be able to · Be allowed to<br><br>Vocab: Make & Do, Holidays, Illness, Cooking, Weather, Furniture<br><br>📖 Eleanor & Grey' },
-        { id: 'global-ov-cg', class: 'cg', label: 'Month 3 — Consolidation', body: 'Relative clauses · Adjective connotations · Adverbs of manner · Perfect tenses · Question tags · Affixes · Participles<br><br>Vocab: Crime, Politics, Film/TV, Family, Animals, Hotels<br><br>📖 Romeo & Juliet / Moby Dick' }
-    ];
+    // Limpado: removidos os blocos padrão de Inglês
+    const defaults = [];
 
     grid.innerHTML = '';
 
@@ -516,7 +509,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
                 const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
                     pushToUndo();
-                    document.getElementById(`container-${bId}`).remove();
+                    const elToRemove = document.getElementById(`container-${bId}`);
+                    if (elToRemove) elToRemove.remove();
                     if (bType === 'default') {
                         if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
                         window.pageContent.hiddenDefaults.push(bId);
@@ -536,20 +530,14 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     if (!list) return;
 
     const content = customContent || window.pageContent || {};
+    
+    // Limpado: Iniciado como array vazio para não carregar as 7 tarefas de inglês
     if (!content.templateRows) {
-        // IDs padrão iniciais
-        content.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+        content.templateRows = [];
     }
 
-    const defaults = {
-        'tpl-1-t': '0–15 min', 'tpl-1-a': '📚 <strong>Vocabulary</strong> — Review yesterday\'s words. Add 5 new ones from today\'s reading.',
-        'tpl-2-t': '15–35 min', 'tpl-2-a': '📖 <strong>Reading</strong> — Read 4–7 pages. Circle unknown words, keep your flow, look up after.',
-        'tpl-3-t': '35–55 min', 'tpl-3-a': '🎙️ <strong>Shadowing</strong> — Listen once → shadow line by line → full shadow without pausing.',
-        'tpl-4-t': '55–75 min', 'tpl-4-a': '🎧 <strong>Listening</strong> — Short clip. Tuesday & Friday: dictation exercise.',
-        'tpl-5-t': '75–95 min', 'tpl-5-a': '📐 <strong>Grammar</strong> (Mon/Wed/Fri) or ✍️ <strong>Writing</strong> (Tue/Thu/Sat)',
-        'tpl-6-t': '95–115 min', 'tpl-6-a': '🗣️ <strong>Speaking</strong> — Same topic as writing. Record yourself once a week.',
-        'tpl-7-t': 'Sunday', 'tpl-7-a': '🔁 <strong>Review Day</strong> — Grammar review · vocabulary test · listen back · set goals.'
-    };
+    // Limpado: Removidos textos padrão de inglês
+    const defaults = {};
 
     list.innerHTML = '';
 
@@ -591,11 +579,12 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
-            const uid = window.auth.currentUser.uid;
-            if (!isEditMode) return;
+            const user = window.auth.currentUser;
+            if (!user || !isEditMode) return;
+            const uid = user.uid;
             pushToUndo();
             const newId = 'tpl-' + Date.now();
-            if(!window.pageContent.templateRows) window.pageContent.templateRows = ['tpl-1', 'tpl-2', 'tpl-3', 'tpl-4', 'tpl-5', 'tpl-6', 'tpl-7'];
+            if(!window.pageContent.templateRows) window.pageContent.templateRows = [];
             window.pageContent.templateRows.push(newId);
             renderDailyTemplate(uid);
         });
