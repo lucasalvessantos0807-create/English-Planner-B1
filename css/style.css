@@ -334,18 +334,18 @@ canvas {
 }
 
 .notes-topbar {
-  padding: 15px 25px;
+  padding: 0 25px;
   background: var(--white);
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  height: 70px;
-  flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 101;
+  height: 70px; /* Altura fixa garantida */
+  min-height: 70px;
+  flex-shrink: 0; /* Impede que a barra "suma" se o conteúdo crescer */
+  position: relative;
+  z-index: 10;
 }
 
 /* ── PLANNER ── */
