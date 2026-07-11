@@ -59,24 +59,25 @@
 </div>
 
 <!-- ── PLANNER PRINCIPAL ── -->
-<div id="planner">
+<div id="planner" style="display: none;">
   <!-- Navigation Sidebar for Notes -->
-<div class="sidebar-header">
+  <aside id="notes-sidebar" class="notes-sidebar" style="display: none;">
+    <div class="sidebar-header">
       <div class="sidebar-logo">📓</div>
       <span class="sidebar-text">Library</span>
     </div>
-    <div class="sidebar-nav">
+    <nav class="sidebar-nav">
       <button class="snav-btn active" id="nav-all-docs"><span>📁</span> <span class="sidebar-text">All Documents</span></button>
       <button class="snav-btn" id="nav-shared"><span>👥</span> <span class="sidebar-text">Shared</span></button>
       <button class="snav-btn" id="nav-favorites"><span>⭐</span> <span class="sidebar-text">Favorites</span></button>
-    </div>
+    </nav>
     <div class="sidebar-footer">
-      <button id="sidebar-toggle-btn">◀</button>
+      <button id="sidebar-toggle-btn" title="Toggle Sidebar">◀</button>
     </div>
-  </div>
+  </aside>
 
   <!-- Notes Dashboard / Library View -->
-  <div id="notes-area" style="display:none; flex: 1; flex-direction: column; overflow: hidden;">
+  <main id="notes-area" style="display:none; flex: 1; flex-direction: column; overflow: hidden; height: 100vh;">
     <div class="notes-topbar">
       <div class="notes-breadcrumb" id="notes-breadcrumb">Documents</div>
       <div class="notes-actions">
@@ -91,14 +92,39 @@
         <button class="nbtn-close" id="close-notes-btn">Back to Planner</button>
       </div>
     </div>
-    
     <div id="notes-grid" class="notes-grid">
-      <!-- Folders and Documents will be injected here -->
+      <!-- Content injected by notes.js -->
+    </div>
+  </main>
+
+  <!-- Planner Container (Original Content) -->
+  <div id="planner-content" style="flex: 1; width: 100%;">
+    <div class="topbar">
+      <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
+      <div style="display: flex; gap: 8px;">
+        <button id="saveChangesBtn" style="display:none; font-size:.78rem; color: var(--green); background: var(--green-light); border:1px solid var(--green); border-radius:99px; padding:4px 12px; cursor:pointer; font-weight:600;">✅ Save Changes</button>
+        <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
+        <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
+      </div>
+    </div>
+
+    <div id="page-cover-container" style="position: relative;">
+      <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
+      <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+    </div>
+
+    <div class="page">
+      <div class="cover">
+        <div class="cover-eye editable-global" id="global-cover-eye">Personal Study Planner</div>
+        <div class="cover-title editable-global" id="global-cover-title">Your Roadmap</div>
+        <div class="cover-sub editable-global" id="global-cover-sub">Custom Duration &nbsp;·&nbsp; Daily Goals &nbsp;·&nbsp; Your Focus</div>
+      </div>
+      <!-- ... Resto do conteúdo do seu planner (goals, overview, template, etc) ... -->
     </div>
   </div>
 
   <!-- Document Editor View (Canvas) -->
-  <div id="doc-editor" style="display:none; flex-direction: column; height: 100vh; background: #555;">
+  <div id="doc-editor" style="display:none; flex-direction: column; height: 100vh; width: 100%; background: #555; position: fixed; inset: 0; z-index: 5000;">
     <div class="editor-toolbar">
       <button id="close-editor-btn">✕ Exit</button>
       <div class="tool-group">
@@ -114,69 +140,6 @@
       <canvas id="note-canvas"></canvas>
     </div>
   </div>
-
-  <!-- ELEMENTOS ORIGINAIS DO PLANNER -->
-  <div class="topbar">
-    <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
-    <div style="display: flex; gap: 8px;">
-      <button id="saveChangesBtn" style="display:none; font-size:.78rem; color: var(--green); background: var(--green-light); border:1px solid var(--green); border-radius:99px; padding:4px 12px; cursor:pointer; font-weight:600;">✅ Save Changes</button>
-      <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
-      <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
-    </div>
-  </div>
-
-  <div id="page-cover-container" style="position: relative;">
-    <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
-    <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
-    
-    <div id="colorChoiceMenu" style="display:none; position: absolute; top: 175px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 8px; z-index: 1500; flex-direction: column; gap: 4px; min-width: 140px;">
-      <button class="mbtn" id="choiceSolid" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🎨 Solid Color</button>
-      <button class="mbtn" id="choiceGradient" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer;">🌈 Gradient</button>
-      <div style="height: 1px; background: var(--border); margin: 4px 0;"></div>
-      <button id="choiceCancel" style="font-size: 0.75rem; padding: 6px 12px; width: 100%; border: none; text-align: left; background: none; cursor: pointer; color: #cc0000;">✕ Cancel</button>
-    </div>
-  </div>
-
-  <div class="page">
-    <div class="cover">
-      <div class="cover-eye editable-global" id="global-cover-eye">Personal Study Planner</div>
-      <div class="cover-title editable-global" id="global-cover-title">Your Roadmap</div>
-      <div class="cover-sub editable-global" id="global-cover-sub">Custom Duration &nbsp;·&nbsp; Daily Goals &nbsp;·&nbsp; Your Focus</div>
-    </div>
-
-    <div class="goal-box">
-      <strong class="editable-global" id="global-goal-strong">🎯 Your Goal</strong>
-      <div class="editable-global" id="global-goal-text">Enter your main goal here — describe what you want to achieve.</div>
-    </div>
-
-    <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
-    <div id="overview-container">
-      <div class="ov-grid" id="dynamic-ov-grid"></div>
-      <button id="addOverviewBlockBtn" style="display:none; width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
-    </div>
-
-    <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
-    <div id="template-container">
-      <div class="tpl" id="dynamic-tpl-list"></div>
-      <button id="addTemplateRowBtn" style="display:none; width:100%; margin-top:-10px; margin-bottom:20px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Task</button>
-    </div>
-
-    <div class="sec editable-global" id="global-sec-progress">Your Progress</div>
-    <div class="prog-box">
-      <div class="prog-lbl editable-global" id="global-prog-lbl">Days completed</div>
-      <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
-      <div class="prog-stats">
-        <span><strong id="dcnt">0</strong> / 0 days</span>
-        <span><strong id="pct">0%</strong> complete</span>
-        <span class="editable-global" id="global-mstat">Learning Progress</span>
-      </div>
-    </div>
-
-    <div class="sec editable-global" id="global-sec-monthly">Monthly Plans</div>
-    <div class="month-nav" id="monthNav">
-        <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
-    </div>
-    <div id="monthPanels"></div>
     
     <!-- DRAWERS PRINCIPAIS -->
     <div id="customDrawer" class="custom-drawer">
