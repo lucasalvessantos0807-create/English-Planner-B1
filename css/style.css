@@ -341,39 +341,59 @@ canvas {
   height: 80px;
   min-height: 80px;
   background-color: var(--white);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--border);
   padding: 0 25px;
   flex-shrink: 0;
-  position: relative;
-  z-index: 100;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .notes-breadcrumb {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1rem;
   color: var(--ink);
   font-family: var(--main-font);
 }
 
 .notes-actions {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 12px;
 }
 
-/* Estilos para garantir que os botões dentro da barra sejam visíveis */
+/* Estilização Individual dos Botões da Barra de Ações */
 .nbtn-primary, .nbtn-secondary, .nbtn-close, .notes-select {
   font-family: var(--main-font);
   font-size: 0.85rem;
-  padding: 8px 15px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.nbtn-primary { background: var(--accent); color: white; border: none; font-weight: 600; }
-.nbtn-secondary { background: var(--white); border: 1px solid var(--border); color: var(--ink); }
-.nbtn-close { background: #333; color: white; border: none; }
-.notes-select { background: white; border: 1px solid var(--border); outline: none; }
+.nbtn-primary { 
+  background: var(--accent) !important; 
+  color: white !important; 
+  border: none; 
+  font-weight: 600;
+}
+
+.nbtn-secondary { 
+  background: var(--bg) !important; 
+  border: 1px solid var(--border) !important; 
+  color: var(--ink) !important; 
+}
+
+.nbtn-close { 
+  background: #333 !important; 
+  color: white !important; 
+  border: none; 
+}
 
 /* ── PLANNER ── */
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
