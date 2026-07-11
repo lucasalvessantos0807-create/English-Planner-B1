@@ -18,16 +18,18 @@ export function resetLocalData() {
         "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
         "global-sec-overview": "Overview",
         "global-sec-template": "Daily Template",
-        "dynamicBlocks": ["ov-initial-1", "ov-initial-2", "ov-initial-3"],
-        "ov-initial-1-title": "Phase 1",
-        "ov-initial-1-body": "Month focus...",
-        "ov-initial-2-title": "Phase 2",
-        "ov-initial-2-body": "Month focus...",
-        "ov-initial-3-title": "Phase 3",
-        "ov-initial-3-body": "Month focus...",
-        "templateRows": ["tpl-initial-1"],
-        "tpl-initial-1-t": "00:00",
-        "tpl-initial-1-a": "Task description — edit this row."
+        // IDs iniciais para os 3 blocos de Overview
+        "dynamicBlocks": ["ov-first-1", "ov-first-2", "ov-first-3"],
+        "ov-first-1-title": "Phase 1",
+        "ov-first-1-body": "Month focus...",
+        "ov-first-2-title": "Phase 2",
+        "ov-first-2-body": "Month focus...",
+        "ov-first-3-title": "Phase 3",
+        "ov-first-3-body": "Month focus...",
+        // ID inicial para 1 linha de Template
+        "templateRows": ["tpl-first-1"],
+        "tpl-first-1-t": "00:00",
+        "tpl-first-1-a": "Task description — edit this row."
     };
     history = [];
     importHistory = [];
@@ -39,8 +41,11 @@ export function resetLocalData() {
 export function applySnapshot(newConfig, newContent) {
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
+    
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
+
+    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -57,6 +62,7 @@ export async function loadUserData(uid) {
 
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
             history = history.filter(item => item.timestamp > thirtyDaysAgo);
+
             const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
             importHistory = importHistory.filter(item => item.timestamp > sixMonthsAgo);
 
@@ -149,6 +155,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
             imported = fileOrData;
         }
     } catch (err) {
+        console.error("Failed to parse import file:", err);
         throw new Error("Invalid JSON format");
     }
 
@@ -176,7 +183,9 @@ export async function importData(fileOrData, uid, isRestore = false) {
     plannerConfig = JSON.parse(JSON.stringify(imported.plannerConfig));
     pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
-    if (imported.history) history = JSON.parse(JSON.stringify(imported.history));
+    if (imported.history && Array.isArray(imported.history)) {
+        history = JSON.parse(JSON.stringify(imported.history));
+    }
 
     if (localName) state.customName = localName;
     if (localPrompted !== undefined) state.namePrompted = localPrompted;
