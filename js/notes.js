@@ -12,6 +12,7 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
+let isNewMenuOpen = false;
 let currentView = 'all'; // 'all', 'favorites', 'shared'
 
 // --- 1. LIBRARY MANAGEMENT ---
@@ -303,8 +304,36 @@ export function exportLibrary() {
 // --- 4. INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    const newFolderBtn = document.getElementById('new-folder-btn');
-    const newDocBtn = document.getElementById('new-doc-btn');
+    const mainNewBtn = document.getElementById('main-new-btn');
+    const newMenu = document.getElementById('new-options-menu');
+
+    // Toggle Menu
+    if (mainNewBtn) {
+        mainNewBtn.onclick = (e) => {
+            e.stopPropagation();
+            isNewMenuOpen = !isNewMenuOpen;
+            newMenu.style.display = isNewMenuOpen ? 'flex' : 'none';
+        };
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) {
+            isNewMenuOpen = false;
+            newMenu.style.display = 'none';
+        }
+    });
+
+    // Mapeamento dos botões do menu para as funções existentes (ou futuras)
+    const btnNewNotebook = document.getElementById('btn-new-notebook');
+    const btnNewTextDoc = document.getElementById('btn-new-text-doc');
+    const btnCreateFolder = document.getElementById('btn-create-folder');
+
+    if (btnNewNotebook) btnNewNotebook.onclick = () => { createDocument(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
+    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { createDocument(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
+    if (btnCreateFolder) btnCreateFolder.onclick = () => { createFolder(); isNewMenuOpen = false; newMenu.style.display = 'none'; };
+
+    // As demais opções (Scan, Study Set, etc) serão implementadas funcionalmente nas próximas etapas
     const closeBtn = document.getElementById('close-editor-btn');
     const saveDocBtn = document.getElementById('save-doc-btn');
     const penBtn = document.getElementById('tool-pen');
