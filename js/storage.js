@@ -6,6 +6,7 @@ export let plannerConfig = {};
 export let pageContent = {};
 export let history = [];
 export let importHistory = [];
+export let library = { folders: [], documents: [] };
 
 export function resetLocalData() {
     state = {};
@@ -76,6 +77,7 @@ export async function loadUserData(uid) {
         const snap = await getDoc(doc(db, "users", uid));
         if (snap.exists()) {
             const data = snap.data();
+            library = data.library || { folders: [], documents: [] };
             state = data.state || {};
             plannerConfig = data.plannerConfig || plannerConfig;
             pageContent = data.pageContent || pageContent;
@@ -109,6 +111,7 @@ export async function saveUserData(uid) {
             pageContent: pageContent,
             history: history,
             importHistory: importHistory
+            library: library
         });
     } catch (e) { console.error("Error saving data:", e); }
 }
