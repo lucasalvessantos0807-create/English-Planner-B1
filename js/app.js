@@ -168,25 +168,25 @@ if (manageAccountBtn) {
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // MODO NOTAS ATIVO
+                    // Switch to Library View
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
-                    plannerContent.style.display = 'none'; // Esconde totalmente o planner
+                    plannerContent.style.display = 'none';
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
                     
                     renderLibrary();
                 } else {
-                    // MODO PLANNER ATIVO
+                    // Return to Planner View
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
-                    plannerContent.style.display = 'block'; // Volta o planner
+                    plannerContent.style.display = 'block';
                     
                     if (fabLabel) fabLabel.textContent = "Notes & Library";
                     if (fabIcon) fabIcon.textContent = "📓";
                 }
-                // Reseta a rolagem para o topo sempre que trocar de página
+                // Garante que a página nova sempre comece no topo
                 plannerContent.scrollTop = 0;
             };
         }
