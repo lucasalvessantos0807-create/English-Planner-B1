@@ -15,13 +15,10 @@ let currentDoc = null;
 
 // --- 1. LIBRARY MANAGEMENT ---
 
-/**
- * Renders the library grid based on current folder and sorting
- */
 export function renderLibrary() {
     const grid = document.getElementById('notes-grid');
     const breadcrumb = document.getElementById('notes-breadcrumb');
-    const sortVal = document.getElementById('sort-docs-select') ? document.getElementById('sort-docs-select').value : 'name';
+    const sortVal = document.getElementById('sort-docs-select')?.value || 'name';
 
     if (!grid) return;
     grid.innerHTML = '';
@@ -38,7 +35,7 @@ export function renderLibrary() {
         };
     }
 
-    // Filter content
+    // Filter items in current folder
     let foldersToShow = library.folders.filter(f => f.parentId === currentFolderId);
     let docsToShow = library.documents.filter(d => d.parentId === currentFolderId);
 
@@ -46,7 +43,11 @@ export function renderLibrary() {
     const sortFn = (a, b) => {
         if (sortVal === 'name') return a.name.localeCompare(b.name);
         if (sortVal === 'date') return b.updatedAt - a.updatedAt;
-        if (sortVal === 'size') return (b.data?.length || 0) - (a.data?.length || 0);
+        if (sortVal === 'size') {
+            const sizeA = a.data ? a.data.length : 0;
+            const sizeB = b.data ? b.data.length : 0;
+            return sizeB - sizeA;
+        }
         return 0;
     };
 
@@ -58,7 +59,7 @@ export function renderLibrary() {
         const item = document.createElement('div');
         item.className = 'note-item';
         item.innerHTML = `
-            <div class="note-icon">📁</div>
+            <div class="note-icon folder">📁</div>
             <div class="note-name">${folder.name}</div>
             <div class="note-meta" style="font-size:10px; color:var(--muted);">${new Date(folder.updatedAt).toLocaleDateString()}</div>
         `;
@@ -66,10 +67,9 @@ export function renderLibrary() {
             currentFolderId = folder.id;
             renderLibrary();
         };
-        // Right click to delete
         item.oncontextmenu = (e) => {
             e.preventDefault();
-            if (confirm(`Delete folder "${folder.name}" and all its contents?`)) {
+            if (confirm(`Delete folder "${folder.name}"?`)) {
                 deleteFolder(folder.id);
             }
         };
@@ -105,7 +105,7 @@ export function renderLibrary() {
 }
 
 export function createFolder() {
-    const name = prompt("Folder Name:", "New Folder");
+    const name = prompt("Enter folder name:", "New Folder");
     if (!name) return;
 
     const newFolder = {
@@ -121,7 +121,7 @@ export function createFolder() {
 }
 
 export function createDocument() {
-    const name = prompt("Document Name:", "Untitled Note");
+    const name = prompt("Enter document name:", "Untitled Note");
     if (!name) return;
 
     const newDoc = {
@@ -131,7 +131,7 @@ export function createDocument() {
         createdAt: Date.now(),
         updatedAt: Date.now(),
         favorite: false,
-        data: null // Drawing data
+        data: null 
     };
 
     library.documents.push(newDoc);
@@ -145,7 +145,7 @@ function deleteDocument(id) {
 }
 
 function deleteFolder(id) {
-    // Delete sub-folders and docs recursively
+    // Delete documents inside and the folder itself
     library.documents = library.documents.filter(d => d.parentId !== id);
     library.folders = library.folders.filter(f => f.id !== id);
     saveLibrary();
@@ -179,7 +179,7 @@ function initCanvas() {
     canvas = document.getElementById('note-canvas');
     ctx = canvas.getContext('2d');
 
-    // High DPI Setup
+    // High DPI Support for Retina/Modern screens
     const ratio = window.devicePixelRatio || 1;
     canvas.width = 800 * ratio;
     canvas.height = 1100 * ratio;
@@ -190,25 +190,24 @@ function initCanvas() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Pointer Events for Bluetooth Pen / Stylus
+    // Event listeners for drawing
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
-    canvas.addEventListener('pointerout', stopDrawing);
 }
 
 function startDrawing(e) {
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    lastX = e.clientX - rect.left;
-    lastY = e.clientY - rect.top;
+    lastX = (e.clientX - rect.left);
+    lastY = (e.clientY - rect.top);
 }
 
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
 
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
@@ -217,7 +216,6 @@ function draw(e) {
     if (currentTool === 'pen') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = document.getElementById('pen-color').value;
-        // Pressure sensitivity support
         ctx.lineWidth = document.getElementById('pen-width').value * (e.pressure || 1);
     } else {
         ctx.globalCompositeOperation = 'destination-out';
@@ -234,7 +232,6 @@ function stopDrawing() {
 
 export function closeEditor() {
     if (currentDoc) {
-        // Save canvas to data URL
         currentDoc.data = canvas.toDataURL();
         currentDoc.updatedAt = Date.now();
         saveLibrary();
@@ -249,47 +246,41 @@ export function closeEditor() {
 
 export function exportLibrary() {
     const dataStr = JSON.stringify(library);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = 'library_backup.json';
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `library_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
 }
 
-// --- 4. INITIALIZATION OF EVENT LISTENERS ---
+// --- 4. INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const newFolderBtn = document.getElementById('new-folder-btn');
     const newDocBtn = document.getElementById('new-doc-btn');
-    const closeEditorBtn = document.getElementById('close-editor-btn');
-    const saveDocBtn = document.getElementById('save-doc-btn');
-    const sortSelect = document.getElementById('sort-docs-select');
-    
-    if (newFolderBtn) newFolderBtn.onclick = createFolder;
-    if (newDocBtn) newDocBtn.onclick = createDocument;
-    if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
-    if (saveDocBtn) saveDocBtn.onclick = closeEditor;
-    if (sortSelect) sortSelect.onchange = renderLibrary;
-
-    // Tool switching
+    const closeBtn = document.getElementById('close-editor-btn');
     const penBtn = document.getElementById('tool-pen');
     const eraserBtn = document.getElementById('tool-eraser');
+    const sortSelect = document.getElementById('sort-docs-select');
+
+    if (newFolderBtn) newFolderBtn.onclick = createFolder;
+    if (newDocBtn) newDocBtn.onclick = createDocument;
+    if (closeBtn) closeBtn.onclick = closeEditor;
+    if (sortSelect) sortSelect.onchange = renderLibrary;
 
     if (penBtn) penBtn.onclick = () => {
         currentTool = 'pen';
         penBtn.classList.add('active');
         eraserBtn.classList.remove('active');
     };
-
     if (eraserBtn) eraserBtn.onclick = () => {
         currentTool = 'eraser';
         eraserBtn.classList.add('active');
         penBtn.classList.remove('active');
     };
 
-    // Sidebar navigation
+    // Nav filters
     document.getElementById('nav-all-docs').onclick = () => {
         currentFolderId = null;
         renderLibrary();
@@ -298,9 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-favorites').onclick = () => {
         const grid = document.getElementById('notes-grid');
         grid.innerHTML = '';
-        const favs = library.documents.filter(d => d.favorite);
-        // Reuse rendering logic for favorites
-        favs.forEach(doc => {
+        const favorites = library.documents.filter(d => d.favorite);
+        favorites.forEach(doc => {
             const item = document.createElement('div');
             item.className = 'note-item';
             item.innerHTML = `<div class="note-icon">📄⭐</div><div class="note-name">${doc.name}</div>`;
