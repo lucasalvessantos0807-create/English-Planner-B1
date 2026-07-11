@@ -348,6 +348,23 @@ canvas {
   z-index: 10;
 }
 
+.notes-breadcrumb {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--ink);
+  font-family: var(--main-font);
+}
+
+.notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notes-actions select, .notes-actions button {
+  font-family: var(--main-font);
+}
+
 /* ── PLANNER ── */
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
 .page { margin-top: 0 !important; }
