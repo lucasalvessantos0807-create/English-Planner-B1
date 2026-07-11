@@ -5,8 +5,6 @@ import { renderStructure, updateProgressBar } from './ui.js';
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
-    renderDynamicOverviewBlocks(uid, targetPrefix, data);
-renderDailyTemplate(uid, targetPrefix, data);
     const data = content || {};
     
     // Conteúdos padrão genéricos
@@ -23,7 +21,7 @@ renderDailyTemplate(uid, targetPrefix, data);
     // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
         if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
@@ -56,7 +54,7 @@ onAuthStateChanged(auth, async (user) => {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
             userData.state.namePrompted = true;
-            import('./storage.js').then(store => store.saveUserData(currentUser));
+            saveUserData(currentUser);
         }
         document.getElementById("topbarName").textContent = userData.state.customName || user.email;
 
@@ -66,9 +64,10 @@ onAuthStateChanged(auth, async (user) => {
             if (newName && newName.trim() !== "") {
                 userData.state.customName = newName;
                 document.getElementById("topbarName").textContent = newName;
-                import('./storage.js').then(store => store.saveUserData(currentUser));
+                saveUserData(currentUser);
             }
         };
+
         // --- ACCOUNT MANAGEMENT LOGIC ---
         const accountModal = document.getElementById('accountManagementModal');
         const manageAccountBtn = document.getElementById('manageAccountBtn');
@@ -91,13 +90,9 @@ onAuthStateChanged(auth, async (user) => {
                 const finalCheck = prompt("To confirm deletion, type the word 'DELETE' below:");
                 if (finalCheck === "DELETE") {
                     try {
-                        // 1. Deletar documento no Firestore
                         await deleteDoc(doc(db, "users", currentUser));
-                        
-                        // 2. Deletar o usuário no Firebase Auth
                         const user = auth.currentUser;
                         await deleteUser(user);
-                        
                         alert("Your account and all data have been successfully deleted.");
                         window.location.reload();
                     } catch (error) {
@@ -131,49 +126,47 @@ onAuthStateChanged(auth, async (user) => {
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
         
-        // --- BOTÕES DA TOPBAR ---
+        // --- FLOATING ACTION BUTTON LOGIC ---
+        const fabWrapper = document.getElementById('fabWrapper');
+        const fabMain = document.getElementById('fabMain');
+        
+        if (fabMain && fabWrapper) {
+            fabMain.onclick = (e) => {
+                e.stopPropagation();
+                fabWrapper.classList.toggle('open');
+            };
+
+            // Fecha o FAB ao clicar fora
+            document.addEventListener('click', (e) => {
+                if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
+                    fabWrapper.classList.remove('open');
+                }
+            });
+
+            // Fecha o FAB ao clicar em um item
+            document.querySelectorAll('.fab-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    fabWrapper.classList.remove('open');
+                });
+            });
+        }
+
+        // --- BOTÕES DA TOPBAR E FAB ITEMS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
         document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
         document.getElementById('logoutBtn').onclick = () => signOut(auth);
-        document.getElementById('switchAccountBtn').onclick = () => {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Error switching account:", error);
-            });
-        };
-        const switchAccountBtn = document.getElementById('switchAccountBtn');
-        if (switchAccountBtn) {
-            switchAccountBtn.onclick = () => {
+        
+        const switchBtn = document.getElementById('switchAccountBtn');
+        if (switchBtn) {
+            switchBtn.onclick = () => {
                 provider.setCustomParameters({ prompt: 'select_account' });
                 signInWithPopup(auth, provider).catch((error) => {
                     console.error("Error switching account:", error);
                 });
             };
         }
-        // --- FLOATING ACTION BUTTON LOGIC ---
-        const fabWrapper = document.getElementById('fabWrapper');
-        const fabMain = document.getElementById('fabMain');
-        
-        fabMain.onclick = (e) => {
-            e.stopPropagation();
-            fabWrapper.classList.toggle('open');
-        };
-
-        // Close FAB when clicking anywhere else
-        document.addEventListener('click', (e) => {
-            if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
-                fabWrapper.classList.remove('open');
-            }
-        });
-
-        // Close FAB when an item is clicked
-        document.querySelectorAll('.fab-item').forEach(item => {
-            item.addEventListener('click', () => {
-                fabWrapper.classList.remove('open');
-            });
-        });
 
         // --- EXPORT / IMPORT SYSTEM ---
         const cover = document.getElementById('page-cover');
@@ -186,23 +179,19 @@ onAuthStateChanged(auth, async (user) => {
             if (e.target.files.length > 0) {
                 const file = e.target.files[0];
                 const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
-                
                 if (confirmation) {
                     try {
-                        // Import data and wait for the Firebase save to complete
                         const success = await importData(file, currentUser);
                         if (success) {
-                            alert("Data imported successfully! The page will now reload to apply changes.");
+                            alert("Data imported successfully!");
                             window.location.reload();
                         }
                     } catch (err) { 
-                        console.error("Import process failed:", err);
+                        console.error("Import failed:", err);
                         alert("Import failed: " + err.message); 
-                        // Reset input value so the same file can be selected again
                         importInput.value = "";
                     }
                 } else {
-                    // Reset input if user cancels
                     importInput.value = "";
                 }
             }
@@ -225,13 +214,9 @@ onAuthStateChanged(auth, async (user) => {
             if (importHistory.length > 0) {
                 const lastBackup = importHistory[0];
                 if (confirm(`Undo last import and restore to state from: ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
-                    import('./storage.js').then(async (store) => {
-                        // Restaura os dados do backup
-                        await store.importData(lastBackup, currentUser, true);
-                        // Remove o backup que foi usado para desfazer, para manter o histórico limpo
-                        await store.deleteImportBackup(currentUser, lastBackup.id);
-                        window.location.reload();
-                    });
+                    await importData(lastBackup, currentUser, true);
+                    await deleteImportBackup(currentUser, lastBackup.id);
+                    window.location.reload();
                 }
             }
         };
@@ -257,11 +242,9 @@ onAuthStateChanged(auth, async (user) => {
                 `;
                 
                 card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Restore and return to this exact state? This will overwrite your current progress.")) {
-                        import('./storage.js').then(async (store) => {
-                            await store.importData(backup, currentUser, true);
-                            window.location.reload();
-                        });
+                    if (confirm("Restore this version?")) {
+                        await importData(backup, currentUser, true);
+                        window.location.reload();
                     }
                 };
 
@@ -272,37 +255,28 @@ onAuthStateChanged(auth, async (user) => {
                     
                     document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
                     
-                    // 1. Atualizar Textos Globais da Sandbox
                     refreshGlobalDOM(backupContent, "sb-");
 
-                    // 2. Cor da Capa na Sandbox
                     const sbCover = document.getElementById('sb-page-cover');
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
-                    // 3. Renderizar blocos de overview na Sandbox
                     renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
                     renderDailyTemplate(currentUser, "sb-", backupContent);
 
-                    // 4. Barra de Progresso na Sandbox
                     updateProgressBar("sb-", backup.plannerConfig, backupState);
 
-                    // 5. Renderizar Estrutura Mensal dentro da Sandbox
                     renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
                         import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
                     }, true, "sb-");
 
-                    // 6. Mostrar Sandbox e travar scroll do fundo
                     historyModal.style.display = 'none';
                     sandbox.style.display = 'flex';
                     document.body.classList.add('preview-open');
 
-                    // 7. Lógica do botão de restauração dentro da Sandbox
                     document.getElementById('restoreSandboxBtn').onclick = async () => {
                         if(confirm("Restore this version?")) {
-                            import('./storage.js').then(async (store) => {
-                                await store.importData(backup, currentUser, true);
-                                window.location.reload();
-                            });
+                            await importData(backup, currentUser, true);
+                            window.location.reload();
                         }
                     };
                 };
@@ -325,7 +299,7 @@ onAuthStateChanged(auth, async (user) => {
 
         // --- LÓGICA DO COLOR PICKER ---
         const editCoverBtn = document.getElementById('editCoverBtn');
-        const menu = document.getElementById('colorChoiceMenu');
+        const colorMenu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
         
         const iroPicker = new iro.ColorPicker("#iroPicker", {
@@ -336,33 +310,29 @@ onAuthStateChanged(auth, async (user) => {
         let pickingGradient = false;
         let color1 = null;
 
-        editCoverBtn.onclick = (e) => {
-            e.stopPropagation();
-            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
-        };
+        if (editCoverBtn) {
+            editCoverBtn.onclick = (e) => {
+                e.stopPropagation();
+                colorMenu.style.display = (colorMenu.style.display === 'flex') ? 'none' : 'flex';
+            };
+        }
 
         document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false; 
-            color1 = null;
+            pickingGradient = false; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color";
-            menu.style.display = 'none'; 
-            openPicker();
+            colorMenu.style.display = 'none'; openPicker();
         };
 
         document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true; 
-            color1 = null;
+            pickingGradient = true; color1 = null;
             document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            menu.style.display = 'none'; 
-            openPicker();
+            colorMenu.style.display = 'none'; openPicker();
         };
 
-        document.getElementById('choiceCancel').onclick = () => {
-            menu.style.display = 'none';
-        };
+        document.getElementById('choiceCancel').onclick = () => { colorMenu.style.display = 'none'; };
         
         document.addEventListener('click', (e) => {
-            if (menu && !menu.contains(e.target) && e.target !== editCoverBtn) menu.style.display = 'none';
+            if (colorMenu && !colorMenu.contains(e.target) && e.target !== editCoverBtn) colorMenu.style.display = 'none';
             if (!e.target.closest('.aico-wrapper')) {
                 document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
             }
@@ -389,7 +359,7 @@ onAuthStateChanged(auth, async (user) => {
                 if (color1 === null) {
                     color1 = selectedColor;
                     document.getElementById('pickerActionTitle').textContent = "Select Color 2";
-                    cover.style.background = color1;
+                    document.getElementById('page-cover').style.background = color1;
                 } else {
                     applyGradient(color1, selectedColor);
                 }
@@ -397,7 +367,7 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         function applySolid(color) {
-            cover.style.background = color;
+            document.getElementById('page-cover').style.background = color;
             if (!colorHistory.solids.includes(color)) {
                 colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
@@ -408,7 +378,7 @@ onAuthStateChanged(auth, async (user) => {
 
         function applyGradient(c1, c2) {
             const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
-            cover.style.background = grad;
+            document.getElementById('page-cover').style.background = grad;
             const exists = colorHistory.gradients.some(g => g.c1 === c1 && g.c2 === c2);
             if (!exists) {
                 colorHistory.gradients.unshift({ c1, c2 });
@@ -419,12 +389,10 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         function saveAllColorData(lastValue) {
-            import('./storage.js').then(store => {
-                if(!store.state.settings) store.state.settings = {};
-                store.state.settings.coverColor = lastValue;
-                store.state.colorHistory = colorHistory;
-                store.saveUserData(currentUser);
-            });
+            if(!userData.state.settings) userData.state.settings = {};
+            userData.state.settings.coverColor = lastValue;
+            userData.state.colorHistory = colorHistory;
+            saveUserData(currentUser);
         }
 
         function renderHistoryUI() {
@@ -455,7 +423,7 @@ onAuthStateChanged(auth, async (user) => {
                 row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
                 row.querySelector('span').onclick = () => {
                     colorHistory.pinned.splice(idx, 1);
-                    saveAllColorData(cover.style.background);
+                    saveAllColorData(document.getElementById('page-cover').style.background);
                     renderHistoryUI();
                 };
                 pinnedContainer.appendChild(row);
@@ -465,13 +433,14 @@ onAuthStateChanged(auth, async (user) => {
         function pinGradient(g) {
             if (!colorHistory.pinned.some(p => p.c1 === g.c1 && p.c2 === g.c2) && colorHistory.pinned.length < 2) {
                 colorHistory.pinned.push(g);
-                saveAllColorData(cover.style.background);
+                saveAllColorData(document.getElementById('page-cover').style.background);
                 renderHistoryUI();
             }
         }
 
-        if(userData.state.settings && userData.state.settings.coverColor) {
-            cover.style.background = userData.state.settings.coverColor;
+        const coverEl = document.getElementById('page-cover');
+        if(userData.state.settings?.coverColor && coverEl) {
+            coverEl.style.background = userData.state.settings.coverColor;
         }
 
         // --- GAVETAS E PERSONALIZAÇÃO ---
@@ -482,31 +451,40 @@ onAuthStateChanged(auth, async (user) => {
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
 
-        personalizeBtn.onclick = () => {
-            if (!document.body.classList.contains('preview-mode')) {
-                settingsDrawer.classList.remove('open');
-                customDrawer.classList.add('open');
-                document.getElementById('fabWrapper').classList.add('fab-hidden');
-            }
-        };
+        if (personalizeBtn) {
+            personalizeBtn.onclick = () => {
+                if (!document.body.classList.contains('preview-mode')) {
+                    settingsDrawer.classList.remove('open');
+                    customDrawer.classList.add('open');
+                    fabWrapper.classList.add('fab-hidden');
+                }
+            };
+        }
 
-        settingsBtn.onclick = () => {
-            if (!document.body.classList.contains('preview-mode')) {
+        if (settingsBtn) {
+            settingsBtn.onclick = () => {
+                if (!document.body.classList.contains('preview-mode')) {
+                    customDrawer.classList.remove('open');
+                    settingsDrawer.classList.add('open');
+                    fabWrapper.classList.add('fab-hidden');
+                    renderHistory();
+                }
+            };
+        }
+
+        if (closeDrawer) {
+            closeDrawer.onclick = () => {
                 customDrawer.classList.remove('open');
-                settingsDrawer.classList.add('open');
-                document.getElementById('fabWrapper').classList.add('fab-hidden');
-                renderHistory();
-            }
-        };
+                fabWrapper.classList.remove('fab-hidden');
+            };
+        }
 
-        closeDrawer.onclick = () => {
-            customDrawer.classList.remove('open');
-            document.getElementById('fabWrapper').classList.remove('fab-hidden');
-        };
-        closeSettings.onclick = () => {
-            settingsDrawer.classList.remove('open');
-            document.getElementById('fabWrapper').classList.remove('fab-hidden');
-        };
+        if (closeSettings) {
+            closeSettings.onclick = () => {
+                settingsDrawer.classList.remove('open');
+                fabWrapper.classList.remove('fab-hidden');
+            };
+        }
 
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
@@ -517,14 +495,14 @@ onAuthStateChanged(auth, async (user) => {
             const id = `font-${fontName.replace(/\s+/g, '-')}`;
             if (!document.getElementById(id)) {
                 const link = document.createElement('link');
-                link.id = id; 
-                link.rel = 'stylesheet';
+                link.id = id; link.rel = 'stylesheet';
                 link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
                 document.head.appendChild(link);
             }
         }
 
         function renderFonts(filter = "") {
+            if (!fontListContainer) return;
             fontListContainer.innerHTML = "";
             googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
                 const div = document.createElement('div');
@@ -534,16 +512,14 @@ onAuthStateChanged(auth, async (user) => {
                 div.style.fontFamily = `"${font}", sans-serif`;
                 div.onclick = () => {
                     document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    import('./storage.js').then(store => {
-                        if (!store.state.settings) store.state.settings = {};
-                        store.state.settings.font = font;
-                        store.saveUserData(currentUser);
-                    });
+                    if (!userData.state.settings) userData.state.settings = {};
+                    userData.state.settings.font = font;
+                    saveUserData(currentUser);
                 };
                 fontListContainer.appendChild(div);
             });
         }
-        fontSearchInput.oninput = (e) => renderFonts(e.target.value);
+        if (fontSearchInput) fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
         const fontSizeSlider = document.getElementById('fontSizeSlider');
@@ -551,21 +527,21 @@ onAuthStateChanged(auth, async (user) => {
             loadGoogleFont(userData.state.settings.font);
             document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
         }
-        fontSizeSlider.value = userData.state.settings?.fontSize || "15";
-        document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
-        document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
+        if (fontSizeSlider) {
+            fontSizeSlider.value = userData.state.settings?.fontSize || "15";
+            document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
+            document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
-        fontSizeSlider.oninput = (e) => {
-            document.getElementById('fontSizeVal').textContent = e.target.value + "px";
-            document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
-        };
-        fontSizeSlider.onchange = (e) => {
-            import('./storage.js').then(store => {
-                if (!store.state.settings) store.state.settings = {};
-                store.state.settings.fontSize = e.target.value;
-                store.saveUserData(currentUser);
-            });
-        };
+            fontSizeSlider.oninput = (e) => {
+                document.getElementById('fontSizeVal').textContent = e.target.value + "px";
+                document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
+            };
+            fontSizeSlider.onchange = (e) => {
+                if (!userData.state.settings) userData.state.settings = {};
+                userData.state.settings.fontSize = e.target.value;
+                saveUserData(currentUser);
+            };
+        }
 
         document.getElementById('fontStyleToggle').onclick = () => {
             const wrapper = document.getElementById('fontPickerWrapper');
@@ -575,7 +551,6 @@ onAuthStateChanged(auth, async (user) => {
             arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         };
 
-        // --- FINALIZAÇÃO E HISTÓRICO COMUM ---
         function renderHistory() {
             const container = document.getElementById('historyList');
             import('./storage.js').then(store => {
@@ -590,7 +565,7 @@ onAuthStateChanged(auth, async (user) => {
                             <button class="history-restore" style="flex:1; cursor:pointer;">Restore</button>
                             <button class="history-del">✕</button>
                         </div>`;
-                    div.querySelector('.history-restore').onclick = async () => { if(confirm("Restore?")) { store.applySnapshot(item.plannerConfig, item.pageContent); await store.saveUserData(currentUser); window.location.reload(); } };
+                    div.querySelector('.history-restore').onclick = async () => { if(confirm("Restore?")) { applySnapshot(item.plannerConfig, item.pageContent); await saveUserData(currentUser); window.location.reload(); } };
                     div.querySelector('.history-del').onclick = async () => { if(confirm("Delete?")) { await deleteHistoryEntry(currentUser, item.id); renderHistory(); } };
                     container.appendChild(div);
                 });
@@ -598,12 +573,10 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         document.getElementById('addMonthBtn').onclick = (e) => {
-            e.preventDefault();
-            addNewMonth(currentUser);
+            e.preventDefault(); addNewMonth(currentUser);
         };
         document.getElementById('addOverviewBlockBtn').onclick = (e) => {
-            e.preventDefault();
-            import('./planner.js').then(mod => mod.addOverviewBlock(currentUser));
+            e.preventDefault(); renderDynamicOverviewBlocks(currentUser);
         };
         document.getElementById('clearHistoryBtn').onclick = async () => {
             if(confirm("Permanently delete ALL history?")) {
