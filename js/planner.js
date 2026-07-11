@@ -35,7 +35,6 @@ function refreshUI(uid, targetMonth = null) {
     });
 }
 
-// --- FUNÇÕES DE UNDO E AUXILIARES ---
 function pushToUndo() {
     undoStack.push({
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
@@ -65,7 +64,6 @@ function refreshGlobalTexts() {
     });
 }
 
-// --- CONTROLE DO MODO DE EDIÇÃO ---
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     
@@ -76,7 +74,6 @@ export function cancelEdit(uid) {
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
     
-    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
     const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -127,7 +124,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         
-        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -147,7 +143,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         
-        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -169,7 +164,6 @@ export function toggleEditMode(uid) {
     renderDailyTemplate(uid);
 }
 
-// --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
 function refreshCurrentWeek(uid) {
     builtWeeks.clear();
     const active = document.querySelector('.mpanel.on .wpanel.on');
@@ -330,14 +324,14 @@ export function addNewMonth(uid) {
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${w}`, theme: "New Month Plans",
+            label: `Week ${w}`, theme: "Plans",
             days: Array.from({length: daysInW}, (_, i) => {
                 const d = currentDay++;
                 return { 
                     n: d, 
-                    name: dayNames[i % 7], 
-                    tag: "Daily Activity", 
-                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                    name: dayNames[i], 
+                    tag: "Activity", 
+                    activities: [{t:"grammar", i:"📐", title:"Task", desc:"Edit", time: "20m"}]
                 };
             })
         };
@@ -363,42 +357,10 @@ export function editMonthStructure(m, uid) {
     });
 
     if (dayCount < existingDays.length) {
-        let hasCustomContent = false;
-        let affectedDays = [];
-
-        for (let i = dayCount; i < existingDays.length; i++) {
-            const dayObj = existingDays[i];
-            const stateKey = `m${m}-d${dayObj.n}`;
-            const oldKey = `d${dayObj.n}`; 
-            const dayState = window.appState[stateKey] || window.appState[oldKey];
-            
-            let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
-            let isTagEdited = dayObj.tag !== "Daily Act";
-            let areActivitiesEdited = dayObj.activities.some(act => 
-                (act.title !== "Study Topic" && act.title !== "New Activity") || 
-                (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
-            );
-
-            if (hasProgressOrNotes || isTagEdited || areActivitiesEdited) {
-                hasCustomContent = true;
-                affectedDays.push(dayObj.n);
-            }
-        }
-
-        if (hasCustomContent) {
-            const warningMessage = `ATTENTION: Reducing to ${dayCount} days will DELETE custom content/notes on days: ${affectedDays.join(', ')}.\n\nDo you want to proceed and PERMANENTLY DELETE this data?`;
-            if (!confirm(warningMessage)) return;
-        }
-
-        for (let i = dayCount; i < existingDays.length; i++) {
-            const dayNum = existingDays[i].n;
-            delete window.appState[`m${m}-d${dayNum}`];
-            delete window.appState[`d${dayNum}`];
-        }
+        if (!confirm(`Reducing to ${dayCount} days will delete data on extra days. Proceed?`)) return;
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
-
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
     let currentDayIdx = 0;
@@ -407,47 +369,35 @@ export function editMonthStructure(m, uid) {
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         const weekDays = [];
-        
         for (let d = 0; d < daysInW; d++) {
             const newDayNum = currentDayIdx + 1;
-            
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
                 preserved.n = newDayNum;
-                preserved.name = dayNames[d % 7];
+                preserved.name = dayNames[d]; // Garante Monday a Sunday
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
                     n: newDayNum, 
-                    name: dayNames[d % 7], 
-                    tag: "Daily Activity", 
-                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
+                    name: dayNames[d], 
+                    tag: "Activity", 
+                    activities: [{t:"grammar", i:"📐", title:"Task", desc:"Edit", time: "20m"}]
                 });
             }
             currentDayIdx++;
         }
-
         window.plannerConfig[`${m}-${w}`] = {
-            label: `Week ${w}`, 
-            theme: "Plans Updated",
-            days: weekDays
+            label: `Week ${w}`, theme: "Updated", days: weekDays
         };
     }
-
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
 
 export function deleteMonth(m, uid) {
-    if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
+    if (confirm(`Are you sure you want to delete Month ${m}?`)) {
          addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
-         
-         const months = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))].sort((a,b) => a-b);
-         const currentIndex = months.indexOf(m.toString());
-         const targetMonth = currentIndex > 0 ? months[currentIndex - 1] : months[currentIndex + 1];
- 
          Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
-         
-         saveUserData(uid).then(() => refreshUI(uid, targetMonth));
+         saveUserData(uid).then(() => refreshUI(uid));
      }
  }
 
@@ -457,7 +407,6 @@ export function addOverviewBlock(uid) {
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
-    
     renderDynamicOverviewBlocks(uid);
 }
 
@@ -467,10 +416,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!grid) return;
 
     const content = customContent || window.pageContent || {};
-    
-    // Removido os defaults de inglês para manter o planner limpo
-    const defaults = [];
-
     grid.innerHTML = '';
 
     if(content.dynamicBlocks) {
@@ -481,7 +426,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
                 <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'Phase X'}</div>
-                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Month focus...'}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Edit focus...'}</div>
             `;
             grid.appendChild(newBlock);
         });
@@ -490,11 +435,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!prefix && isEditMode) {
         grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
-            el.onblur = () => {
-                window.pageContent[el.id] = el.innerHTML;
-            };
+            el.onblur = () => { window.pageContent[el.id] = el.innerHTML; };
         });
-
         grid.querySelectorAll('.del-ov-btn').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -510,20 +452,13 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
-// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
     if (!list) return;
 
     const content = customContent || window.pageContent || {};
-    
-    if (!content.templateRows) {
-        content.templateRows = [];
-    }
-
-    const defaults = {};
-
+    if (!content.templateRows) content.templateRows = [];
     list.innerHTML = '';
 
     content.templateRows.forEach(rowId => {
@@ -533,7 +468,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
             <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
-            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || 'Task description...'}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || 'Edit task...'}</div>
         `;
         list.appendChild(row);
     });
@@ -541,16 +476,12 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     if (!prefix && isEditMode) {
         list.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
-            el.onblur = () => { 
-                if (!window.pageContent) window.pageContent = {};
-                window.pageContent[el.id] = el.innerHTML; 
-            };
+            el.onblur = () => { if (!window.pageContent) window.pageContent = {}; window.pageContent[el.id] = el.innerHTML; };
         });
-
         list.querySelectorAll('.del-tpl-btn').forEach(btn => {
             btn.onclick = () => {
                 const rId = btn.dataset.id;
-                if(confirm("Delete this task from template?")) {
+                if(confirm("Delete this task?")) {
                     pushToUndo();
                     window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
                     renderDailyTemplate(uid);
@@ -560,7 +491,6 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
-// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
