@@ -367,7 +367,7 @@ canvas {
   top: calc(100% + 10px);
   right: 0;
   width: 280px;
-  background: #f2f2f7; /* Cor de fundo estilo iOS/iPadOS */
+  background: #f2f2f7;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   z-index: 2000;
@@ -378,94 +378,116 @@ canvas {
   border: 1px solid rgba(0,0,0,0.05);
 }
 
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
+.menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 .grid-item {
-  background: white;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 5px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  position: relative;
+  background: white; border: none; border-radius: 12px; padding: 12px 5px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; cursor: pointer; transition: background 0.2s; position: relative;
 }
-
 .grid-item:hover { background: #e5e5ea; }
-
 .grid-icon { font-size: 1.4rem; }
 .grid-text { font-size: 0.65rem; font-weight: 500; color: #333; text-align: center; }
 
 .new-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 0.5rem;
-  background: #e5e5ea;
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-weight: bold;
-  color: #666;
+  position: absolute; top: 4px; right: 4px; font-size: 0.5rem;
+  background: #e5e5ea; padding: 2px 4px; border-radius: 4px; font-weight: bold; color: #666;
 }
 
-.menu-row-btns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
+.menu-row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row-btn {
-  background: white;
-  border: none;
-  border-radius: 12px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
+  background: white; border: none; border-radius: 12px; padding: 15px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
 }
-
 .row-icon { font-size: 1.2rem; }
 .row-text { font-size: 0.75rem; font-weight: 500; color: #333; }
 
-.menu-list, .menu-footer {
-  background: white;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
+.menu-list, .menu-footer { background: white; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
 .list-item {
-  background: white;
-  border: none;
-  border-bottom: 1px solid #f2f2f7;
-  padding: 12px 15px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-  transition: background 0.2s;
+  background: white; border: none; border-bottom: 1px solid #f2f2f7;
+  padding: 12px 15px; display: flex; align-items: center; gap: 12px; cursor: pointer;
+  text-align: left; width: 100%; transition: background 0.2s;
 }
-
 .list-item:hover { background: #f9f9f9; }
 .list-item:last-child { border-bottom: none; }
-
 .list-icon { font-size: 1.1rem; color: #555; width: 24px; text-align: center; }
 .list-text { font-size: 0.85rem; font-weight: 400; color: #000; }
-
 .menu-footer { margin-top: 5px; }
+
+/* --- NOTEBOOK MODAL STYLES --- */
+.nb-modal-container {
+  background: #f2f2f7; width: 100%; max-width: 800px; max-height: 90vh;
+  border-radius: 20px; overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.nb-header {
+  padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #d1d1d6; background: #f2f2f7;
+}
+.nb-title { font-weight: 600; font-size: 1.1rem; }
+.nb-btn-text { background: none; border: none; color: #007aff; font-size: 1rem; cursor: pointer; }
+.nb-btn-primary { background: #007aff; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+
+.nb-body { overflow-y: auto; padding: 25px; flex: 1; }
+
+.nb-top-section { display: flex; gap: 40px; margin-bottom: 30px; }
+
+.nb-previews { display: flex; gap: 20px; }
+.nb-preview-item { display: flex; flex-direction: column; align-items: center; }
+.nb-label-preview { font-size: 0.7rem; font-weight: bold; color: #8e8e93; margin-bottom: 10px; }
+.nb-preview-box {
+  width: 140px; height: 180px; background: white; border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #d1d1d6;
+  display: flex; align-items: center; justify-content: center; padding: 15px; text-align: center;
+}
+.nb-preview-sub { font-size: 0.8rem; color: #333; margin-top: 8px; }
+
+.cover-img { background: #f9d7d9; border-right: 8px solid #c85a2a; font-family: 'Pacifico', cursive; font-size: 0.8rem; color: #1a1814; }
+.paper-blank { background: white; }
+
+.nb-settings-column { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.nb-setting-row label { font-size: 0.9rem; font-weight: 500; color: #333; margin-bottom: 4px; display: block; }
+.nb-setting-row input, .nb-setting-row select {
+  width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #d1d1d6; background: white; outline: none;
+}
+.nb-flex-between { display: flex !important; flex-direction: row !important; justify-content: space-between; align-items: center; }
+.nb-divider-mini { font-size: 0.65rem; font-weight: bold; color: #8e8e93; margin: 15px 0 5px; }
+
+.nb-papers-section { border-top: 1px solid #d1d1d6; padding-top: 20px; }
+.nb-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.nb-section-header span { font-weight: bold; font-size: 1.1rem; }
+.nb-edit-link { color: #007aff; background: none; border: none; font-size: 0.9rem; cursor: pointer; }
+
+.nb-group-label { font-size: 1rem; font-weight: 600; margin: 20px 0 10px; }
+.nb-papers-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+
+.nb-paper-card { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; padding: 10px; border-radius: 12px; transition: 0.2s; }
+.nb-paper-card:hover { background: #e5e5ea; }
+.nb-paper-card.active { background: #e5e5ea; position: relative; }
+.nb-paper-card.active::before {
+  content: '✓'; position: absolute; top: 15px; left: 15px; background: #007aff; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;
+}
+
+.nb-paper-thumb { width: 100%; aspect-ratio: 3/4; background: white; border-radius: 4px; border: 1px solid #d1d1d6; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.nb-paper-name { font-size: 0.75rem; text-align: center; color: #333; margin-top: 5px; }
+.nb-paper-dots { display: flex; gap: 3px; margin-top: 4px; }
+.nb-paper-dots span { width: 6px; height: 6px; border-radius: 50%; border: 1px solid #d1d1d6; }
+
+/* Thumbs specific styles */
+.thumb-blank { background: white; }
+.thumb-dotted { background-image: radial-gradient(#d1d1d6 1px, transparent 1px); background-size: 10px 10px; }
+.thumb-squared { background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); background-size: 10px 10px; }
+.thumb-ruled { background-image: repeating-linear-gradient(transparent, transparent 7px, #e5e5ea 7px, #e5e5ea 8px); }
+.thumb-ruled-wide { background-image: repeating-linear-gradient(transparent, transparent 12px, #e5e5ea 12px, #e5e5ea 13px); }
+
+/* Switch Style */
+.nb-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.nb-switch input { opacity: 0; width: 0; height: 0; }
+.nb-slider { position: absolute; cursor: pointer; inset: 0; background-color: #d1d1d6; transition: .4s; border-radius: 34px; }
+.nb-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .nb-slider { background-color: #34c759; }
+input:checked + .nb-slider:before { transform: translateX(20px); }
 
 /* Estilização Individual dos Botões da Barra de Ações */
 .nbtn-primary, .nbtn-secondary, .nbtn-close, .notes-select {
