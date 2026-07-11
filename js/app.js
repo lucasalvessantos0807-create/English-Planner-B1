@@ -8,13 +8,13 @@ function refreshGlobalDOM(content, targetPrefix = "") {
     const data = content || {};
     
     // Conteúdos padrão integrais (Daily Template restaurado)
-    const defaults = {
-        "global-cover-eye": "Personal English Study Planner",
-        "global-cover-title": "A2+ to B1 Roadmap",
-        "global-cover-sub": "3 months · Every day · 1.5–2+ hours · Full fluency focus",
+   const defaults = {
+        "global-cover-eye": "Personal Study Planner",
+        "global-cover-title": "Your Roadmap",
+        "global-cover-sub": "Custom Duration · Daily Goals · Your Focus",
         "global-goal-strong": "🎯 Your Goal",
-        "global-goal-text": "Reach B1 level — understand the main points of clear input on familiar topics, handle travel situations, produce connected text, and describe experiences, events, and plans with detail.",
-        "global-sec-overview": "Month Overview",
+        "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
+        "global-sec-overview": "Overview",
         "global-sec-template": "Daily Template",
     };
 
