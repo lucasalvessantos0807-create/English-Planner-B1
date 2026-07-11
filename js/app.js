@@ -161,32 +161,33 @@ if (manageAccountBtn) {
         const openNotesBtn = document.getElementById('openNotesBtn');
         const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
-        if (openNotesBtn) {
+       if (openNotesBtn) {
             openNotesBtn.onclick = () => {
                 const isNotesOpen = notesArea.style.display === 'flex';
                 const fabLabel = openNotesBtn.querySelector('.fab-label');
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // Switch to Library View
-                   notesArea.style.display = 'flex';
-                    notesArea.style.flexDirection = 'column';
-                    notesArea.style.justifyContent = 'flex-start';
-                    notesArea.style.alignItems = 'stretch';
+                    // MODO NOTAS ATIVO
+                    notesArea.style.display = 'flex';
+                    notesSidebar.style.display = 'flex';
+                    plannerContent.style.display = 'none'; // Esconde totalmente o planner
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
                     
                     renderLibrary();
                 } else {
-                    // Return to Planner View
+                    // MODO PLANNER ATIVO
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
-                    plannerContent.style.display = 'block';
+                    plannerContent.style.display = 'block'; // Volta o planner
                     
                     if (fabLabel) fabLabel.textContent = "Notes & Library";
                     if (fabIcon) fabIcon.textContent = "📓";
                 }
+                // Reseta a rolagem para o topo sempre que trocar de página
+                plannerContent.scrollTop = 0;
             };
         }
 
@@ -196,6 +197,7 @@ if (manageAccountBtn) {
                 notesArea.style.display = 'none';
                 notesSidebar.style.display = 'none';
                 plannerContent.style.display = 'block';
+                plannerContent.scrollTop = 0; // Garante que volta pro topo do planner
                 
                 if (openNotesBtn) {
                     const fabLabel = openNotesBtn.querySelector('.fab-label');
