@@ -163,7 +163,6 @@ if (manageAccountBtn) {
 
         if (openNotesBtn) {
             openNotesBtn.onclick = () => {
-                // Verificação de segurança para garantir que os elementos existem
                 if (!notesArea || !notesSidebar || !plannerContent) return;
 
                 const isNotesOpen = notesArea.style.display === 'flex';
@@ -171,10 +170,10 @@ if (manageAccountBtn) {
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // MUDAR PARA MODO NOTAS
+                    // MODO NOTAS ATIVADO
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
-                    plannerContent.style.display = 'none';
+                    plannerContent.style.display = 'none'; // Esconde planner e capa automaticamente
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
@@ -192,6 +191,7 @@ if (manageAccountBtn) {
             };
         }
 
+        // Controle da Sidebar Colapsável
         if (sidebarToggle && notesSidebar) {
             sidebarToggle.onclick = (e) => {
                 e.stopPropagation();
@@ -199,12 +199,13 @@ if (manageAccountBtn) {
             };
         }
 
+        // Linkar o botão interno da barra de notas ao toggle do FAB
         if (document.getElementById('close-notes-btn')) {
             document.getElementById('close-notes-btn').onclick = () => {
                 if (openNotesBtn) openNotesBtn.click();
             };
         }
-        // --- END OF NOTES SYSTEM UI LOGIC ----
+        // --- END OF NOTES SYSTEM UI LOGIC ---
         
         document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
         document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
