@@ -21,7 +21,7 @@ let currentDoc = null;
 export function renderLibrary() {
     const grid = document.getElementById('notes-grid');
     const breadcrumb = document.getElementById('notes-breadcrumb');
-    const sortVal = document.getElementById('sort-docs-select').value;
+    const sortVal = document.getElementById('sort-docs-select') ? document.getElementById('sort-docs-select').value : 'name';
 
     if (!grid) return;
     grid.innerHTML = '';
