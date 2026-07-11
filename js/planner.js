@@ -59,7 +59,7 @@ export function performUndo(uid) {
 function refreshGlobalTexts() {
     Object.keys(window.pageContent || {}).forEach(id => {
         const el = document.getElementById(id);
-        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { // Ignora blocos dinâmicos aqui
+        if (el && !el.id.includes('ov-') && !el.id.includes('tpl-')) { 
             el.innerHTML = window.pageContent[id];
         }
     });
@@ -76,7 +76,6 @@ export function cancelEdit(uid) {
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
     
-    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
     const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -127,7 +126,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         
-        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -147,7 +145,6 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         
-        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -230,7 +227,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
                 <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
-                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Day ${day.n} completed</span></label>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Completed</span></label>
             </div>`;
 
         if (isEditMode && !isPreview) {
@@ -393,14 +390,14 @@ export function editMonthStructure(m, uid) {
             currentDayIdx++;
         }
         window.plannerConfig[`${m}-${w}`] = {
-            label: `Week ${w}`, theme: "Plans Updated", days: weekDays
+            label: `Week ${w}`, theme: "Updated", days: weekDays
         };
     }
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
 
 export function deleteMonth(m, uid) {
-    if (confirm(`Are you sure you want to delete Month ${m}? All progress for this month will be lost.`)) {
+    if (confirm(`Are you sure you want to delete Month ${m}?`)) {
          addHistoryEntry(`Before Deleting Month ${m}`, window.plannerConfig, window.pageContent);
          Object.keys(window.plannerConfig).forEach(k => { if (k.startsWith(`${m}-`)) delete window.plannerConfig[k]; });
          saveUserData(uid).then(() => refreshUI(uid));
@@ -413,6 +410,7 @@ export function addOverviewBlock(uid) {
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
+    
     renderDynamicOverviewBlocks(uid);
 }
 
@@ -458,6 +456,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
+// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
@@ -497,6 +496,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
+// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
