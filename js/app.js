@@ -170,17 +170,17 @@ if (manageAccountBtn) {
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // MODO NOTAS ATIVADO
+                    // Enter Notes & Library Mode
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
-                    plannerContent.style.display = 'none'; // Esconde planner e capa automaticamente
+                    plannerContent.style.display = 'none'; // Automatically hides topbar and cover
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
                     
                     renderLibrary();
                 } else {
-                    // VOLTAR PARA MODO PLANNER
+                    // Return to Planner Mode
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
                     plannerContent.style.display = 'block';
@@ -191,7 +191,6 @@ if (manageAccountBtn) {
             };
         }
 
-        // Controle da Sidebar Colapsável
         if (sidebarToggle && notesSidebar) {
             sidebarToggle.onclick = (e) => {
                 e.stopPropagation();
@@ -199,7 +198,6 @@ if (manageAccountBtn) {
             };
         }
 
-        // Linkar o botão interno da barra de notas ao toggle do FAB
         if (document.getElementById('close-notes-btn')) {
             document.getElementById('close-notes-btn').onclick = () => {
                 if (openNotesBtn) openNotesBtn.click();
