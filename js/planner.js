@@ -35,6 +35,7 @@ function refreshUI(uid, targetMonth = null) {
     });
 }
 
+// --- FUNÇÕES DE UNDO E AUXILIARES ---
 function pushToUndo() {
     undoStack.push({
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
@@ -64,6 +65,7 @@ function refreshGlobalTexts() {
     });
 }
 
+// --- CONTROLE DO MODO DE EDIÇÃO ---
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     
@@ -74,6 +76,7 @@ export function cancelEdit(uid) {
     document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
     document.getElementById('addOverviewBlockBtn').style.display = 'none';
     
+    // UI específica do Template Dinâmico
     const tplList = document.getElementById('dynamic-tpl-list');
     if (tplList) tplList.classList.remove('edit-active');
     const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -124,6 +127,7 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.add('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'block';
         
+        // Ativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.add('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -143,6 +147,7 @@ export function toggleEditMode(uid) {
         document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
         document.getElementById('addOverviewBlockBtn').style.display = 'none';
         
+        // Desativa botões do Template Dinâmico
         const tplList = document.getElementById('dynamic-tpl-list');
         if (tplList) tplList.classList.remove('edit-active');
         const addTplBtn = document.getElementById('addTemplateRowBtn');
@@ -164,6 +169,7 @@ export function toggleEditMode(uid) {
     renderDailyTemplate(uid);
 }
 
+// --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
 function refreshCurrentWeek(uid) {
     builtWeeks.clear();
     const active = document.querySelector('.mpanel.on .wpanel.on');
@@ -309,6 +315,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     });
 }
 
+// --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days for this new month?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
@@ -319,18 +326,18 @@ export function addNewMonth(uid) {
     
     let currentDay = 1;
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    
+
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${w}`, theme: "Click to edit your weekly theme",
+            label: `Week ${w}`, theme: "New Month Plans",
             days: Array.from({length: daysInW}, (_, i) => {
                 const d = currentDay++;
                 return { 
                     n: d, 
-                    name: dayNames[i], 
+                    name: dayNames[i % 7], 
                     tag: "Daily Activity", 
-                    activities: [{t:"grammar", i:"📝", title:"New Activity", desc:"Edit", time: "20m"}]
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
                 };
             })
         };
@@ -366,7 +373,7 @@ export function editMonthStructure(m, uid) {
             const dayState = window.appState[stateKey] || window.appState[oldKey];
             
             let hasProgressOrNotes = dayState && (dayState.done === true || (dayState.notes && dayState.notes.trim() !== ""));
-            let isTagEdited = dayObj.tag !== "Daily Activity";
+            let isTagEdited = dayObj.tag !== "Daily Act";
             let areActivitiesEdited = dayObj.activities.some(act => 
                 (act.title !== "Study Topic" && act.title !== "New Activity") || 
                 (act.desc !== "Edit" && act.desc !== "Click to edit your activity")
@@ -396,6 +403,7 @@ export function editMonthStructure(m, uid) {
 
     let currentDayIdx = 0;
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         const weekDays = [];
@@ -406,14 +414,14 @@ export function editMonthStructure(m, uid) {
             if (existingDays[currentDayIdx]) {
                 const preserved = existingDays[currentDayIdx];
                 preserved.n = newDayNum;
-                preserved.name = dayNames[d];
+                preserved.name = dayNames[d % 7];
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
                     n: newDayNum, 
-                    name: dayNames[d], 
+                    name: dayNames[d % 7], 
                     tag: "Daily Activity", 
-                    activities: [{t:"grammar", i:"📝", title:"New Activity", desc:"Edit", time: "20m"}]
+                    activities: [{t:"grammar", i:"📐", title:"Study Topic", desc:"Edit", time: "20m"}]
                 });
             }
             currentDayIdx++;
@@ -460,6 +468,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
 
     const content = customContent || window.pageContent || {};
     
+    // Removido os defaults de inglês para manter o planner limpo
     const defaults = [];
 
     grid.innerHTML = '';
@@ -501,6 +510,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
+// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
@@ -522,8 +532,8 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.id = `${prefix}row-container-${rowId}`;
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
-            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || defaults[rowId + '-t'] || '00:00'}</div>
-            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || defaults[rowId + '-a'] || 'Task description...'}</div>
+            <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || 'Task description...'}</div>
         `;
         list.appendChild(row);
     });
@@ -550,6 +560,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     }
 }
 
+// Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
