@@ -612,21 +612,28 @@ onAuthStateChanged(auth, async (user) => {
             });
         }
 
-        document.getElementById('addMonthBtn').onclick = (e) => {
-            e.preventDefault(); addNewMonth(currentUser);
-        };
-        // CORREÇÃO: Vinculação correta do botão de Adicionar Blocos de Overview
-        document.getElementById('addOverviewBlockBtn').onclick = (e) => {
-            e.preventDefault(); addOverviewBlock(currentUser);
-        };
-        document.getElementById('clearHistoryBtn').onclick = async () => {
-            if(confirm("Permanently delete ALL history?")) {
-                await clearAllHistory(currentUser);
-                renderHistory();
-            }
-        };
+        if (document.getElementById('addMonthBtn')) {
+            document.getElementById('addMonthBtn').onclick = (e) => {
+                e.preventDefault(); addNewMonth(currentUser);
+            };
+        }
 
-       renderLibrary();
+        if (document.getElementById('addOverviewBlockBtn')) {
+            document.getElementById('addOverviewBlockBtn').onclick = (e) => {
+                e.preventDefault(); addOverviewBlock(currentUser);
+            };
+        }
+
+        if (document.getElementById('clearHistoryBtn')) {
+            document.getElementById('clearHistoryBtn').onclick = async () => {
+                if(confirm("Permanently delete ALL history?")) {
+                    await clearAllHistory(currentUser);
+                    renderHistory();
+                }
+            };
+        }
+
+        renderLibrary();
         updateProgressBar();
         
     } else {
