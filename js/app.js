@@ -163,24 +163,22 @@ if (manageAccountBtn) {
 
         if (openNotesBtn) {
             openNotesBtn.onclick = () => {
-                if (!notesArea || !notesSidebar || !plannerContent) return;
-
                 const isNotesOpen = notesArea.style.display === 'flex';
                 const fabLabel = openNotesBtn.querySelector('.fab-label');
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
 
                 if (!isNotesOpen) {
-                    // Enter Notes & Library Mode
+                    // Switch to Library View
                     notesArea.style.display = 'flex';
                     notesSidebar.style.display = 'flex';
-                    plannerContent.style.display = 'none'; // Automatically hides topbar and cover
+                    plannerContent.style.display = 'none';
                     
                     if (fabLabel) fabLabel.textContent = "Back to Planner";
                     if (fabIcon) fabIcon.textContent = "📅";
                     
                     renderLibrary();
                 } else {
-                    // Return to Planner Mode
+                    // Return to Planner View
                     notesArea.style.display = 'none';
                     notesSidebar.style.display = 'none';
                     plannerContent.style.display = 'block';
@@ -195,12 +193,6 @@ if (manageAccountBtn) {
             sidebarToggle.onclick = (e) => {
                 e.stopPropagation();
                 notesSidebar.classList.toggle('collapsed');
-            };
-        }
-
-        if (document.getElementById('close-notes-btn')) {
-            document.getElementById('close-notes-btn').onclick = () => {
-                if (openNotesBtn) openNotesBtn.click();
             };
         }
         // --- END OF NOTES SYSTEM UI LOGIC ---
