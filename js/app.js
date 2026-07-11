@@ -91,8 +91,8 @@ onAuthStateChanged(auth, async (user) => {
                 if (finalCheck === "DELETE") {
                     try {
                         await deleteDoc(doc(db, "users", currentUser));
-                        const user = auth.currentUser;
-                        await deleteUser(user);
+                        const userAuth = auth.currentUser;
+                        await deleteUser(userAuth);
                         alert("Your account and all data have been successfully deleted.");
                         window.location.reload();
                     } catch (error) {
@@ -129,21 +129,16 @@ onAuthStateChanged(auth, async (user) => {
         // --- FLOATING ACTION BUTTON LOGIC ---
         const fabWrapper = document.getElementById('fabWrapper');
         const fabMain = document.getElementById('fabMain');
-        
         if (fabMain && fabWrapper) {
             fabMain.onclick = (e) => {
                 e.stopPropagation();
                 fabWrapper.classList.toggle('open');
             };
-
-            // Fecha o FAB ao clicar fora
             document.addEventListener('click', (e) => {
                 if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
                     fabWrapper.classList.remove('open');
                 }
             });
-
-            // Fecha o FAB ao clicar em um item
             document.querySelectorAll('.fab-item').forEach(item => {
                 item.addEventListener('click', () => {
                     fabWrapper.classList.remove('open');
@@ -213,7 +208,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('undoLastImportBtn').onclick = async () => {
             if (importHistory.length > 0) {
                 const lastBackup = importHistory[0];
-                if (confirm(`Undo last import and restore to state from: ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
+                if (confirm(`Restore to ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
                     await importData(lastBackup, currentUser, true);
                     await deleteImportBackup(currentUser, lastBackup.id);
                     window.location.reload();
@@ -369,7 +364,7 @@ onAuthStateChanged(auth, async (user) => {
         function applySolid(color) {
             document.getElementById('page-cover').style.background = color;
             if (!colorHistory.solids.includes(color)) {
-                colorHistory.solids.unshift(color);
+                colorHistory. solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
             }
             saveAllColorData(color);
@@ -460,7 +455,6 @@ onAuthStateChanged(auth, async (user) => {
                 }
             };
         }
-
         if (settingsBtn) {
             settingsBtn.onclick = () => {
                 if (!document.body.classList.contains('preview-mode')) {
@@ -471,14 +465,12 @@ onAuthStateChanged(auth, async (user) => {
                 }
             };
         }
-
         if (closeDrawer) {
             closeDrawer.onclick = () => {
                 customDrawer.classList.remove('open');
                 fabWrapper.classList.remove('fab-hidden');
             };
         }
-
         if (closeSettings) {
             closeSettings.onclick = () => {
                 settingsDrawer.classList.remove('open');
