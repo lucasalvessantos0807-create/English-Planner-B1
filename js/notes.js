@@ -24,23 +24,27 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Update Breadcrumb and Navigation path
-    if (currentView === 'favorites') {
-        breadcrumb.innerText = 'Favorites';
-    } else if (currentView === 'shared') {
-        breadcrumb.innerText = 'Shared Documents';
-    } else if (!currentFolderId) {
-        breadcrumb.innerText = 'Documents';
-    } else {
-        const folder = library.folders.find(f => f.id === currentFolderId);
-        breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
-        const backBtn = document.getElementById('back-to-root');
-        if (backBtn) {
-            backBtn.onclick = () => {
-                currentFolderId = null;
-                currentView = 'all';
-                renderLibrary();
-            };
+    // Safety check for breadcrumb element
+    if (breadcrumb) {
+        if (currentView === 'favorites') {
+            breadcrumb.innerText = 'Favorites';
+        } else if (currentView === 'shared') {
+            breadcrumb.innerText = 'Shared Documents';
+        } else if (!currentFolderId) {
+            breadcrumb.innerText = 'Documents';
+        } else {
+            const folder = library.folders.find(f => f.id === currentFolderId);
+            breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
+            
+            // Re-attach event to the dynamic "back-to-root" span
+            const backBtn = document.getElementById('back-to-root');
+            if (backBtn) {
+                backBtn.onclick = () => {
+                    currentFolderId = null;
+                    currentView = 'all';
+                    renderLibrary();
+                };
+            }
         }
     }
 
@@ -49,12 +53,12 @@ export function renderLibrary() {
     let docsToShow = [];
 
     if (currentView === 'all') {
-        foldersToShow = library.folders.filter(f => f.parentId === currentFolderId);
-        docsToShow = library.documents.filter(d => d.parentId === currentFolderId);
+        foldersToShow = (library.folders || []).filter(f => f.parentId === currentFolderId);
+        docsToShow = (library.documents || []).filter(d => d.parentId === currentFolderId);
     } else if (currentView === 'favorites') {
-        docsToShow = library.documents.filter(d => d.favorite);
+        docsToShow = (library.documents || []).filter(d => d.favorite);
     } else if (currentView === 'shared') {
-        docsToShow = library.documents.filter(d => d.shared);
+        docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
     // Sorting Logic
@@ -136,6 +140,7 @@ export function createFolder() {
         updatedAt: Date.now()
     };
 
+    if (!library.folders) library.folders = [];
     library.folders.push(newFolder);
     saveLibrary();
 }
@@ -155,6 +160,7 @@ export function createDocument() {
         data: null 
     };
 
+    if (!library.documents) library.documents = [];
     library.documents.push(newDoc);
     saveLibrary();
     openDocument(newDoc);
@@ -166,16 +172,17 @@ function deleteDocument(id) {
 }
 
 function deleteFolder(id) {
-    // Recursive-like deletion: remove docs in this folder
     library.documents = library.documents.filter(d => d.parentId !== id);
     library.folders = library.folders.filter(f => f.id !== id);
     saveLibrary();
 }
 
 async function saveLibrary() {
-    const uid = window.auth.currentUser.uid;
-    await saveUserData(uid);
-    renderLibrary();
+    const user = window.auth.currentUser;
+    if (user) {
+        await saveUserData(user.uid);
+        renderLibrary();
+    }
 }
 
 // --- 2. CANVAS / DRAWING SYSTEM (Bluetooth Pen Support) ---
@@ -198,9 +205,9 @@ function openDocument(doc) {
 
 function initCanvas() {
     canvas = document.getElementById('note-canvas');
+    if (!canvas) return;
     ctx = canvas.getContext('2d');
 
-    // High DPI Support for precise drawing with Bluetooth Pens
     const ratio = window.devicePixelRatio || 1;
     canvas.width = 850 * ratio;
     canvas.height = 1100 * ratio;
@@ -211,7 +218,6 @@ function initCanvas() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Event listeners for drawing (using PointerEvents for pressure sensitivity)
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
@@ -238,7 +244,6 @@ function draw(e) {
     if (currentTool === 'pen') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = document.getElementById('pen-color').value;
-        // Bluetooth pen pressure support
         const pressure = e.pressure !== undefined && e.pressure > 0 ? e.pressure : 1;
         ctx.lineWidth = document.getElementById('pen-width').value * pressure;
     } else {
@@ -253,7 +258,7 @@ function draw(e) {
 function stopDrawing() {
     isDrawing = false;
     if (currentDoc) {
-        currentDoc.data = canvas.toDataURL(); // Keep current state in memory
+        currentDoc.data = canvas.toDataURL();
     }
 }
 
@@ -342,6 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateNavUI(activeBtn) {
         document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
-        activeBtn.classList.add('active');
+        if (activeBtn) activeBtn.classList.add('active');
     }
 });
