@@ -355,23 +355,34 @@ if (manageAccountBtn) {
         if (editCoverBtn) {
             editCoverBtn.onclick = (e) => {
                 e.stopPropagation();
-                colorMenu.style.display = (colorMenu.style.display === 'flex') ? 'none' : 'flex';
+                if (colorMenu) colorMenu.style.display = (colorMenu.style.display === 'flex') ? 'none' : 'flex';
             };
         }
 
-        document.getElementById('choiceSolid').onclick = () => {
-            pickingGradient = false; color1 = null;
-            document.getElementById('pickerActionTitle').textContent = "Select Color";
-            colorMenu.style.display = 'none'; openPicker();
-        };
+        const choiceSolid = document.getElementById('choiceSolid');
+        if (choiceSolid) {
+            choiceSolid.onclick = () => {
+                pickingGradient = false; color1 = null;
+                document.getElementById('pickerActionTitle').textContent = "Select Color";
+                if (colorMenu) colorMenu.style.display = 'none'; 
+                openPicker();
+            };
+        }
 
-        document.getElementById('choiceGradient').onclick = () => {
-            pickingGradient = true; color1 = null;
-            document.getElementById('pickerActionTitle').textContent = "Select Color 1";
-            colorMenu.style.display = 'none'; openPicker();
-        };
+        const choiceGradient = document.getElementById('choiceGradient');
+        if (choiceGradient) {
+            choiceGradient.onclick = () => {
+                pickingGradient = true; color1 = null;
+                document.getElementById('pickerActionTitle').textContent = "Select Color 1";
+                if (colorMenu) colorMenu.style.display = 'none'; 
+                openPicker();
+            };
+        }
 
-        document.getElementById('choiceCancel').onclick = () => { colorMenu.style.display = 'none'; };
+        const choiceCancel = document.getElementById('choiceCancel');
+        if (choiceCancel) {
+            choiceCancel.onclick = () => { if (colorMenu) colorMenu.style.display = 'none'; };
+        }
         
         document.addEventListener('click', (e) => {
             if (colorMenu && !colorMenu.contains(e.target) && e.target !== editCoverBtn) colorMenu.style.display = 'none';
@@ -379,7 +390,7 @@ if (manageAccountBtn) {
                 document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
             }
         });
-
+        
         function openPicker() {
             renderHistoryUI();
             document.getElementById('colorPickerContainer').classList.add('open');
