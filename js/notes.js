@@ -24,24 +24,27 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
 
-    // Update Breadcrumb and Navigation
+    // Update Breadcrumb and Navigation path
     if (currentView === 'favorites') {
         breadcrumb.innerText = 'Favorites';
     } else if (currentView === 'shared') {
-        breadcrumb.innerText = 'Shared with me';
+        breadcrumb.innerText = 'Shared Documents';
     } else if (!currentFolderId) {
         breadcrumb.innerText = 'Documents';
     } else {
         const folder = library.folders.find(f => f.id === currentFolderId);
         breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
-        document.getElementById('back-to-root').onclick = () => {
-            currentFolderId = null;
-            currentView = 'all';
-            renderLibrary();
-        };
+        const backBtn = document.getElementById('back-to-root');
+        if (backBtn) {
+            backBtn.onclick = () => {
+                currentFolderId = null;
+                currentView = 'all';
+                renderLibrary();
+            };
+        }
     }
 
-    // Filter items based on view and folder
+    // Filter items logic
     let foldersToShow = [];
     let docsToShow = [];
 
@@ -112,7 +115,7 @@ export function renderLibrary() {
                 doc.updatedAt = Date.now();
                 saveLibrary();
             } else {
-                if (confirm("Delete this document permanently?")) {
+                if (confirm("Delete this document?")) {
                     deleteDocument(doc.id);
                 }
             }
@@ -158,32 +161,24 @@ export function createDocument() {
 }
 
 function deleteDocument(id) {
-    const index = library.documents.findIndex(d => d.id === id);
-    if (index !== -1) {
-        library.documents.splice(index, 1);
-        saveLibrary();
-    }
+    library.documents = library.documents.filter(d => d.id !== id);
+    saveLibrary();
 }
 
 function deleteFolder(id) {
-    // Delete documents inside this folder
+    // Recursive-like deletion: remove docs in this folder
     library.documents = library.documents.filter(d => d.parentId !== id);
-    // Delete subfolders (one level deep for this logic)
-    library.folders = library.folders.filter(f => f.parentId !== id);
-    // Delete the folder itself
     library.folders = library.folders.filter(f => f.id !== id);
     saveLibrary();
 }
 
 async function saveLibrary() {
-    const user = window.auth.currentUser;
-    if (user) {
-        await saveUserData(user.uid);
-        renderLibrary();
-    }
+    const uid = window.auth.currentUser.uid;
+    await saveUserData(uid);
+    renderLibrary();
 }
 
-// --- 2. CANVAS / DRAWING SYSTEM ---
+// --- 2. CANVAS / DRAWING SYSTEM (Bluetooth Pen Support) ---
 
 function openDocument(doc) {
     currentDoc = doc;
@@ -205,7 +200,7 @@ function initCanvas() {
     canvas = document.getElementById('note-canvas');
     ctx = canvas.getContext('2d');
 
-    // High DPI Support for Retina/Modern screens and Stylus precision
+    // High DPI Support for precise drawing with Bluetooth Pens
     const ratio = window.devicePixelRatio || 1;
     canvas.width = 850 * ratio;
     canvas.height = 1100 * ratio;
@@ -216,7 +211,7 @@ function initCanvas() {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Pointer events support pressure sensitivity for Bluetooth Pens
+    // Event listeners for drawing (using PointerEvents for pressure sensitivity)
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
@@ -243,7 +238,7 @@ function draw(e) {
     if (currentTool === 'pen') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = document.getElementById('pen-color').value;
-        // Use pen pressure if available
+        // Bluetooth pen pressure support
         const pressure = e.pressure !== undefined && e.pressure > 0 ? e.pressure : 1;
         ctx.lineWidth = document.getElementById('pen-width').value * pressure;
     } else {
@@ -258,8 +253,7 @@ function draw(e) {
 function stopDrawing() {
     isDrawing = false;
     if (currentDoc) {
-        // Auto-save data URL to memory while drawing stops
-        currentDoc.data = canvas.toDataURL();
+        currentDoc.data = canvas.toDataURL(); // Keep current state in memory
     }
 }
 
@@ -283,31 +277,9 @@ export function exportLibrary() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `my_library_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
+    a.download = `library_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-}
-
-export async function importLibrary(file) {
-    try {
-        const text = await file.text();
-        const imported = JSON.parse(text);
-        if (imported.folders && imported.documents) {
-            if (confirm("This will merge the imported folders and documents with your current library. Continue?")) {
-                library.folders = [...library.folders, ...imported.folders];
-                library.documents = [...library.documents, ...imported.documents];
-                await saveLibrary();
-                alert("Library imported successfully!");
-            }
-        } else {
-            alert("Invalid library file format.");
-        }
-    } catch (err) {
-        console.error("Import failed:", err);
-        alert("Failed to import library.");
-    }
 }
 
 // --- 4. INITIALIZATION ---
@@ -320,27 +292,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const penBtn = document.getElementById('tool-pen');
     const eraserBtn = document.getElementById('tool-eraser');
     const sortSelect = document.getElementById('sort-docs-select');
-    const exportBtn = document.getElementById('export-library-btn');
-    const importBtn = document.getElementById('import-library-btn');
 
     if (newFolderBtn) newFolderBtn.onclick = createFolder;
     if (newDocBtn) newDocBtn.onclick = createDocument;
     if (closeBtn) closeBtn.onclick = closeEditor;
     if (saveDocBtn) saveDocBtn.onclick = closeEditor;
     if (sortSelect) sortSelect.onchange = renderLibrary;
-    if (exportBtn) exportBtn.onclick = exportLibrary;
-    
-    if (importBtn) {
-        importBtn.onclick = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-                if (e.target.files.length > 0) importLibrary(e.target.files[0]);
-            };
-            input.click();
-        };
-    }
 
     if (penBtn) penBtn.onclick = () => {
         currentTool = 'pen';
@@ -353,26 +310,38 @@ document.addEventListener('DOMContentLoaded', () => {
         penBtn.classList.remove('active');
     };
 
-    // Nav filters
-    document.getElementById('nav-all-docs').onclick = () => {
-        currentFolderId = null;
-        currentView = 'all';
-        document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('nav-all-docs').classList.add('active');
-        renderLibrary();
-    };
+    // Navigation Filters
+    const navAll = document.getElementById('nav-all-docs');
+    const navFav = document.getElementById('nav-favorites');
+    const navShared = document.getElementById('nav-shared');
 
-    document.getElementById('nav-favorites').onclick = () => {
-        currentView = 'favorites';
-        document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('nav-favorites').classList.add('active');
-        renderLibrary();
-    };
+    if (navAll) {
+        navAll.onclick = () => {
+            currentFolderId = null;
+            currentView = 'all';
+            updateNavUI(navAll);
+            renderLibrary();
+        };
+    }
 
-    document.getElementById('nav-shared').onclick = () => {
-        currentView = 'shared';
+    if (navFav) {
+        navFav.onclick = () => {
+            currentView = 'favorites';
+            updateNavUI(navFav);
+            renderLibrary();
+        };
+    }
+
+    if (navShared) {
+        navShared.onclick = () => {
+            currentView = 'shared';
+            updateNavUI(navShared);
+            renderLibrary();
+        };
+    }
+
+    function updateNavUI(activeBtn) {
         document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('nav-shared').classList.add('active');
-        renderLibrary();
-    };
+        activeBtn.classList.add('active');
+    }
 });
