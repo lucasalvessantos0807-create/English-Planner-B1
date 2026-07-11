@@ -86,8 +86,72 @@
           <option value="date">Sort by Last Modified</option>
           <option value="size">Sort by Size</option>
         </select>
-        <button class="nbtn-primary" id="new-folder-btn">+ New Folder</button>
-        <button class="nbtn-primary" id="new-doc-btn">+ New Document</button>
+        <div class="new-menu-container" style="position: relative;">
+          <button class="nbtn-primary" id="main-new-btn">+ New</button>
+          
+          <div id="new-options-menu" class="new-options-dropdown" style="display: none;">
+            <!-- Top Grid Options -->
+            <div class="menu-grid">
+              <button class="grid-item" id="btn-new-notebook">
+                <span class="grid-icon">📓</span>
+                <span class="grid-text">Notebook</span>
+              </button>
+              <button class="grid-item" id="btn-new-text-doc">
+                <span class="grid-icon">📄</span>
+                <span class="grid-text">Text Document</span>
+              </button>
+              <button class="grid-item" id="btn-new-whiteboard">
+                <span class="grid-icon">📋</span>
+                <span class="grid-text">Whiteboard</span>
+                <span class="new-badge">NEW</span>
+              </button>
+            </div>
+
+            <!-- Middle Buttons -->
+            <div class="menu-row-btns">
+              <button class="row-btn" id="btn-import-doc">
+                <span class="row-icon">📥</span>
+                <span class="row-text">Import</span>
+              </button>
+              <button class="row-btn" id="btn-quick-record">
+                <span class="row-icon">🎙️</span>
+                <span class="row-text">Quick Recording</span>
+              </button>
+            </div>
+
+            <!-- List Options -->
+            <div class="menu-list">
+              <button class="list-item" id="btn-quick-note">
+                <span class="list-icon">📝</span>
+                <span class="list-text">QuickNote</span>
+              </button>
+              <button class="list-item" id="btn-scan-doc">
+                <span class="list-icon">📷</span>
+                <span class="list-text">Scan Documents</span>
+              </button>
+              <button class="list-item" id="btn-study-set">
+                <span class="list-icon">📁</span>
+                <span class="list-text">Study Set</span>
+              </button>
+              <button class="list-item" id="btn-add-image">
+                <span class="list-icon">🖼️</span>
+                <span class="list-text">Image</span>
+              </button>
+              <button class="list-item" id="btn-take-photo">
+                <span class="list-icon">📸</span>
+                <span class="list-text">Take Photo</span>
+              </button>
+            </div>
+
+            <!-- Bottom Folder Option -->
+            <div class="menu-footer">
+              <button class="list-item" id="btn-create-folder">
+                <span class="list-icon">📂</span>
+                <span class="list-text">Folder</span>
+              </button>
+            </div>
+          </div>
+        </div>
         <button class="nbtn-secondary" id="import-library-btn">Import Library</button>
         <button class="nbtn-secondary" id="export-library-btn">Export Library</button>
         <button class="nbtn-close" id="close-notes-btn">Back to Planner</button>
