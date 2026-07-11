@@ -73,40 +73,46 @@ onAuthStateChanged(auth, async (user) => {
         const closeAccountModal = document.getElementById('closeAccountModal');
         const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
-        manageAccountBtn.onclick = () => {
-            const settingsDrawer = document.getElementById('settingsDrawer');
-            settingsDrawer.classList.remove('open');
-            accountModal.style.display = 'flex';
-        };
+if (manageAccountBtn) {
+            manageAccountBtn.onclick = () => {
+                const settingsDrawer = document.getElementById('settingsDrawer');
+                if (settingsDrawer) settingsDrawer.classList.remove('open');
+                if (accountModal) accountModal.style.display = 'flex';
+            };
+        }
 
-        closeAccountModal.onclick = () => {
-            accountModal.style.display = 'none';
-        };
+        if (closeAccountModal) {
+            closeAccountModal.onclick = () => {
+                accountModal.style.display = 'none';
+            };
+        }
 
-        deleteAccountBtn.onclick = async () => {
-            const confirmation = confirm("ARE YOU ABSOLUTELY SURE?\n\nThis will delete your entire study progress and your account permanently. This action is irreversible.");
-            if (confirmation) {
-                const finalCheck = prompt("To confirm deletion, type the word 'DELETE' below:");
-                if (finalCheck === "DELETE") {
-                    try {
-                        await deleteDoc(doc(db, "users", currentUser));
-                        const userAuth = auth.currentUser;
-                        await deleteUser(userAuth);
-                        alert("Your account and all data have been successfully deleted.");
-                        window.location.reload();
-                    } catch (error) {
-                        console.error("Error deleting account:", error);
-                        if (error.code === 'auth/requires-recent-login') {
-                            alert("For security reasons, you need to have logged in recently to delete your account. Please logout and login again, then try this action again.");
-                        } else {
-                            alert("An error occurred while deleting your account. Please try again later.");
+        if (deleteAccountBtn) {
+            deleteAccountBtn.onclick = async () => {
+                const confirmation = confirm("ARE YOU ABSOLUTELY SURE?\n\nThis will delete your entire study progress and your account permanently. This action is irreversible.");
+                if (confirmation) {
+                    const finalCheck = prompt("To confirm deletion, type the word 'DELETE' below:");
+                    if (finalCheck === "DELETE") {
+                        try {
+                            await deleteDoc(doc(db, "users", currentUser));
+                            const userAuth = auth.currentUser;
+                            await deleteUser(userAuth);
+                            alert("Your account and all data have been successfully deleted.");
+                            window.location.reload();
+                        } catch (error) {
+                            console.error("Error deleting account:", error);
+                            if (error.code === 'auth/requires-recent-login') {
+                                alert("For security reasons, you need to have logged in recently to delete your account. Please logout and login again, then try this action again.");
+                            } else {
+                                alert("An error occurred while deleting your account. Please try again later.");
+                            }
                         }
+                    } else {
+                        alert("Confirmation word incorrect. Deletion cancelled.");
                     }
-                } else {
-                    alert("Confirmation word incorrect. Deletion cancelled.");
                 }
-            }
-        };
+            };
+        }
 
         // --- ACORDION DE IDIOMA ---
         document.getElementById('langToggle').onclick = () => {
