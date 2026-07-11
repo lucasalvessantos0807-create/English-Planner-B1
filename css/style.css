@@ -160,7 +160,13 @@ button, input, select, textarea {
 /* ── PLANNER ── */
 #page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
 .page { margin-top: 0 !important; }
-#planner { display: none; flex-direction: row; align-items: flex-start; min-height: 100vh; }
+#planner {
+  display: none;
+  flex-direction: row;
+  min-height: 100vh;
+  width: 100%;
+  align-items: stretch;
+}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;font-family: var(--main-font)}
 .topbar-name{font-size:.85rem;font-weight:600;color:var(--ink)}
 .topbar-name span{color:var(--muted);font-weight:400}
@@ -715,4 +721,15 @@ body.preview-open {
 }
 @media (max-width: 600px) {
   .fab-label { display: none; }
+}
+
+.sidebar-text {
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.notes-sidebar.collapsed .sidebar-text {
+  opacity: 0;
+  width: 0;
+  display: none;
 }
