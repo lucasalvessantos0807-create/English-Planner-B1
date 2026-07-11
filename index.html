@@ -119,7 +119,40 @@
         <div class="cover-title editable-global" id="global-cover-title">Your Roadmap</div>
         <div class="cover-sub editable-global" id="global-cover-sub">Custom Duration &nbsp;·&nbsp; Daily Goals &nbsp;·&nbsp; Your Focus</div>
       </div>
-      <!-- ... Resto do conteúdo do seu planner (goals, overview, template, etc) ... -->
+
+      <div class="goal-box">
+        <strong class="editable-global" id="global-goal-strong">🎯 Your Goal</strong>
+        <div class="editable-global" id="global-goal-text">Enter your main goal here — describe what you want to achieve.</div>
+      </div>
+
+      <div class="sec editable-global" id="global-sec-overview">3-Month Overview</div>
+      <div id="overview-container">
+        <div class="ov-grid" id="dynamic-ov-grid"></div>
+        <button id="addOverviewBlockBtn" style="display:none; width:100%; margin-top:10px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Overview Block</button>
+      </div>
+
+      <div class="sec editable-global" id="global-sec-template">Daily Template (1.5–2 hours)</div>
+      <div id="template-container">
+        <div class="tpl" id="dynamic-tpl-list"></div>
+        <button id="addTemplateRowBtn" style="display:none; width:100%; margin-top:-10px; margin-bottom:20px; padding:8px; background:none; border:1px dashed var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-size:0.8rem;">+ Add Task</button>
+      </div>
+
+      <div class="sec editable-global" id="global-sec-progress">Your Progress</div>
+      <div class="prog-box">
+        <div class="prog-lbl editable-global" id="global-prog-lbl">Days completed</div>
+        <div class="prog-bg"><div class="prog-fill" id="pbar"></div></div>
+        <div class="prog-stats">
+          <span><strong id="dcnt">0</strong> / 0 days</span>
+          <span><strong id="pct">0%</strong> complete</span>
+          <span class="editable-global" id="global-mstat">Learning Progress</span>
+        </div>
+      </div>
+
+      <div class="sec editable-global" id="global-sec-monthly">Monthly Plans</div>
+      <div class="month-nav" id="monthNav">
+          <button class="mbtn" id="addMonthBtn" style="border-style: dashed; color: var(--muted);">+ Add Month</button>
+      </div>
+      <div id="monthPanels"></div>
     </div>
   </div>
 
