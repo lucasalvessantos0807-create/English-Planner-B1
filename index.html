@@ -401,6 +401,142 @@
     <button class="picker-btn btn-apply" id="btnApplyPicker">Confirm</button>
   </div>
 </div>
+    <!-- ── NEW NOTEBOOK MODAL ── -->
+<div id="notebook-modal" style="display:none; position:fixed; inset:0; z-index:6000; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; padding:20px; font-family: system-ui, -apple-system, sans-serif;">
+  <div class="nb-modal-container">
+    <!-- Header -->
+    <div class="nb-header">
+      <button id="nb-cancel" class="nb-btn-text">Cancel</button>
+      <span class="nb-title">New Notebook</span>
+      <button id="nb-create" class="nb-btn-primary">Create</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="nb-body">
+      <!-- Preview and Basic Settings -->
+      <div class="nb-top-section">
+        <div class="nb-previews">
+          <div class="nb-preview-item">
+            <div class="nb-label-preview">COVER</div>
+            <div id="nb-cover-preview" class="nb-preview-box cover-img">
+              <div class="nb-preview-text">Make Your Dreams Come True</div>
+            </div>
+            <div class="nb-preview-sub">Imported Image</div>
+          </div>
+          <div class="nb-preview-item">
+            <div class="nb-label-preview">PAPER</div>
+            <div id="nb-paper-preview" class="nb-preview-box paper-blank"></div>
+            <div class="nb-preview-sub" id="nb-selected-paper-name">Blank</div>
+          </div>
+        </div>
+
+        <div class="nb-settings-column">
+          <div class="nb-setting-row">
+            <label>Name</label>
+            <input type="text" id="nb-name-input" placeholder="Untitled Notebook">
+          </div>
+          <div class="nb-setting-row">
+            <label>Language</label>
+            <select>
+              <option>Auto Detect</option>
+              <option>English</option>
+              <option>Portuguese</option>
+            </select>
+          </div>
+          <div class="nb-setting-row nb-flex-between">
+            <label>Cover</label>
+            <label class="nb-switch">
+              <input type="checkbox" checked>
+              <span class="nb-slider"></span>
+            </label>
+          </div>
+          
+          <div class="nb-divider-mini">PAPER MODELS</div>
+          
+          <div class="nb-setting-row">
+            <label>Size</label>
+            <select>
+              <option>Goodnotes Standard, Vertical</option>
+              <option>A4, Vertical</option>
+              <option>Letter, Vertical</option>
+            </select>
+          </div>
+          <div class="nb-setting-row nb-flex-between">
+            <label>Color</label>
+            <select style="width: 80px;">
+              <option>White</option>
+              <option>Yellow</option>
+              <option>Dark</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paper Selection Grid -->
+      <div class="nb-papers-section">
+        <div class="nb-section-header">
+          <span>Paper Models</span>
+          <button class="nb-edit-link">Edit</button>
+        </div>
+
+        <!-- Essentials -->
+        <div class="nb-group-label">Essentials</div>
+        <div class="nb-papers-grid">
+          <div class="nb-paper-card active" data-paper="Blank">
+            <div class="nb-paper-thumb thumb-blank"></div>
+            <div class="nb-paper-name">Blank</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Dotted">
+            <div class="nb-paper-thumb thumb-dotted"></div>
+            <div class="nb-paper-name">Dotted</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Squared">
+            <div class="nb-paper-thumb thumb-squared"></div>
+            <div class="nb-paper-name">Squared</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Narrow Ruled">
+            <div class="nb-paper-thumb thumb-ruled"></div>
+            <div class="nb-paper-name">Narrow Ruled</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Wide Ruled">
+            <div class="nb-paper-thumb thumb-ruled-wide"></div>
+            <div class="nb-paper-name">Wide Ruled</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+
+        <!-- Writing Sheets -->
+        <div class="nb-group-label">Writing Sheets</div>
+        <div class="nb-papers-grid">
+          <div class="nb-paper-card" data-paper="Cornell">
+            <div class="nb-paper-thumb thumb-cornell"></div>
+            <div class="nb-paper-name">Cornell</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Legal">
+            <div class="nb-paper-thumb thumb-legal"></div>
+            <div class="nb-paper-name">Legal</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Single Column">
+            <div class="nb-paper-thumb thumb-column"></div>
+            <div class="nb-paper-name">Single Column</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="nb-paper-card" data-paper="Three Columns">
+            <div class="nb-paper-thumb thumb-three-columns"></div>
+            <div class="nb-paper-name">Three Columns</div>
+            <div class="nb-paper-dots"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="accountManagementModal" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--white); width:100%; max-width:400px; border-radius:16px; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.3); overflow:hidden;">
     <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
