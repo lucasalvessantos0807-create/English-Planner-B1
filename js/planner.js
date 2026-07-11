@@ -8,7 +8,7 @@ let sessionInitialContent = null;
 let sessionInitialDOMSnapshot = {}; 
 
 const builtWeeks = new Set();
-const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','順','⭐','✅','📝','📍'];
+const EMOJI_LIST = ['📚','📖','🎙️','📐','✍️','🎧','🗣️','🔁','⭐','✅','📝','📍'];
 const ICON_MAP = { '📚': 'Vocabulary', '📖': 'Reading', '🎙️': 'Shadowing', '🎧': 'Listening', '📐': 'Grammar', '✍️': 'Writing', '🗣️': 'Speaking', '🔁': 'Review Day', '⭐': 'Review Day', '✅': 'Completed', '📝': 'Exercise', '📍': 'Extra Activity' };
 
 function refreshUI(uid, targetMonth = null) {
@@ -35,7 +35,6 @@ function refreshUI(uid, targetMonth = null) {
     });
 }
 
-// --- FUNÇÕES DE UNDO E AUXILIARES ---
 function pushToUndo() {
     undoStack.push({
         config: JSON.parse(JSON.stringify(window.plannerConfig)),
@@ -65,7 +64,6 @@ function refreshGlobalTexts() {
     });
 }
 
-// --- CONTROLE DO MODO DE EDIÇÃO ---
 export function cancelEdit(uid) {
     if (!confirm("Discard all changes made in this session?")) return;
     
@@ -166,7 +164,6 @@ export function toggleEditMode(uid) {
     renderDailyTemplate(uid);
 }
 
-// --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
 function refreshCurrentWeek(uid) {
     builtWeeks.clear();
     const active = document.querySelector('.mpanel.on .wpanel.on');
@@ -312,7 +309,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     });
 }
 
-// --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
     const dayCount = parseInt(prompt("How many days for this new month?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
@@ -463,25 +459,10 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!grid) return;
 
     const content = customContent || window.pageContent || {};
-    if (!content.hiddenDefaults) content.hiddenDefaults = [];
-
+    
     const defaults = [];
 
     grid.innerHTML = '';
-
-    defaults.forEach(def => {
-        if (content.hiddenDefaults.includes(def.id)) return;
-
-        const card = document.createElement('div');
-        card.className = `ov-card ${def.class}`;
-        card.id = `${prefix}container-${def.id}`;
-        card.innerHTML = `
-            ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="default" data-id="' + def.id + '" style="display:flex;">✕</button>' : ''}
-            <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-label" contenteditable="${isEditMode && !prefix}">${content[def.id + '-label'] || def.label}</div>
-            <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${def.id}-body" contenteditable="${isEditMode && !prefix}">${content[def.id + '-body'] || def.body}</div>
-        `;
-        grid.appendChild(card);
-    });
 
     if(content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
@@ -509,24 +490,17 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const bId = btn.dataset.id;
-                const bType = btn.dataset.type;
                 if(confirm("Delete this block?")) {
                     pushToUndo();
                     const elToRemove = document.getElementById(`container-${bId}`);
                     if (elToRemove) elToRemove.remove();
-                    if (bType === 'default') {
-                        if (!window.pageContent.hiddenDefaults) window.pageContent.hiddenDefaults = [];
-                        window.pageContent.hiddenDefaults.push(bId);
-                    } else {
-                        window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
-                    }
+                    window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
                 }
             };
         });
     }
 }
 
-// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
