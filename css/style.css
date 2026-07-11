@@ -145,6 +145,24 @@ button, input, select, textarea {
   transition: transform 0.3s;
 }
 
+/* Sidebar Collapsed State */
+.notes-sidebar.collapsed {
+  width: 70px;
+}
+.notes-sidebar.collapsed .sidebar-text {
+  display: none;
+}
+.notes-sidebar.collapsed .sidebar-logo + span {
+    display: none;
+}
+.notes-sidebar.collapsed .snav-btn {
+  justify-content: center;
+  padding: 12px 0;
+}
+.notes-sidebar.collapsed #sidebar-toggle-btn {
+  transform: rotate(180deg);
+}
+
 .notes-topbar {
   padding: 15px 25px;
   background: var(--white);
@@ -155,7 +173,6 @@ button, input, select, textarea {
   position: sticky;
   top: 0;
   z-index: 101;
-  width: 100%;
 }
 
 /* ── PLANNER ── */
