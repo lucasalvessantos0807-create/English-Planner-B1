@@ -2,6 +2,7 @@ import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, deleteDoc
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot, saveUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate, addOverviewBlock } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
+import { renderLibrary } from './notes.js';
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
@@ -146,6 +147,31 @@ onAuthStateChanged(auth, async (user) => {
 
         // --- BOTÕES DA TOPBAR E FAB ITEMS ---
         document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        // Logic to switch between Planner and Notes Library
+        const notesArea = document.getElementById('notes-area');
+        const notesSidebar = document.getElementById('notes-sidebar');
+        const plannerPage = document.querySelector('.page');
+        const topbar = document.querySelector('.topbar');
+
+        document.getElementById('openNotesBtn').onclick = () => {
+            if (notesArea && notesSidebar) {
+                notesArea.style.display = 'flex';
+                notesSidebar.style.display = 'flex';
+                plannerPage.style.display = 'none';
+                topbar.style.display = 'none';
+                renderLibrary(); // Re-render library when opening
+            }
+        };
+
+        document.getElementById('close-notes-btn').onclick = () => {
+            if (notesArea && notesSidebar) {
+                notesArea.style.display = 'none';
+                notesSidebar.style.display = 'none';
+                plannerPage.style.display = 'block';
+                topbar.style.display = 'flex';
+            }
+        };
+        
         const notesArea = document.getElementById('notes-area');
         const notesSidebar = document.getElementById('notes-sidebar');
         const plannerPage = document.querySelector('.page');
@@ -591,6 +617,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         };
 
+        renderLibrary();
         updateProgressBar();
         
     } else {
