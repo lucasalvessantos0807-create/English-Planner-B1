@@ -1,12 +1,15 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, deleteDoc, doc, db, deleteUser } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot, saveUserData } from './storage.js';
-import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit } from './planner.js';
+import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
 function refreshGlobalDOM(content, targetPrefix = "") {
+    renderDynamicOverviewBlocks(uid, targetPrefix, data);
+renderDailyTemplate(uid, targetPrefix, data);
     const data = content || {};
     
+    // Conteúdos padrão genéricos
     const defaults = {
         "global-cover-eye": "Personal Study Planner",
         "global-cover-title": "Your Roadmap",
@@ -17,19 +20,25 @@ function refreshGlobalDOM(content, targetPrefix = "") {
         "global-sec-template": "Daily Template",
     };
 
+    // No modo Sandbox, procuramos elementos dentro do previewSandbox
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub, .tpl-time, .tpl-act").forEach(el => {
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
-        
-        // Se houver valor no backup/conteúdo, usa ele. Se não, usa o default.
         if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
             el.innerHTML = val;
         } else if (defaults[cleanId]) {
             el.innerHTML = defaults[cleanId];
         }
     });
+
+    // CORREÇÃO DO BACKUP: Forçar a renderização dos blocos dinâmicos com os dados vindos do backup (content)
+    const uid = auth.currentUser ? auth.currentUser.uid : null;
+    if (uid) {
+        renderDynamicOverviewBlocks(uid, targetPrefix, data);
+        renderDailyTemplate(uid, targetPrefix, data);
+    }
 }
 
 let currentUser = null;
@@ -119,10 +128,6 @@ onAuthStateChanged(auth, async (user) => {
         });
 
         // --- RENDERIZAÇÃO INICIAL ---
-        import('./planner.js').then(mod => {
-            mod.renderDynamicOverviewBlocks(currentUser);
-            mod.renderDailyTemplate(currentUser);
-        });
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
         refreshGlobalDOM(userData.pageContent);
         
@@ -275,10 +280,8 @@ onAuthStateChanged(auth, async (user) => {
                     if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
 
                     // 3. Renderizar blocos de overview na Sandbox
-                    import('./planner.js').then(mod => {
-                        mod.renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
-                        mod.renderDailyTemplate(currentUser, "sb-", backupContent);
-                    });
+                    renderDynamicOverviewBlocks(currentUser, "sb-", backupContent);
+                    renderDailyTemplate(currentUser, "sb-", backupContent);
 
                     // 4. Barra de Progresso na Sandbox
                     updateProgressBar("sb-", backup.plannerConfig, backupState);
@@ -320,7 +323,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('importHistoryModal').style.display = 'flex';
         };
 
-        // --- LÓGICA DO COLOR PICKER (COMPLETA E INTEGRAL) ---
+        // --- LÓGICA DO COLOR PICKER ---
         const editCoverBtn = document.getElementById('editCoverBtn');
         const menu = document.getElementById('colorChoiceMenu');
         let colorHistory = userData.state.colorHistory || { solids: [], gradients: [], pinned: [] };
@@ -471,7 +474,7 @@ onAuthStateChanged(auth, async (user) => {
             cover.style.background = userData.state.settings.coverColor;
         }
 
-        // --- GAVETAS E PERSONALIZAÇÃO (INTEGRAL E SEM SIMPLIFICAÇÃO) ---
+        // --- GAVETAS E PERSONALIZAÇÃO ---
         const personalizeBtn = document.getElementById('personalizeBtn');
         const customDrawer = document.getElementById('customDrawer');
         const closeDrawer = document.getElementById('closeDrawer');
