@@ -362,20 +362,120 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAllMenus();
     };
 
-   if (btnSelectItems) btnSelectItems.onclick = (e) => {
-        e.stopPropagation();
-        isSelectionMode = true;
-        selectedItems.clear();
-        
-        const topbar = document.getElementById('notes-topbar');
-        const selectionBar = document.getElementById('selection-toolbar');
-        
-        if (topbar) topbar.style.display = 'none';
-        if (selectionBar) selectionBar.style.display = 'flex';
-        
-        renderLibrary();
-        if (viewMenu) viewMenu.style.display = 'none';
-    };
+    // MODO SELEÇÃO: ATIVAÇÃO
+    if (btnSelectItems) {
+        btnSelectItems.onclick = (e) => {
+            e.stopPropagation();
+            isSelectionMode = true;
+            selectedItems.clear();
+            const topbar = document.getElementById('notes-topbar');
+            const selectionBar = document.getElementById('selection-toolbar');
+            if (topbar) topbar.style.display = 'none';
+            if (selectionBar) selectionBar.style.display = 'flex';
+            renderLibrary();
+            closeAllMenus();
+        };
+    }
+
+    // MODO SELEÇÃO: BOTÕES DA BARRA
+    const btnDoneSelection = document.getElementById('btn-selection-done');
+    if (btnDoneSelection) {
+        btnDoneSelection.onclick = () => {
+            isSelectionMode = false;
+            selectedItems.clear();
+            const topbar = document.getElementById('notes-topbar');
+            const selectionBar = document.getElementById('selection-toolbar');
+            if (topbar) topbar.style.display = 'flex';
+            if (selectionBar) selectionBar.style.display = 'none';
+            renderLibrary();
+        };
+    }
+
+    const btnSelectAllItems = document.getElementById('btn-select-all');
+    if (btnSelectAllItems) {
+        btnSelectAllItems.onclick = () => {
+            const allItems = [...(library.folders || []), ...(library.documents || [])];
+            if (selectedItems.size >= allItems.length && allItems.length > 0) {
+                selectedItems.clear();
+            } else {
+                allItems.forEach(item => selectedItems.add(item.id));
+            }
+            renderLibrary();
+        };
+    }
+
+    // AÇÕES DE SELEÇÃO: TRASH, DUPLICATE, EXPORT, MOVE
+    if (document.getElementById('st-trash')) {
+        document.getElementById('st-trash').onclick = () => {
+            if (selectedItems.size === 0) return;
+            if (confirm(`Delete ${selectedItems.size} items?`)) {
+                selectedItems.forEach(id => {
+                    library.documents = (library.documents || []).filter(d => d.id !== id);
+                    library.folders = (library.folders || []).filter(f => f.id !== id);
+                });
+                saveLibrary();
+                selectedItems.clear();
+                if (btnDoneSelection) btnDoneSelection.click();
+            }
+        };
+    }
+
+    if (document.getElementById('st-duplicate')) {
+        document.getElementById('st-duplicate').onclick = () => {
+            if (selectedItems.size === 0) return;
+            selectedItems.forEach(id => {
+                const docToCopy = library.documents.find(d => d.id === id);
+                if (docToCopy) {
+                    const newDoc = JSON.parse(JSON.stringify(docToCopy));
+                    newDoc.id = 'doc_' + Date.now() + Math.floor(Math.random() * 1000);
+                    newDoc.name = docToCopy.name + " Copy";
+                    newDoc.updatedAt = Date.now();
+                    library.documents.push(newDoc);
+                }
+            });
+            saveLibrary();
+            selectedItems.clear();
+            if (btnDoneSelection) btnDoneSelection.click();
+        };
+    }
+
+    if (document.getElementById('st-export')) {
+        document.getElementById('st-export').onclick = () => {
+            if (selectedItems.size === 0) return;
+            const selection = {
+                documents: library.documents.filter(d => selectedItems.has(d.id)),
+                folders: library.folders.filter(f => selectedItems.has(f.id))
+            };
+            const blob = new Blob([JSON.stringify(selection, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `export_${Date.now()}.json`;
+            a.click();
+        };
+    }
+
+    if (document.getElementById('st-move')) {
+        document.getElementById('st-move').onclick = () => {
+            if (selectedItems.size === 0) return;
+            const dest = prompt("Destination folder name (Leave empty for root):");
+            let targetId = null;
+            if (dest) {
+                const folder = library.folders.find(f => f.name.toLowerCase() === dest.toLowerCase());
+                if (folder) targetId = folder.id;
+                else { alert("Folder not found."); return; }
+            }
+            selectedItems.forEach(id => {
+                const doc = library.documents.find(d => d.id === id);
+                if (doc) doc.parentId = targetId;
+                const fld = library.folders.find(f => f.id === id);
+                if (fld) fld.parentId = targetId;
+            });
+            saveLibrary();
+            selectedItems.clear();
+            if (btnDoneSelection) btnDoneSelection.click();
+        };
+    }
 
     document.querySelectorAll('.sort-opt').forEach(btn => {
         btn.onclick = () => {
@@ -386,7 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Notebook Modal Logic
     const nbModal = document.getElementById('notebook-modal');
     const nbCancel = document.getElementById('nb-cancel');
     const nbCreate = document.getElementById('nb-create');
@@ -454,214 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navShared = document.getElementById('nav-shared');
 
     if (navAll) navAll.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
-    renderLibrary();
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
     updateViewCheckmarks();
-});
-
-// --- SELECTION ACTIONS LOGIC ---
-
-document.addEventListener('DOMContentLoaded', () => {
-    const btnDone = document.getElementById('btn-selection-done');
-    const btnSelectAll = document.getElementById('btn-select-all');
-    
-    if (btnDone) {
-        btnDone.onclick = () => {
-            isSelectionMode = false;
-            selectedItems.clear();
-            document.getElementById('notes-topbar').style.display = 'flex';
-            document.getElementById('selection-toolbar').style.display = 'none';
-            renderLibrary();
-        };
-    }
-
-    if (btnSelectAll) {
-        btnSelectAll.onclick = () => {
-            const allItems = [...(library.folders || []), ...(library.documents || [])];
-            if (selectedItems.size === allItems.length) {
-                selectedItems.clear();
-            } else {
-                allItems.forEach(item => selectedItems.add(item.id));
-            }
-            renderLibrary();
-        };
-    }
-
-    // ACTION: TRASH (Delete)
-    document.getElementById('st-trash').onclick = () => {
-        if (selectedItems.size === 0) return;
-        if (confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) {
-            selectedItems.forEach(id => {
-                library.documents = (library.documents || []).filter(d => d.id !== id);
-                library.folders = (library.folders || []).filter(f => f.id !== id);
-            });
-            saveLibrary();
-            selectedItems.clear();
-        }
-    };
-
-    // ACTION: DUPLICATE
-    document.getElementById('st-duplicate').onclick = () => {
-        if (selectedItems.size === 0) return;
-        selectedItems.forEach(id => {
-            const docToCopy = library.documents.find(d => d.id === id);
-            if (docToCopy) {
-                const newDoc = { 
-                    ...docToCopy, 
-                    id: 'doc_' + Date.now() + Math.random(), 
-                    name: docToCopy.name + " Copy",
-                    updatedAt: Date.now() 
-                };
-                library.documents.push(newDoc);
-            }
-            // Note: Folder duplication is more complex (recursive), skipping simple folder copy for stability
-        });
-        saveLibrary();
-        selectedItems.clear();
-    };
-
-    // ACTION: EXPORT
-    document.getElementById('st-export').onclick = () => {
-        if (selectedItems.size === 0) return;
-        const itemsToExport = {
-            documents: library.documents.filter(d => selectedItems.has(d.id)),
-            folders: library.folders.filter(f => selectedItems.has(f.id))
-        };
-        const dataStr = JSON.stringify(itemsToExport, null, 2);
-        const blob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `exported_selection_${Date.now()}.json`;
-        a.click();
-    };
-
-    // ACTION: MOVE
-    document.getElementById('st-move').onclick = () => {
-        if (selectedItems.size === 0) return;
-        const folderName = prompt("Enter the name of the destination folder (Leave blank for Root):");
-        const targetFolder = library.folders.find(f => f.name.toLowerCase() === (folderName || "").toLowerCase());
-        const targetId = targetFolder ? targetFolder.id : null;
-
-        selectedItems.forEach(id => {
-            const doc = library.documents.find(d => d.id === id);
-            if (doc) doc.parentId = targetId;
-            const fld = library.folders.find(f => f.id === id);
-            if (fld) fld.parentId = targetId;
-        });
-        saveLibrary();
-        selectedItems.clear();
-    };
-    // --- SELECTION TOOLBAR ACTIONS ---
-    const btnDone = document.getElementById('btn-selection-done');
-    const btnSelectAll = document.getElementById('btn-select-all');
-    
-    if (btnDone) {
-        btnDone.onclick = () => {
-            isSelectionMode = false;
-            selectedItems.clear();
-            const topbar = document.getElementById('notes-topbar');
-            const selectionBar = document.getElementById('selection-toolbar');
-            if (topbar) topbar.style.display = 'flex';
-            if (selectionBar) selectionBar.style.display = 'none';
-            renderLibrary();
-        };
-    }
-
-    if (btnSelectAll) {
-        btnSelectAll.onclick = () => {
-            const allItems = [...(library.folders || []), ...(library.documents || [])];
-            // Se já estiver tudo selecionado, desmarca tudo. Caso contrário, seleciona tudo.
-            if (selectedItems.size >= allItems.length && allItems.length > 0) {
-                selectedItems.clear();
-            } else {
-                allItems.forEach(item => selectedItems.add(item.id));
-            }
-            renderLibrary();
-        };
-    }
-
-    // ACTION: DELETE (TRASH)
-    const trashBtn = document.getElementById('st-trash');
-    if (trashBtn) {
-        trashBtn.onclick = () => {
-            if (selectedItems.size === 0) return;
-            if (confirm(`Delete ${selectedItems.size} items?`)) {
-                selectedItems.forEach(id => {
-                    library.documents = (library.documents || []).filter(d => d.id !== id);
-                    library.folders = (library.folders || []).filter(f => f.id !== id);
-                });
-                saveLibrary();
-                selectedItems.clear();
-                // Opcional: sai do modo de seleção após deletar
-                if (btnDone) btnDone.click();
-            }
-        };
-    }
-
-    // ACTION: DUPLICATE
-    const duplicateBtn = document.getElementById('st-duplicate');
-    if (duplicateBtn) {
-        duplicateBtn.onclick = () => {
-            if (selectedItems.size === 0) return;
-            selectedItems.forEach(id => {
-                const docToCopy = library.documents.find(d => d.id === id);
-                if (docToCopy) {
-                    const newDoc = JSON.parse(JSON.stringify(docToCopy));
-                    newDoc.id = 'doc_' + Date.now() + Math.floor(Math.random() * 1000);
-                    newDoc.name = docToCopy.name + " Copy";
-                    newDoc.updatedAt = Date.now();
-                    library.documents.push(newDoc);
-                }
-            });
-            saveLibrary();
-            selectedItems.clear();
-            if (btnDone) btnDone.click();
-        };
-    }
-
-    // ACTION: EXPORT
-    const exportBtn = document.getElementById('st-export');
-    if (exportBtn) {
-        exportBtn.onclick = () => {
-            if (selectedItems.size === 0) return;
-            const selection = {
-                documents: library.documents.filter(d => selectedItems.has(d.id)),
-                folders: library.folders.filter(f => selectedItems.has(f.id))
-            };
-            const blob = new Blob([JSON.stringify(selection, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `selection_export_${Date.now()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        };
-    }
-
-    // ACTION: MOVE
-    const moveBtn = document.getElementById('st-move');
-    if (moveBtn) {
-        moveBtn.onclick = () => {
-            if (selectedItems.size === 0) return;
-            const destName = prompt("Enter destination folder name (Leave empty for root):");
-            let targetId = null;
-            if (destName) {
-                const folder = library.folders.find(f => f.name.toLowerCase() === destName.toLowerCase());
-                if (folder) targetId = folder.id;
-                else { alert("Folder not found."); return; }
-            }
-            selectedItems.forEach(id => {
-                const doc = library.documents.find(d => d.id === id);
-                if (doc) doc.parentId = targetId;
-                const fld = library.folders.find(f => f.id === id);
-                if (fld) fld.parentId = targetId;
-            });
-            saveLibrary();
-            selectedItems.clear();
-            if (btnDone) btnDone.click();
-        };
-    }
+    renderLibrary();
 });
