@@ -1,7 +1,7 @@
 import { saveUserData, library } from './storage.js';
 
 /**
- * NOTES & LIBRARY SYSTEM
+ * NOTES & LIBRARY SYSTEM - INTEGRAL VERSION
  */
 
 let currentFolderId = null; 
@@ -167,6 +167,17 @@ export function createDocument(type = 'Document', paper = 'Blank') {
     openDocument(newDoc);
 }
 
+function deleteDocument(id) {
+    library.documents = (library.documents || []).filter(d => d.id !== id);
+    saveLibrary();
+}
+
+function deleteFolder(id) {
+    library.documents = (library.documents || []).filter(d => d.parentId !== id);
+    library.folders = (library.folders || []).filter(f => f.id !== id);
+    saveLibrary();
+}
+
 async function saveLibrary() {
     const user = window.auth.currentUser;
     if (user) {
@@ -185,21 +196,19 @@ function openDocument(doc) {
     }
     currentPageIndex = 0;
 
-    const notesArea = document.getElementById('notes-area');
-    const notesSidebar = document.getElementById('notes-sidebar');
-    const docEditor = document.getElementById('doc-editor');
-    const plannerContent = document.getElementById('planner-content');
-
-    if (notesArea) notesArea.style.display = 'none';
-    if (notesSidebar) notesSidebar.style.display = 'none';
-    if (docEditor) docEditor.style.display = 'flex';
-    if (plannerContent) plannerContent.style.display = 'none';
+    // Hide other areas to prevent overlap
+    document.getElementById('notes-area').style.display = 'none';
+    document.getElementById('notes-sidebar').style.display = 'none';
+    document.getElementById('planner-content').style.display = 'none';
+    document.getElementById('doc-editor').style.display = 'flex';
 
     initCanvas();
 
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
-        canvasEl.className = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+        canvasEl.className = ""; // Reset patterns
+        const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+        canvasEl.classList.add(paperClass);
     }
     
     renderPage();
@@ -237,6 +246,7 @@ export function nextPage() {
     if (!currentDoc) return;
     saveCurrentPage();
     
+    // Infinite pages: Create new if at the end
     if (currentPageIndex === currentDoc.pages.length - 1) {
         currentDoc.pages.push(null);
     }
@@ -314,31 +324,35 @@ export function closeEditor() {
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
-    const docEditor = document.getElementById('doc-editor');
-    const notesArea = document.getElementById('notes-area');
-    const notesSidebar = document.getElementById('notes-sidebar');
-    const plannerContent = document.getElementById('planner-content');
     
-    if (docEditor) docEditor.style.display = 'none';
-    if (notesArea) notesArea.style.display = 'flex';
-    if (notesSidebar) notesSidebar.style.display = 'flex';
-    if (plannerContent) plannerContent.style.display = 'none';
+    // Close editor and show library/notes correctly
+    document.getElementById('doc-editor').style.display = 'none';
+    document.getElementById('notes-area').style.display = 'flex';
+    document.getElementById('notes-sidebar').style.display = 'flex';
+    document.getElementById('planner-content').style.display = 'none'; 
     currentDoc = null;
 }
 
-// --- 3. INITIALIZATION & UI LOGIC ---
+export function exportLibrary() {
+    const dataStr = JSON.stringify(library, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `library_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// --- 3. INITIALIZATION & GESTURE SYSTEM ---
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Keyboard navigation: Arrows Left/Right
+    // Keyboard Navigation: Left/Right keys
     document.addEventListener('keydown', (e) => {
-        const docEditor = document.getElementById('doc-editor');
-        if (docEditor && docEditor.style.display === 'flex') {
-            if (e.key === 'ArrowRight') {
-                nextPage();
-            } else if (e.key === 'ArrowLeft') {
-                prevPage();
-            }
+        if (document.getElementById('doc-editor').style.display === 'flex') {
+            if (e.key === 'ArrowRight') nextPage();
+            else if (e.key === 'ArrowLeft') prevPage();
         }
     });
 
@@ -375,35 +389,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
 
-    const btnGridView = document.getElementById('btn-view-grid');
-    const btnListView = document.getElementById('btn-view-list');
-    const btnSelectItems = document.getElementById('btn-select-items');
-
-    if (btnGridView) btnGridView.onclick = () => {
-        currentLayout = 'grid';
-        renderLibrary();
-        closeAllMenus();
-    };
-
-    if (btnListView) btnListView.onclick = () => {
-        currentLayout = 'list';
-        renderLibrary();
-        closeAllMenus();
-    };
-
-    if (btnSelectItems) {
-        btnSelectItems.onclick = (e) => {
-            e.stopPropagation();
-            isSelectionMode = true;
-            selectedItems.clear();
-            const topbar = document.getElementById('notes-topbar');
-            const selectionBar = document.getElementById('selection-toolbar');
-            if (topbar) topbar.style.display = 'none';
-            if (selectionBar) selectionBar.style.display = 'flex';
-            renderLibrary();
-            closeAllMenus();
+    // Modal Selection Logic for Preview
+    const paperCards = document.querySelectorAll('.nb-paper-card');
+    paperCards.forEach(card => {
+        card.onclick = () => {
+            paperCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            const paper = card.dataset.paper;
+            const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
+            const nbPaperPreview = document.getElementById('nb-paper-preview');
+            
+            if (nbSelectedPaperName) nbSelectedPaperName.innerText = paper;
+            if (nbPaperPreview) {
+                // Remove all possible paper classes first
+                nbPaperPreview.classList.remove('paper-blank', 'paper-dotted', 'paper-squared', 'paper-narrow-ruled', 'paper-wide-ruled', 'paper-ruled', 'paper-cornell', 'paper-legal', 'paper-single-column', 'paper-three-columns');
+                // Apply the selected paper class
+                const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
+                nbPaperPreview.classList.add(paperClass);
+            }
         };
-    }
+    });
 
     const nbModal = document.getElementById('notebook-modal');
     const nbCancel = document.getElementById('nb-cancel');
@@ -422,35 +427,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    const paperCards = document.querySelectorAll('.nb-paper-card');
-    paperCards.forEach(card => {
-        card.onclick = () => {
-            paperCards.forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-            const paper = card.dataset.paper;
-            const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
-            const nbPaperPreview = document.getElementById('nb-paper-preview');
-            if (nbSelectedPaperName) nbSelectedPaperName.innerText = paper;
-            if (nbPaperPreview) { 
-                const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
-                nbPaperPreview.className = 'nb-preview-box ' + paperClass; 
-            }
-        };
-    });
-
     const btnNewNotebook = document.getElementById('btn-new-notebook');
-    const btnNewTextDoc = document.getElementById('btn-new-text-doc');
-    const btnCreateFolder = document.getElementById('btn-create-folder');
+    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeAllMenus(); if (nbModal) nbModal.style.display = 'flex'; };
+    
+    document.getElementById('btn-new-text-doc').onclick = () => { closeAllMenus(); createDocument('Text Document'); };
+    document.getElementById('btn-create-folder').onclick = () => { closeAllMenus(); createFolder(); };
+    document.getElementById('close-editor-btn').onclick = closeEditor;
 
-    if (btnNewNotebook) btnNewNotebook.onclick = () => { 
-        closeAllMenus(); 
-        if (nbModal) nbModal.style.display = 'flex'; 
-    };
-    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeAllMenus(); createDocument('Text Document'); };
-    if (btnCreateFolder) btnCreateFolder.onclick = () => { closeAllMenus(); createFolder(); };
-
-    const closeEditorBtn = document.getElementById('close-editor-btn');
-    if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
+    document.getElementById('tool-pen').onclick = () => { currentTool = 'pen'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-pen').classList.add('active'); };
+    document.getElementById('tool-eraser').onclick = () => { currentTool = 'eraser'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-eraser').classList.add('active'); };
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
@@ -460,15 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
-    // Swipe gestures (iPad/Mobile)
+    // Swipe Gestures: Touch Start/End
     let touchStartX = 0;
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].screenX, { passive: true });
         canvasEl.addEventListener('touchend', (e) => {
-            let touchEndX = e.changedTouches[0].screenX;
-            let diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 70) { 
+            let diff = touchStartX - e.changedTouches[0].screenX;
+            if (Math.abs(diff) > 80) { 
                 if (diff > 0) nextPage();
                 else prevPage();
             }
