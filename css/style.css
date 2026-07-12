@@ -1341,3 +1341,70 @@ body.preview-open {
 .notes-grid.selection-active {
   padding-top: 20px;
 }
+/* --- NOTEBOOK COVER RENDERING IN LIBRARY --- */
+.note-icon.notebook-thumbnail {
+    width: 85px;
+    height: 110px;
+    background: #eee;
+    border-radius: 4px 10px 10px 4px;
+    border-left: 5px solid rgba(0,0,0,0.2);
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.15);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.notebook-thumbnail .thumb-title {
+    font-size: 0.6rem;
+    font-weight: bold;
+    text-align: center;
+    color: rgba(0,0,0,0.6);
+    word-break: break-word;
+    background: rgba(255,255,255,0.7);
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+/* Cover Classes */
+.cover-solid-blue { background: #2a4f8a !important; }
+.cover-solid-pink { background: #f9d7d9 !important; }
+.cover-pattern-dots { 
+    background-color: #f7f5f0 !important;
+    background-image: radial-gradient(#c85a2a 2px, transparent 2px) !important;
+    background-size: 20px 20px !important;
+}
+
+/* Modal Specifics */
+.nb-cover-card { cursor: pointer; text-align: center; padding: 5px; border-radius: 8px; transition: 0.2s; }
+.nb-cover-card.active { background: #e5e5ea; box-shadow: inset 0 0 0 2px #007aff; }
+.nb-cover-thumb { width: 60px; height: 80px; margin: 0 auto; border-radius: 3px 6px 6px 3px; border-left: 3px solid rgba(0,0,0,0.1); }
+.thumb-blue { background: #2a4f8a; }
+.thumb-pink { background: #f9d7d9; }
+.thumb-dots { background: #f7f5f0; background-image: radial-gradient(#c85a2a 1px, transparent 1px); background-size: 10px 10px; }
+.thumb-import { background: #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #999; border: 2px dashed #ccc; }
+
+.nb-preview-title-text {
+    font-size: 0.7rem;
+    background: rgba(255,255,255,0.8);
+    padding: 5px;
+    border-radius: 4px;
+    font-weight: bold;
+    max-width: 90%;
+}
+
+.page-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #333;
+    padding: 5px 15px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.8rem;
+}
+.page-controls button {
+    background: none; border: none; color: white; cursor: pointer; font-size: 1rem;
+}
