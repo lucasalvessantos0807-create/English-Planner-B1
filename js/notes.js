@@ -158,7 +158,7 @@ export function createDocument(type = 'Document', paper = 'Blank') {
         favorite: false,
         shared: false,
         paperType: paper,
-        pages: [null],
+        pages: [null, null], // Initial cover + first page
         updatedAt: Date.now()
     };
     if (!library.documents) library.documents = [];
@@ -191,23 +191,21 @@ async function saveLibrary() {
 function openDocument(doc) {
     currentDoc = doc;
     
-    // Ensure the notebook has at least a cover (page 0) and one writing page (page 1)
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
-        currentDoc.pages = [null, null]; 
+        currentDoc.pages = [null, null];
     } else if (currentDoc.pages.length === 1) {
         currentDoc.pages.push(null);
     }
-    
-    currentPageIndex = 0; // Always start on the cover
+
+    currentPageIndex = 0;
 
     document.getElementById('notes-area').style.display = 'none';
     document.getElementById('notes-sidebar').style.display = 'none';
     document.getElementById('planner-content').style.display = 'none';
     document.getElementById('doc-editor').style.display = 'flex';
 
-    // Update Doc Title in Header
     const titleEl = document.getElementById('editor-doc-title');
-    if (titleEl) titleEl.innerText = currentDoc.name;
+    if (titleEl) titleEl.innerText = doc.name;
 
     initCanvas();
     renderPage();
@@ -221,34 +219,24 @@ function renderPage() {
     ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     
     const canvasEl = document.getElementById('note-canvas');
-    canvasEl.className = ""; // Reset patterns
+    canvasEl.className = ""; 
 
     if (currentPageIndex === 0) {
-        // --- RENDER COVER PAGE ---
-        canvasEl.style.backgroundColor = "#2a4f8a"; // Classic blue cover
-        
+        canvasEl.style.backgroundColor = "#2a4f8a"; 
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
-        
-        // Notebook Title
         ctx.font = "bold 45px Georgia";
         ctx.fillText(currentDoc.name, 425, 450);
-        
-        // Subtitle
         ctx.font = "italic 20px Georgia";
         ctx.fillStyle = "rgba(255,255,255,0.7)";
         ctx.fillText("Notebook Collection", 425, 500);
-        
-        // Ornamental Line
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(350, 530);
         ctx.lineTo(500, 530);
         ctx.stroke();
-
     } else {
-        // --- RENDER WRITING PAGE ---
         canvasEl.style.backgroundColor = "white";
         const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
@@ -256,14 +244,11 @@ function renderPage() {
         const pageData = currentDoc.pages[currentPageIndex];
         if (pageData) {
             const img = new Image();
-            img.onload = () => { 
-                ctx.drawImage(img, 0, 0, 850, 1100); 
-            };
+            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
             img.src = pageData;
         }
     }
     
-    // Update "X de Y" indicator
     const indicator = document.getElementById('page-indicator-text');
     if (indicator) {
         indicator.innerText = `${currentPageIndex + 1} de ${currentDoc.pages.length}`;
@@ -271,7 +256,7 @@ function renderPage() {
 }
 
 function saveCurrentPage() {
-    if (currentDoc && canvas) {
+    if (currentDoc && canvas && currentPageIndex !== 0) {
         currentDoc.pages[currentPageIndex] = canvas.toDataURL();
     }
 }
@@ -279,16 +264,11 @@ function saveCurrentPage() {
 export function nextPage() {
     if (!currentDoc) return;
     saveCurrentPage();
-    
-    // Infinite pages: Create new if at the end
     if (currentPageIndex === currentDoc.pages.length - 1) {
         currentDoc.pages.push(null);
     }
-    
     currentPageIndex++;
     renderPage();
-    
-    // Auto-save to cloud when changing pages to prevent data loss
     currentDoc.updatedAt = Date.now();
     saveLibrary();
 }
@@ -298,6 +278,8 @@ export function prevPage() {
     saveCurrentPage();
     currentPageIndex--;
     renderPage();
+    currentDoc.updatedAt = Date.now();
+    saveLibrary();
 }
 
 function initCanvas() {
@@ -320,9 +302,7 @@ function initCanvas() {
 }
 
 function startDrawing(e) {
-    // SECURITY: Prevent drawing if the current page is the cover (index 0)
     if (currentPageIndex === 0) return;
-
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
     lastX = (e.clientX - rect.left);
@@ -365,8 +345,6 @@ export function closeEditor() {
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
-    
-    // Close editor and show library/notes correctly
     document.getElementById('doc-editor').style.display = 'none';
     document.getElementById('notes-area').style.display = 'flex';
     document.getElementById('notes-sidebar').style.display = 'flex';
@@ -389,7 +367,6 @@ export function exportLibrary() {
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // Keyboard Navigation: Left/Right keys
     document.addEventListener('keydown', (e) => {
         const editor = document.getElementById('doc-editor');
         if (editor && editor.style.display === 'flex') {
@@ -431,33 +408,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
 
-    // Lógica do menu de 3 pontos
-    const btnMore = document.getElementById('btn-more-options');
-    const moreMenu = document.getElementById('editor-more-menu');
-    if (btnMore && moreMenu) {
-        btnMore.onclick = (e) => {
-            e.stopPropagation();
-            moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
-        };
-    }
-
-    // Fechar menu ao clicar fora
-    document.addEventListener('click', () => {
-        if (moreMenu) moreMenu.style.display = 'none';
-    });
-
-    // Lógica de exportar (Download como imagem do canvas atual)
-    const btnExport = document.getElementById('btn-export-doc');
-    if (btnExport) {
-        btnExport.onclick = () => {
-            const link = document.createElement('a');
-            link.download = `${currentDoc.name}_page_${currentPageIndex + 1}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        };
-    }
-    
-    // Modal Paper Selection Preview Update
     const paperCards = document.querySelectorAll('.nb-paper-card');
     paperCards.forEach(card => {
         card.onclick = () => {
@@ -466,12 +416,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const paper = card.dataset.paper;
             const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
             const nbPaperPreview = document.getElementById('nb-paper-preview-trigger');
-            
             if (nbSelectedPaperName) nbSelectedPaperName.innerText = paper;
             if (nbPaperPreview) {
-                // Clear old paper patterns
                 nbPaperPreview.classList.remove('paper-blank', 'paper-dotted', 'paper-squared', 'paper-narrow-ruled', 'paper-wide-ruled', 'paper-cornell', 'paper-legal', 'paper-single-column', 'paper-three-columns');
-                // Apply selected pattern to preview
                 const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
                 nbPaperPreview.classList.add(paperClass);
             }
@@ -504,7 +451,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('tool-pen').onclick = () => { currentTool = 'pen'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-pen').classList.add('active'); };
     document.getElementById('tool-eraser').onclick = () => { currentTool = 'eraser'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-eraser').classList.add('active'); };
-    // Toolbar: Export and Options logic
+
+    const navAll = document.getElementById('nav-all-docs');
+    const navFav = document.getElementById('nav-favorites');
+    const navShared = document.getElementById('nav-shared');
+
+    if (navAll) navAll.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
+    if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
+    if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
+
+    // Toolbar logic
     const btnExport = document.getElementById('btn-export-doc');
     if (btnExport) {
         btnExport.onclick = () => {
@@ -524,34 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    document.addEventListener('click', () => {
-        if (moreMenu) moreMenu.style.display = 'none';
-    });
-
-    const navAll = document.getElementById('nav-all-docs');
-    const navFav = document.getElementById('nav-favorites');
-    const navShared = document.getElementById('nav-shared');
-
-    if (navAll) navAll.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
-    if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
-    if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
-
-    // Swipe Gestures: Touch Start/End
- // Enhanced Swipe Gestures: Applied to the container for better Kindle-like experience
     let touchStartX = 0;
     const editorContainer = document.querySelector('.canvas-container');
     if (editorContainer) {
         editorContainer.addEventListener('touchstart', (e) => {
-            // Only trigger swipe if not currently drawing (1 touch point)
-            if (e.touches.length === 1) {
-                touchStartX = e.changedTouches[0].screenX;
-            }
+            if (e.touches.length === 1) touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
-
         editorContainer.addEventListener('touchend', (e) => {
             if (e.changedTouches.length === 1) {
                 let diff = touchStartX - e.changedTouches[0].screenX;
-                // Threshold of 80px to avoid accidental turns while drawing
                 if (Math.abs(diff) > 80) { 
                     if (diff > 0) nextPage();
                     else prevPage();
