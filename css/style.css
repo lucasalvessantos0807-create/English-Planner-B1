@@ -313,37 +313,141 @@ canvas {
   min-height: 1100px;
 }
 
-/* Força o editor a cobrir TUDO, inclusive o botão + laranja */
+/* --- NOVO LAYOUT DO EDITOR IMERSIVO --- */
 #doc-editor {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 10000 !important; /* Valor maior que o FAB (9999) */
-  background: #222 !important;
+  z-index: 10000 !important;
+  background: #f0f0f0 !important; /* Cor de fundo suave fora da página */
   display: none;
   flex-direction: column;
   width: 100vw !important;
   height: 100vh !important;
+  overflow: hidden;
 }
 
-/* Torna os padrões de papel visíveis */
-.paper-dotted { background-image: radial-gradient(#d1d1d6 1.5px, transparent 1.5px) !important; background-size: 30px 30px !important; }
-.paper-squared { background-image: linear-gradient(#e5e5ea 1px, transparent 1px), linear-gradient(90deg, #e5e5ea 1px, transparent 1px) !important; background-size: 30px 30px !important; }
-.paper-narrow-ruled { background-image: repeating-linear-gradient(transparent, transparent 24px, #e5e5ea 24px, #e5e5ea 25px) !important; }
-.paper-wide-ruled { background-image: repeating-linear-gradient(transparent, transparent 34px, #e5e5ea 34px, #e5e5ea 35px) !important; }
-.paper-blank { background-color: white !important; }
-
-/* Esconde indicadores soltos que não pertencem ao editor */
-#doc-editor .doc-title-editor, 
-#doc-editor #save-doc-btn,
-.topbar-name span {
-  display: none !important;
+.editor-header {
+  height: 60px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 10;
 }
-/* Hide orphan texts like 'Save' and 'Untitled' from the screenshot */
-#doc-editor .doc-title-editor, 
-#doc-editor #save-doc-btn,
-.planner-content .topbar-name span,
-[id*="save"] {
-  display: none !important;
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.header-right { justify-content: flex-end; }
+
+.header-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--ink);
+  transition: opacity 0.2s;
+}
+
+.editor-title-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  background: #e5e5ea;
+  padding: 5px 15px;
+  border-radius: 12px;
+  gap: 15px;
+}
+
+.tool-divider { width: 1px; height: 20px; background: #ccc; }
+
+/* Canvas Container Responsivo */
+.canvas-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Permite scroll se a página for maior que a tela */
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+#note-canvas {
+  background-color: white !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  display: block;
+  margin: 0 auto;
+  /* Responsividade do Canvas */
+  max-width: 100%;
+  height: auto !important; 
+}
+
+/* Footer & Indicador de Página */
+.editor-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  pointer-events: none;
+}
+
+.page-indicator-pill {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: sans-serif;
+  backdrop-filter: blur(5px);
+}
+
+/* Menu de Opções (3 pontos) */
+.more-menu-wrapper { position: relative; }
+.editor-context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+  width: 220px;
+  display: none;
+  flex-direction: column;
+  padding: 8px;
+  z-index: 100;
+}
+
+.editor-context-menu button {
+  padding: 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-radius: 6px;
+}
+
+.editor-context-menu button:hover { background: #f2f2f7; }
+
+/* Ajustes Mobile */
+@media (max-width: 768px) {
+  .tool-group { gap: 8px; padding: 5px 10px; }
+  #pen-width { width: 60px; }
+  .editor-title-text { display: none; }
+  .canvas-container { padding: 10px 5px; }
 }
 
 .notes-select {
