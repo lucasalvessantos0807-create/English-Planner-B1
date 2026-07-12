@@ -11,9 +11,9 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
-let currentView = 'all'; // 'all', 'favorites', 'shared'
-let currentLayout = 'grid'; // 'grid' or 'list'
-let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
+let currentView = 'all'; 
+let currentLayout = 'grid'; 
+let currentSort = 'modified'; 
 let isSelectionMode = false;
 let selectedItems = new Set();
 
@@ -26,11 +26,11 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
     
-    // Define o layout da grade
+    // Layout and selection classes
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
 
-    // Gerencia o Breadcrumb (Caminho de navegação)
+    // Breadcrumb Management
     if (breadcrumb) {
         if (currentView === 'favorites') {
             breadcrumb.innerText = 'Favorites';
@@ -52,21 +52,22 @@ export function renderLibrary() {
         }
     }
 
-    // Filtra pastas e documentos com base na pasta atual ou visão
+    // Filter logic - Robust comparison
     let foldersToShow = [];
     let docsToShow = [];
 
+    const activeFolder = currentFolderId || null;
+
     if (currentView === 'all') {
-        // Usa == para capturar tanto null quanto undefined se necessário
-        foldersToShow = (library.folders || []).filter(f => f.parentId == currentFolderId);
-        docsToShow = (library.documents || []).filter(d => d.parentId == currentFolderId);
+        foldersToShow = (library.folders || []).filter(f => (f.parentId || null) === activeFolder);
+        docsToShow = (library.documents || []).filter(d => (d.parentId || null) === activeFolder);
     } else if (currentView === 'favorites') {
         docsToShow = (library.documents || []).filter(d => d.favorite);
     } else if (currentView === 'shared') {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
-    // Lógica de Ordenação
+    // Sorting Logic
     const sortFn = (a, b) => {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
@@ -77,7 +78,6 @@ export function renderLibrary() {
     foldersToShow.sort(sortFn);
     docsToShow.sort(sortFn);
 
-    // Função interna para renderizar cada item
     const renderItem = (data, type) => {
         const item = document.createElement('div');
         item.className = 'note-item' + (isSelectionMode ? ' selectable' : '');
@@ -86,7 +86,6 @@ export function renderLibrary() {
         const icon = type === 'folder' ? '📁' : (isNotebook ? '📓' : '📄');
         const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
-        // Se estiver em modo de seleção, adiciona checkbox
         if (isSelectionMode) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
@@ -126,7 +125,6 @@ export function renderLibrary() {
         grid.appendChild(item);
     };
 
-    // Primeiro renderiza pastas, depois documentos
     foldersToShow.forEach(f => renderItem(f, 'folder'));
     docsToShow.forEach(d => renderItem(d, 'document'));
 }
@@ -137,7 +135,7 @@ export function createFolder() {
     const newFolder = {
         id: 'fld_' + Date.now(),
         name: name,
-        parentId: currentFolderId,
+        parentId: currentFolderId || null,
         createdAt: Date.now(),
         updatedAt: Date.now()
     };
@@ -146,18 +144,18 @@ export function createFolder() {
     saveLibrary();
 }
 
-export function createDocument() {
-    const name = prompt("Enter document name:", "Untitled Note");
+export function createDocument(type = 'Document', paper = 'Blank') {
+    const name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
     if (!name) return;
     const newDoc = {
         id: 'doc_' + Date.now(),
         name: name,
-        parentId: currentFolderId,
+        parentId: currentFolderId || null,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         favorite: false,
         shared: false,
-        paperType: 'Blank',
+        paperType: paper,
         data: null 
     };
     if (!library.documents) library.documents = [];
@@ -304,9 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newMenu = document.getElementById('new-options-menu');
     const viewOptionsBtn = document.getElementById('view-options-btn');
     const viewMenu = document.getElementById('view-options-menu');
-    const sortSelect = document.getElementById('sort-docs-select');
 
-    // Menus Toggle Logic
     const closeAllMenus = () => {
         if (newMenu) newMenu.style.display = 'none';
         if (viewMenu) viewMenu.style.display = 'none';
@@ -335,7 +331,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
 
-    // --- VIEW OPTIONS LOGIC ---
     const btnGridView = document.getElementById('btn-view-grid');
     const btnListView = document.getElementById('btn-view-list');
     const btnSelectItems = document.getElementById('btn-select-items');
@@ -398,7 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id: 'doc_' + Date.now(),
                 name: name,
                 paperType: paperType,
-                parentId: currentFolderId,
+                parentId: currentFolderId || null,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
                 favorite: false,
@@ -424,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Menu Item Click Handlers
     const btnNewNotebook = document.getElementById('btn-new-notebook');
     const btnNewTextDoc = document.getElementById('btn-new-text-doc');
     const btnCreateFolder = document.getElementById('btn-create-folder');
@@ -434,12 +428,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nbModal) nbModal.style.display = 'flex'; 
         if (nbNameInput) nbNameInput.value = "";
     };
-    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeAllMenus(); createDocument(); };
+    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeAllMenus(); createDocument('Text Document'); };
     if (btnCreateFolder) btnCreateFolder.onclick = () => { closeAllMenus(); createFolder(); };
 
-    // Other UI controls
-    if (sortSelect) sortSelect.onchange = (e) => { currentSort = e.target.value === 'name' ? 'name' : 'modified'; renderLibrary(); };
-    
     const closeEditorBtn = document.getElementById('close-editor-btn');
     if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
     
@@ -454,6 +445,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
-    // Initial Sync
     updateViewCheckmarks();
 });
