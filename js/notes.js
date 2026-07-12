@@ -442,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navShared = document.getElementById('nav-shared');
 
     if (navAll) navAll.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
+    renderLibrary();
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
