@@ -313,12 +313,12 @@ canvas {
   min-height: 1100px;
 }
 
-/* --- NOVO LAYOUT DO EDITOR IMERSIVO --- */
+/* --- IMMERSIVE NOTEBOOK LAYOUT --- */
 #doc-editor {
   position: fixed !important;
   inset: 0 !important;
   z-index: 10000 !important;
-  background: #f0f0f0 !important; /* Cor de fundo suave fora da página */
+  background: #f0f0f0 !important; 
   display: none;
   flex-direction: column;
   width: 100vw !important;
@@ -328,7 +328,7 @@ canvas {
 
 .editor-header {
   height: 60px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -354,7 +354,6 @@ canvas {
   cursor: pointer;
   padding: 5px;
   color: var(--ink);
-  transition: opacity 0.2s;
 }
 
 .editor-title-text {
@@ -374,44 +373,57 @@ canvas {
 
 .tool-divider { width: 1px; height: 20px; background: #ccc; }
 
-/* Canvas Container Responsivo */
+.color-swatch input[type="color"] {
+  width: 25px;
+  height: 25px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+/* Canvas Container */
 .canvas-container {
   flex: 1;
   overflow: auto;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Permite scroll se a página for maior que a tela */
-  padding: 20px;
-  -webkit-overflow-scrolling: touch;
+  align-items: flex-start;
+  padding: 0;
+  background: #f0f0f0;
 }
 
 #note-canvas {
   background-color: white !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 0 30px rgba(0,0,0,0.1);
   display: block;
   margin: 0 auto;
-  /* Responsividade do Canvas */
-  max-width: 100%;
-  height: auto !important; 
 }
 
-/* Footer & Indicador de Página */
+/* Page Indicator Style */
 .editor-footer {
   position: absolute;
-  bottom: 20px;
-  left: 20px;
+  bottom: 25px;
+  left: 25px;
   pointer-events: none;
+  z-index: 20;
 }
 
 .page-indicator-pill {
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.7rem;
   font-weight: 600;
-  font-family: sans-serif;
   backdrop-filter: blur(5px);
+}
+
+/* Mobile Adaptation */
+@media (max-width: 768px) {
+  .editor-header { height: 50px; padding: 0 10px; }
+  .tool-group { gap: 8px; padding: 5px; }
+  .editor-title-text { display: none; }
+  #pen-width { width: 70px; }
 }
 
 /* Menu de Opções (3 pontos) */
