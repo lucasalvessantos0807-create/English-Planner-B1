@@ -258,28 +258,51 @@
 </div>
   </div>
 
-  <!-- Document Editor View (Canvas) -->
+  <!-- Document Editor View (Immersive Tablet Layout) -->
   <div id="doc-editor">
-    <div class="editor-toolbar" style="background:#1a1a1a; padding:10px 25px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; height: 60px; min-height: 60px;">
-      <button id="close-editor-btn" style="background:#333; color:white; border:none; padding:8px 18px; border-radius:6px; cursor:pointer; font-family:sans-serif; font-weight:600;">✕ Exit</button>
+    <!-- Header: Navigation & Tools -->
+    <header class="editor-header">
+      <div class="header-left">
+        <button id="close-editor-btn" class="header-btn">✕</button>
+        <span id="editor-doc-title" class="editor-title-text">Notebook Name</span>
+      </div>
       
-      <div class="tool-group" style="display:flex; gap:25px; align-items:center;">
-        <button class="tool-btn active" id="tool-pen" style="background:none; border:none; font-size:1.6rem; cursor:pointer;">🖋️</button>
-        <button class="tool-btn" id="tool-eraser" style="background:none; border:none; font-size:1.6rem; cursor:pointer;">🧽</button>
-        <div style="width:1px; height:24px; background:#444;"></div>
-        <div style="background:black; border: 1px solid #444; border-radius:4px; padding:2px; display:flex; align-items:center;">
-          <input type="color" id="pen-color" value="#000000" style="width:28px; height:28px; border:none; background:none; cursor:pointer;">
+      <div class="header-center">
+        <div class="tool-group">
+          <button class="tool-btn active" id="tool-pen">🖋️</button>
+          <button class="tool-btn" id="tool-eraser">🧽</button>
+          <div class="tool-divider"></div>
+          <div class="color-swatch">
+            <input type="color" id="pen-color" value="#000000">
+          </div>
+          <input type="range" id="pen-width" min="1" max="20" value="2">
         </div>
-        <input type="range" id="pen-width" min="1" max="20" value="2" style="width:120px; accent-color:var(--accent);">
       </div>
 
-      <div style="color:#aaa; font-size:13px; font-family:sans-serif; min-width:100px; text-align:right;" id="page-indicator-text">Page 1 / 1</div>
-    </div>
-    <div class="canvas-container">
+      <div class="header-right">
+        <button class="header-btn" id="btn-export-doc" title="Export">📤</button>
+        <div class="more-menu-wrapper">
+          <button class="header-btn" id="btn-more-options">⋮</button>
+          <div id="editor-more-menu" class="editor-context-menu">
+            <button id="btn-toggle-read-only">🔒 Read Only Mode</button>
+            <button id="btn-change-paper">📝 Change Paper Template</button>
+            <button id="btn-delete-page" style="color: #cc0000;">🗑️ Delete Current Page</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Drawing Area -->
+    <main class="canvas-container" id="canvas-scroll-container">
       <canvas id="note-canvas"></canvas>
-    </div>
-  </div>
-    </div>
+    </main>
+
+    <!-- Footer: Page Indicator -->
+    <footer class="editor-footer">
+      <div class="page-indicator-pill">
+        <span id="page-indicator-text">1 of 1</span>
+      </div>
+    </footer>
   </div>
     
     <!-- DRAWERS PRINCIPAIS -->
