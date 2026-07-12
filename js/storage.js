@@ -6,18 +6,19 @@ export let plannerConfig = {};
 export let pageContent = {};
 export let history = [];
 export let importHistory = [];
+// Mantemos como const para preservar a referência de memória para o notes.js
 export const library = { folders: [], documents: [] };
 
 export function resetLocalData() {
     state = {};
     const starterConfig = {};
     
-    // Gerar 3 meses automáticos no primeiro acesso (30 dias cada)
+    // Gerar 3 meses automáticos
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     for (let m = 1; m <= 3; m++) {
         let currentDay = 1;
         for (let w = 1; w <= 5; w++) {
-            const daysInW = (w === 5) ? 2 : 7; // Semana 5 com 2 dias para totalizar 30
+            const daysInW = (w === 5) ? 2 : 7; 
             starterConfig[`${m}-${w}`] = {
                 label: `Week ${w}`,
                 theme: "Month Plans",
@@ -56,7 +57,11 @@ export function resetLocalData() {
     };
     history = [];
     importHistory = [];
-    library = { folders: [], documents: [] };
+    
+    // CORREÇÃO: Limpamos as propriedades em vez de reatribuir a variável constante
+    library.folders = [];
+    library.documents = [];
+
     window.appState = state;
     window.plannerConfig = plannerConfig;
     window.pageContent = pageContent;
@@ -65,11 +70,8 @@ export function resetLocalData() {
 export function applySnapshot(newConfig, newContent) {
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
-    
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
-
-    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -78,13 +80,16 @@ export async function loadUserData(uid) {
         const snap = await getDoc(doc(db, "users", uid));
         if (snap.exists()) {
             const data = snap.data();
+            
+            // CORREÇÃO: Atualizamos o conteúdo da constante library
             if (data.library) {
                 library.folders = data.library.folders || [];
                 library.documents = data.library.documents || [];
+            } else {
+                library.folders = [];
+                library.documents = [];
             }
-            // Ensure internal arrays exist to prevent map/filter errors
-            if (!library.folders) library.folders = [];
-            if (!library.documents) library.documents = [];
+
             state = data.state || {};
             plannerConfig = data.plannerConfig || plannerConfig;
             pageContent = data.pageContent || pageContent;
@@ -117,7 +122,7 @@ export async function saveUserData(uid) {
             plannerConfig: plannerConfig,
             pageContent: pageContent,
             history: history,
-           importHistory: importHistory,
+            importHistory: importHistory,
             library: library
         });
     } catch (e) { console.error("Error saving data:", e); }
