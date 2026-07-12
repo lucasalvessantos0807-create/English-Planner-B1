@@ -260,9 +260,16 @@
 
   <!-- Document Editor View (Canvas) -->
   <div id="doc-editor" style="display:none; flex-direction: column; height: 100vh; width: 100%; background: #555; position: fixed; inset: 0; z-index: 5000;">
-   <div class="editor-toolbar">
-      <button id="close-editor-btn">✕ Exit</button>
-      <div class="tool-group">
+    <div class="editor-toolbar">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button id="close-editor-btn">✕ Exit</button>
+        <div class="page-nav-controls" style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); padding:4px 12px; border-radius:20px;">
+          <button id="prev-page-btn" class="tool-btn" title="Previous Page">◀</button>
+          <span id="page-counter" style="font-size:13px; min-width:80px; text-align:center; font-family:sans-serif;">Page 1 / 1</span>
+          <button id="next-page-btn" class="tool-btn" title="Next Page">▶</button>
+          <button id="add-page-btn" class="tool-btn" style="margin-left:5px; background:var(--accent); font-weight:bold;">+ Add Page</button>
+        </div>
+      </div>
         <button class="tool-btn active" id="tool-pen">🖋️</button>
         <button class="tool-btn" id="tool-eraser">🧽</button>
         <input type="color" id="pen-color" value="#000000">
