@@ -29,8 +29,10 @@ export function renderLibrary() {
     // Apply layout mode
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
-    const stTitle = document.querySelector('.st-title');
-    if (stTitle) stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
+    const stTitle = document.getElementById('st-selection-title');
+    if (stTitle) {
+        stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
+    }
 
     if (breadcrumb) {
         if (currentView === 'favorites') {
@@ -360,13 +362,19 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAllMenus();
     };
 
-   if (btnSelectItems) btnSelectItems.onclick = () => {
+   if (btnSelectItems) btnSelectItems.onclick = (e) => {
+        e.stopPropagation();
         isSelectionMode = true;
         selectedItems.clear();
-        document.getElementById('notes-topbar').style.display = 'none';
-        document.getElementById('selection-toolbar').style.display = 'flex';
+        
+        const topbar = document.getElementById('notes-topbar');
+        const selectionBar = document.getElementById('selection-toolbar');
+        
+        if (topbar) topbar.style.display = 'none';
+        if (selectionBar) selectionBar.style.display = 'flex';
+        
         renderLibrary();
-        closeAllMenus();
+        if (viewMenu) viewMenu.style.display = 'none';
     };
 
     document.querySelectorAll('.sort-opt').forEach(btn => {
@@ -546,4 +554,114 @@ document.addEventListener('DOMContentLoaded', () => {
         saveLibrary();
         selectedItems.clear();
     };
+    // --- SELECTION TOOLBAR ACTIONS ---
+    const btnDone = document.getElementById('btn-selection-done');
+    const btnSelectAll = document.getElementById('btn-select-all');
+    
+    if (btnDone) {
+        btnDone.onclick = () => {
+            isSelectionMode = false;
+            selectedItems.clear();
+            const topbar = document.getElementById('notes-topbar');
+            const selectionBar = document.getElementById('selection-toolbar');
+            if (topbar) topbar.style.display = 'flex';
+            if (selectionBar) selectionBar.style.display = 'none';
+            renderLibrary();
+        };
+    }
+
+    if (btnSelectAll) {
+        btnSelectAll.onclick = () => {
+            const allItems = [...(library.folders || []), ...(library.documents || [])];
+            // Se já estiver tudo selecionado, desmarca tudo. Caso contrário, seleciona tudo.
+            if (selectedItems.size >= allItems.length && allItems.length > 0) {
+                selectedItems.clear();
+            } else {
+                allItems.forEach(item => selectedItems.add(item.id));
+            }
+            renderLibrary();
+        };
+    }
+
+    // ACTION: DELETE (TRASH)
+    const trashBtn = document.getElementById('st-trash');
+    if (trashBtn) {
+        trashBtn.onclick = () => {
+            if (selectedItems.size === 0) return;
+            if (confirm(`Delete ${selectedItems.size} items?`)) {
+                selectedItems.forEach(id => {
+                    library.documents = (library.documents || []).filter(d => d.id !== id);
+                    library.folders = (library.folders || []).filter(f => f.id !== id);
+                });
+                saveLibrary();
+                selectedItems.clear();
+                // Opcional: sai do modo de seleção após deletar
+                if (btnDone) btnDone.click();
+            }
+        };
+    }
+
+    // ACTION: DUPLICATE
+    const duplicateBtn = document.getElementById('st-duplicate');
+    if (duplicateBtn) {
+        duplicateBtn.onclick = () => {
+            if (selectedItems.size === 0) return;
+            selectedItems.forEach(id => {
+                const docToCopy = library.documents.find(d => d.id === id);
+                if (docToCopy) {
+                    const newDoc = JSON.parse(JSON.stringify(docToCopy));
+                    newDoc.id = 'doc_' + Date.now() + Math.floor(Math.random() * 1000);
+                    newDoc.name = docToCopy.name + " Copy";
+                    newDoc.updatedAt = Date.now();
+                    library.documents.push(newDoc);
+                }
+            });
+            saveLibrary();
+            selectedItems.clear();
+            if (btnDone) btnDone.click();
+        };
+    }
+
+    // ACTION: EXPORT
+    const exportBtn = document.getElementById('st-export');
+    if (exportBtn) {
+        exportBtn.onclick = () => {
+            if (selectedItems.size === 0) return;
+            const selection = {
+                documents: library.documents.filter(d => selectedItems.has(d.id)),
+                folders: library.folders.filter(f => selectedItems.has(f.id))
+            };
+            const blob = new Blob([JSON.stringify(selection, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `selection_export_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+    }
+
+    // ACTION: MOVE
+    const moveBtn = document.getElementById('st-move');
+    if (moveBtn) {
+        moveBtn.onclick = () => {
+            if (selectedItems.size === 0) return;
+            const destName = prompt("Enter destination folder name (Leave empty for root):");
+            let targetId = null;
+            if (destName) {
+                const folder = library.folders.find(f => f.name.toLowerCase() === destName.toLowerCase());
+                if (folder) targetId = folder.id;
+                else { alert("Folder not found."); return; }
+            }
+            selectedItems.forEach(id => {
+                const doc = library.documents.find(d => d.id === id);
+                if (doc) doc.parentId = targetId;
+                const fld = library.folders.find(f => f.id === id);
+                if (fld) fld.parentId = targetId;
+            });
+            saveLibrary();
+            selectedItems.clear();
+            if (btnDone) btnDone.click();
+        };
+    }
 });
