@@ -461,9 +461,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
     // Toolbar logic
-    const btnExport = document.getElementById('btn-export-doc');
-    if (btnExport) {
-        btnExport.onclick = () => {
+  const btnExportNotebook = document.getElementById('btn-export-doc');
+    if (btnExportNotebook) {
+        btnExportNotebook.onclick = () => {
             const link = document.createElement('a');
             link.download = `${currentDoc.name}_page_${currentPageIndex + 1}.png`;
             link.href = canvas.toDataURL();
@@ -471,14 +471,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    const btnMore = document.getElementById('btn-more-options');
-    const moreMenu = document.getElementById('editor-more-menu');
-    if (btnMore && moreMenu) {
-        btnMore.onclick = (e) => {
+    const btnMoreNotebook = document.getElementById('btn-more-options');
+    const moreMenuNotebook = document.getElementById('editor-more-menu');
+    if (btnMoreNotebook && moreMenuNotebook) {
+        btnMoreNotebook.onclick = (e) => {
             e.stopPropagation();
-            moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
+            moreMenuNotebook.style.display = moreMenuNotebook.style.display === 'flex' ? 'none' : 'flex';
         };
     }
+
+    document.addEventListener('click', () => {
+        if (moreMenuNotebook) moreMenuNotebook.style.display = 'none';
+    });
 
     let touchStartX = 0;
     const editorContainer = document.querySelector('.canvas-container');
