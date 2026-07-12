@@ -218,13 +218,18 @@ function renderPage() {
     if (!ctx || !canvas || !currentDoc) return;
     
     const ratio = window.devicePixelRatio || 1;
+    // Reset transform to clear the entire canvas correctly
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Apply scale again for drawing
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     
     const pageData = currentDoc.pages[currentPageIndex];
     if (pageData) {
         const img = new Image();
         img.onload = () => { 
+            // Clear again just before drawing to avoid flickers on slow loads
+            ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
             ctx.drawImage(img, 0, 0, 850, 1100); 
         };
         img.src = pageData;
@@ -253,6 +258,10 @@ export function nextPage() {
     
     currentPageIndex++;
     renderPage();
+    
+    // Auto-save to cloud when changing pages to prevent data loss
+    currentDoc.updatedAt = Date.now();
+    saveLibrary();
 }
 
 export function prevPage() {
@@ -447,15 +456,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
     // Swipe Gestures: Touch Start/End
+ // Enhanced Swipe Gestures: Applied to the container for better Kindle-like experience
     let touchStartX = 0;
-    const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) {
-        canvasEl.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].screenX, { passive: true });
-        canvasEl.addEventListener('touchend', (e) => {
-            let diff = touchStartX - e.changedTouches[0].screenX;
-            if (Math.abs(diff) > 80) { 
-                if (diff > 0) nextPage();
-                else prevPage();
+    const editorContainer = document.querySelector('.canvas-container');
+    if (editorContainer) {
+        editorContainer.addEventListener('touchstart', (e) => {
+            // Only trigger swipe if not currently drawing (1 touch point)
+            if (e.touches.length === 1) {
+                touchStartX = e.changedTouches[0].screenX;
+            }
+        }, { passive: true });
+
+        editorContainer.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 1) {
+                let diff = touchStartX - e.changedTouches[0].screenX;
+                // Threshold of 80px to avoid accidental turns while drawing
+                if (Math.abs(diff) > 80) { 
+                    if (diff > 0) nextPage();
+                    else prevPage();
+                }
             }
         }, { passive: true });
     }
