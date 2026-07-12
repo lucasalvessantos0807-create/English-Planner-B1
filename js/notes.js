@@ -191,18 +191,25 @@ async function saveLibrary() {
 function openDocument(doc) {
     currentDoc = doc;
     
+    // Notebook logic: Page 0 is always the Cover, Page 1+ is writing content
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
-        currentDoc.pages = [null, null];
+        currentDoc.pages = [null, null]; 
     } else if (currentDoc.pages.length === 1) {
         currentDoc.pages.push(null);
     }
+    
+    currentPageIndex = 0; // Starts on cover
 
-    currentPageIndex = 0;
+    // Hide all planner and library elements to prevent layout "invasion"
+    const notesArea = document.getElementById('notes-area');
+    const notesSidebar = document.getElementById('notes-sidebar');
+    const plannerContent = document.getElementById('planner-content');
+    const docEditor = document.getElementById('doc-editor');
 
-    document.getElementById('notes-area').style.display = 'none';
-    document.getElementById('notes-sidebar').style.display = 'none';
-    document.getElementById('planner-content').style.display = 'none';
-    document.getElementById('doc-editor').style.display = 'flex';
+    if (notesArea) notesArea.style.display = 'none';
+    if (notesSidebar) notesSidebar.style.display = 'none';
+    if (plannerContent) plannerContent.style.display = 'none';
+    if (docEditor) docEditor.style.display = 'flex';
 
     const titleEl = document.getElementById('editor-doc-title');
     if (titleEl) titleEl.innerText = doc.name;
@@ -219,24 +226,20 @@ function renderPage() {
     ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     
     const canvasEl = document.getElementById('note-canvas');
-    canvasEl.className = ""; 
+    if (canvasEl) canvasEl.className = ""; 
 
     if (currentPageIndex === 0) {
-        canvasEl.style.backgroundColor = "#2a4f8a"; 
+        // --- COVER PAGE RENDERING ---
+        canvasEl.style.backgroundColor = "#2a4f8a"; // Solid blue cover
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
-        ctx.font = "bold 45px Georgia";
+        ctx.font = "bold 40px Georgia";
         ctx.fillText(currentDoc.name, 425, 450);
-        ctx.font = "italic 20px Georgia";
+        ctx.font = "italic 18px Georgia";
         ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText("Notebook Collection", 425, 500);
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(350, 530);
-        ctx.lineTo(500, 530);
-        ctx.stroke();
+        ctx.fillText("Personal Notebook", 425, 490);
     } else {
+        // --- WRITING PAGE RENDERING ---
         canvasEl.style.backgroundColor = "white";
         const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
@@ -302,7 +305,9 @@ function initCanvas() {
 }
 
 function startDrawing(e) {
+    // Prevent writing if on the cover (Page 1 / Index 0)
     if (currentPageIndex === 0) return;
+
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
     lastX = (e.clientX - rect.left);
