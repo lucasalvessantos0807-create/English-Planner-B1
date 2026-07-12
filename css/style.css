@@ -1348,27 +1348,25 @@ body.preview-open {
 .st-icon { font-size: 1.6rem; }
 .st-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; font-family: var(--main-font); }
 
-/* --- SELECTION CHECKBOX CORRECTION --- */
-.note-item.selectable {
-  position: relative;
-}
+/* --- SELECTION SYSTEM CORRECTION --- */
 .note-checkbox {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 22px;
-  height: 22px;
+  top: 12px;
+  left: 12px;
+  width: 20px;
+  height: 20px;
   z-index: 100;
   cursor: pointer;
   accent-color: var(--accent);
+  background: white;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  appearance: auto; /* Garante que o check apareça no navegador */
   display: block !important;
   opacity: 1 !important;
 }
-.notes-grid.selection-active .note-item {
-  padding-top: 15px;
-}
 
-/* --- CANVAS & PAPER CORRECTION --- */
+/* --- EDITOR & CANVAS CORRECTION --- */
 .canvas-container {
   flex: 1;
   background: #555;
@@ -1378,19 +1376,19 @@ body.preview-open {
   padding: 40px;
   overflow: auto;
 }
+
 #note-canvas {
-  background-color: white !important; /* Obriga a folha a ser branca */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  cursor: crosshair;
+  background-color: white !important;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
   flex-shrink: 0;
+  display: block;
 }
 
-/* Estilos de Papéis Adicionais */
-.thumb-cornell, .paper-cornell { background: white; background-image: linear-gradient(90deg, transparent 79px, #abced7 1px, transparent 1px), linear-gradient(#eee 1px, transparent 1px); background-size: 100% 100%, 100% 25px; }
-.thumb-legal, .paper-legal { background: white; background-image: linear-gradient(90deg, transparent 70px, #ffadad 1px, transparent 80px), linear-gradient(#e5e5ea 1px, transparent 1px); background-size: 100% 100%, 100% 25px; }
-.thumb-column, .paper-single-column { background: white; border-left: 40px solid transparent; border-right: 40px solid transparent; background-clip: content-box; background-image: linear-gradient(#eee 1px, transparent 1px); background-size: 100% 25px; }
-.thumb-three-columns, .paper-three-columns { background: white; background-image: linear-gradient(90deg, transparent 33%, #eee 33%, #eee 34%, transparent 34%, transparent 66%, #eee 66%, #eee 67%, transparent 67%); }
-}
+/* Folhas Especiais */
+.paper-cornell { background: white; background-image: linear-gradient(90deg, transparent 79px, #abced7 1px, transparent 1px), linear-gradient(#eee 1px, transparent 1px); background-size: 100% 100%, 100% 25px; }
+.paper-legal { background: white; background-image: linear-gradient(90deg, transparent 70px, #ffadad 1px, transparent 80px), linear-gradient(#e5e5ea 1px, transparent 1px); background-size: 100% 100%, 100% 25px; }
+.paper-single-column { background: white; background-image: linear-gradient(90deg, #eee 1px, transparent 1px, transparent calc(100% - 1px), #eee 1px); background-size: 80% 100%; background-position: center; background-repeat: no-repeat; }
+.paper-three-columns { background: white; background-image: linear-gradient(90deg, transparent 33%, #eee 33%, #eee 34%, transparent 34%, transparent 66%, #eee 66%, #eee 67%, transparent 67%); }
 /* --- NOTEBOOK COVER RENDERING IN LIBRARY --- */
 .note-icon.notebook-thumbnail {
     width: 85px;
