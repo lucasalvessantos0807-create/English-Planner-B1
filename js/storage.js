@@ -6,7 +6,7 @@ export let plannerConfig = {};
 export let pageContent = {};
 export let history = [];
 export let importHistory = [];
-export let library = { folders: [], documents: [] };
+export const library = { folders: [], documents: [] };
 
 export function resetLocalData() {
     state = {};
@@ -78,7 +78,10 @@ export async function loadUserData(uid) {
         const snap = await getDoc(doc(db, "users", uid));
         if (snap.exists()) {
             const data = snap.data();
-            library = data.library || { folders: [], documents: [] };
+            if (data.library) {
+                library.folders = data.library.folders || [];
+                library.documents = data.library.documents || [];
+            }
             // Ensure internal arrays exist to prevent map/filter errors
             if (!library.folders) library.folders = [];
             if (!library.documents) library.documents = [];
