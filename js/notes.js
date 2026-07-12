@@ -4,7 +4,7 @@ import { saveUserData, library } from './storage.js';
  * NOTES & LIBRARY SYSTEM
  */
 
-let currentFolderId = null; // null = Root
+let currentFolderId = null; 
 let isDrawing = false;
 let currentTool = 'pen';
 let canvas, ctx;
@@ -52,7 +52,6 @@ export function renderLibrary() {
         }
     }
 
-    // Filter logic - Robust comparison
     let foldersToShow = [];
     let docsToShow = [];
 
@@ -67,7 +66,6 @@ export function renderLibrary() {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
-    // Sorting Logic
     const sortFn = (a, b) => {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
