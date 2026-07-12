@@ -294,47 +294,50 @@ button, input, select, textarea {
   background: #333;
   display: flex;
   justify-content: center;
-  padding: 20px;
+  padding: 40px 20px;
   overflow: auto;
   position: relative;
   z-index: 1;
 }
 
 canvas {
-  background: white;
+  background-color: white !important;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   cursor: crosshair;
   touch-action: none;
   background-attachment: local;
-  display: block;
+  display: block !important;
+  margin: 0 auto;
+  /* Garante que o canvas tenha tamanho mesmo vazio */
+  min-width: 850px;
+  min-height: 1100px;
 }
 
-/* Fix overlap: Ensure editor is on top of everything */
+/* Força o editor a cobrir TUDO, inclusive o botão + laranja */
 #doc-editor {
   position: fixed !important;
   inset: 0 !important;
-  z-index: 9999 !important;
+  z-index: 10000 !important; /* Valor maior que o FAB (9999) */
   background: #222 !important;
   display: none;
   flex-direction: column;
+  width: 100vw !important;
+  height: 100vh !important;
 }
 
-/* Make paper patterns visible and clear */
+/* Torna os padrões de papel visíveis */
 .paper-dotted { background-image: radial-gradient(#d1d1d6 1.5px, transparent 1.5px) !important; background-size: 30px 30px !important; }
 .paper-squared { background-image: linear-gradient(#e5e5ea 1px, transparent 1px), linear-gradient(90deg, #e5e5ea 1px, transparent 1px) !important; background-size: 30px 30px !important; }
 .paper-narrow-ruled { background-image: repeating-linear-gradient(transparent, transparent 24px, #e5e5ea 24px, #e5e5ea 25px) !important; }
 .paper-wide-ruled { background-image: repeating-linear-gradient(transparent, transparent 34px, #e5e5ea 34px, #e5e5ea 35px) !important; }
-.paper-blank { background: white !important; }
+.paper-blank { background-color: white !important; }
 
-/* Hide floating Save and Untitled indicators in Editor Mode */
+/* Esconde indicadores soltos que não pertencem ao editor */
 #doc-editor .doc-title-editor, 
 #doc-editor #save-doc-btn,
-#doc-editor + div[style*="Save"],
-.editor-toolbar + div,
 .topbar-name span {
   display: none !important;
 }
-
 /* Hide orphan texts like 'Save' and 'Untitled' from the screenshot */
 #doc-editor .doc-title-editor, 
 #doc-editor #save-doc-btn,
