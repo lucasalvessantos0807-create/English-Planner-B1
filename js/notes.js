@@ -29,6 +29,8 @@ export function renderLibrary() {
     // Apply layout mode
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
+    const stTitle = document.querySelector('.st-title');
+    if (stTitle) stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
 
     if (breadcrumb) {
         if (currentView === 'favorites') {
@@ -358,9 +360,11 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAllMenus();
     };
 
-    if (btnSelectItems) btnSelectItems.onclick = () => {
-        isSelectionMode = !isSelectionMode;
+   if (btnSelectItems) btnSelectItems.onclick = () => {
+        isSelectionMode = true;
         selectedItems.clear();
+        document.getElementById('notes-topbar').style.display = 'none';
+        document.getElementById('selection-toolbar').style.display = 'flex';
         renderLibrary();
         closeAllMenus();
     };
@@ -447,4 +451,99 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
     updateViewCheckmarks();
+});
+
+// --- SELECTION ACTIONS LOGIC ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnDone = document.getElementById('btn-selection-done');
+    const btnSelectAll = document.getElementById('btn-select-all');
+    
+    if (btnDone) {
+        btnDone.onclick = () => {
+            isSelectionMode = false;
+            selectedItems.clear();
+            document.getElementById('notes-topbar').style.display = 'flex';
+            document.getElementById('selection-toolbar').style.display = 'none';
+            renderLibrary();
+        };
+    }
+
+    if (btnSelectAll) {
+        btnSelectAll.onclick = () => {
+            const allItems = [...(library.folders || []), ...(library.documents || [])];
+            if (selectedItems.size === allItems.length) {
+                selectedItems.clear();
+            } else {
+                allItems.forEach(item => selectedItems.add(item.id));
+            }
+            renderLibrary();
+        };
+    }
+
+    // ACTION: TRASH (Delete)
+    document.getElementById('st-trash').onclick = () => {
+        if (selectedItems.size === 0) return;
+        if (confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) {
+            selectedItems.forEach(id => {
+                library.documents = (library.documents || []).filter(d => d.id !== id);
+                library.folders = (library.folders || []).filter(f => f.id !== id);
+            });
+            saveLibrary();
+            selectedItems.clear();
+        }
+    };
+
+    // ACTION: DUPLICATE
+    document.getElementById('st-duplicate').onclick = () => {
+        if (selectedItems.size === 0) return;
+        selectedItems.forEach(id => {
+            const docToCopy = library.documents.find(d => d.id === id);
+            if (docToCopy) {
+                const newDoc = { 
+                    ...docToCopy, 
+                    id: 'doc_' + Date.now() + Math.random(), 
+                    name: docToCopy.name + " Copy",
+                    updatedAt: Date.now() 
+                };
+                library.documents.push(newDoc);
+            }
+            // Note: Folder duplication is more complex (recursive), skipping simple folder copy for stability
+        });
+        saveLibrary();
+        selectedItems.clear();
+    };
+
+    // ACTION: EXPORT
+    document.getElementById('st-export').onclick = () => {
+        if (selectedItems.size === 0) return;
+        const itemsToExport = {
+            documents: library.documents.filter(d => selectedItems.has(d.id)),
+            folders: library.folders.filter(f => selectedItems.has(f.id))
+        };
+        const dataStr = JSON.stringify(itemsToExport, null, 2);
+        const blob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `exported_selection_${Date.now()}.json`;
+        a.click();
+    };
+
+    // ACTION: MOVE
+    document.getElementById('st-move').onclick = () => {
+        if (selectedItems.size === 0) return;
+        const folderName = prompt("Enter the name of the destination folder (Leave blank for Root):");
+        const targetFolder = library.folders.find(f => f.name.toLowerCase() === (folderName || "").toLowerCase());
+        const targetId = targetFolder ? targetFolder.id : null;
+
+        selectedItems.forEach(id => {
+            const doc = library.documents.find(d => d.id === id);
+            if (doc) doc.parentId = targetId;
+            const fld = library.folders.find(f => f.id === id);
+            if (fld) fld.parentId = targetId;
+        });
+        saveLibrary();
+        selectedItems.clear();
+    };
 });
