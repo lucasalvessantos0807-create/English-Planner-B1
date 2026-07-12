@@ -4,16 +4,16 @@ import { saveUserData, library } from './storage.js';
  * NOTES & LIBRARY SYSTEM
  */
 
-let currentFolderId = null; 
+let currentFolderId = null; // null means Root
 let isDrawing = false;
 let currentTool = 'pen';
 let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
-let currentView = 'all'; 
-let currentLayout = 'grid'; 
-let currentSort = 'modified'; 
+let currentView = 'all'; // 'all', 'favorites', 'shared'
+let currentLayout = 'grid'; // 'grid' or 'list'
+let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
 let isSelectionMode = false;
 let selectedItems = new Set();
 
@@ -26,11 +26,10 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
     
-    // Layout and selection classes
+    // Apply layout mode
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
 
-    // Breadcrumb Management
     if (breadcrumb) {
         if (currentView === 'favorites') {
             breadcrumb.innerText = 'Favorites';
@@ -41,9 +40,10 @@ export function renderLibrary() {
         } else {
             const folder = (library.folders || []).find(f => f.id === currentFolderId);
             breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
-            const btnBack = document.getElementById('back-to-root');
-            if (btnBack) {
-                btnBack.onclick = () => {
+            
+            const backBtn = document.getElementById('back-to-root');
+            if (backBtn) {
+                backBtn.onclick = () => {
                     currentFolderId = null;
                     currentView = 'all';
                     renderLibrary();
@@ -55,6 +55,7 @@ export function renderLibrary() {
     let foldersToShow = [];
     let docsToShow = [];
 
+    // Helper to normalize parentId comparison
     const activeFolder = currentFolderId || null;
 
     if (currentView === 'all') {
@@ -66,6 +67,7 @@ export function renderLibrary() {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
+    // Sorting Logic
     const sortFn = (a, b) => {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
