@@ -448,13 +448,10 @@
         <div class="nb-previews">
           <div class="nb-preview-item">
             <div class="nb-label-preview">COVER</div>
-            <!-- Adicionei o ID nb-cover-preview-trigger -->
-            <div id="nb-cover-preview-trigger" class="nb-preview-box cover-solid-blue" style="cursor:pointer;">
-            </div>
+            <div id="nb-cover-preview-trigger" class="nb-preview-box cover-solid-blue" style="cursor:pointer;"></div>
           </div>
           <div class="nb-preview-item">
             <div class="nb-label-preview">PAPER</div>
-            <!-- Adicionei o ID nb-paper-preview-trigger -->
             <div id="nb-paper-preview-trigger" class="nb-preview-box paper-blank" style="cursor:pointer;"></div>
             <div class="nb-preview-sub" id="nb-selected-paper-name">Blank</div>
           </div>
@@ -475,7 +472,7 @@
         </div>
       </div>
 
-      <!-- Seção de Capas (Escondida por padrão) -->
+      <!-- Seção de Capas (Escondida por padrão até clicar na miniatura) -->
       <div class="nb-papers-section" id="nb-covers-section" style="display:none;">
         <div class="nb-section-header"><span>Cover Models</span></div>
         <div class="nb-papers-grid">
@@ -483,21 +480,30 @@
           <div class="nb-cover-card" data-cover="solid-pink"><div class="nb-cover-thumb thumb-pink"></div><div class="nb-cover-name">Rose</div></div>
           <div class="nb-cover-card" data-cover="pattern-dots"><div class="nb-cover-thumb thumb-dots"></div><div class="nb-cover-name">Dots</div></div>
           <div class="nb-cover-card" id="nb-import-cover-btn">
-            <div class="nb-cover-thumb thumb-import">+</div>
-            <div class="nb-cover-name">Import</div>
+            <div class="nb-cover-thumb thumb-import">+</div><div class="nb-cover-name">Import</div>
             <input type="file" id="nb-cover-upload" style="display:none" accept="image/*">
           </div>
         </div>
       </div>
 
-      <!-- Seção de Papéis (Escondida por padrão) -->
-      <div class="nb-papers-section" id="nb-papers-selection-section" style="display:none;">
+      <!-- Seção de Papéis (ABERTA POR PADRÃO) -->
+      <div class="nb-papers-section" id="nb-papers-selection-section" style="display:block;">
         <div class="nb-section-header"><span>Paper Models</span></div>
+        
+        <div class="nb-group-label">Essentials</div>
         <div class="nb-papers-grid">
           <div class="nb-paper-card active" data-paper="Blank"><div class="nb-paper-thumb thumb-blank"></div><div class="nb-paper-name">Blank</div></div>
           <div class="nb-paper-card" data-paper="Dotted"><div class="nb-paper-thumb thumb-dotted"></div><div class="nb-paper-name">Dotted</div></div>
           <div class="nb-paper-card" data-paper="Squared"><div class="nb-paper-thumb thumb-squared"></div><div class="nb-paper-name">Squared</div></div>
           <div class="nb-paper-card" data-paper="Narrow Ruled"><div class="nb-paper-thumb thumb-ruled"></div><div class="nb-paper-name">Ruled</div></div>
+        </div>
+
+        <div class="nb-group-label">Writing Sheets</div>
+        <div class="nb-papers-grid">
+          <div class="nb-paper-card" data-paper="Cornell"><div class="nb-paper-thumb thumb-cornell"></div><div class="nb-paper-name">Cornell</div></div>
+          <div class="nb-paper-card" data-paper="Legal"><div class="nb-paper-thumb thumb-legal"></div><div class="nb-paper-name">Legal</div></div>
+          <div class="nb-paper-card" data-paper="Single Column"><div class="nb-paper-thumb thumb-column"></div><div class="nb-paper-name">Column</div></div>
+          <div class="nb-paper-card" data-paper="Three Columns"><div class="nb-paper-thumb thumb-three-columns"></div><div class="nb-paper-name">3 Columns</div></div>
         </div>
       </div>
     </div>
