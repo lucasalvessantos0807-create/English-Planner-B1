@@ -349,7 +349,14 @@ export function closeEditor() {
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
-    document.getElementById('doc-editor').style.display = 'none';
+    
+    // Explicitly hide the immersive editor
+    const docEditor = document.getElementById('doc-editor');
+    if (docEditor) {
+        docEditor.style.display = 'none';
+    }
+
+    // Restore standard view visibility
     document.getElementById('notes-area').style.display = 'flex';
     document.getElementById('notes-sidebar').style.display = 'flex';
     document.getElementById('planner-content').style.display = 'none'; 
