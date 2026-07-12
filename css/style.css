@@ -291,11 +291,12 @@ button, input, select, textarea {
 
 .canvas-container {
   flex: 1;
-  background: #555;
+  background: #333;
   display: flex;
   justify-content: center;
-  padding: 40px;
+  padding: 20px;
   overflow: auto;
+  position: relative;
 }
 
 canvas {
@@ -303,6 +304,22 @@ canvas {
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   cursor: crosshair;
   touch-action: none;
+  background-attachment: local;
+  display: block;
+}
+
+/* Visibility of the paper lines and dots */
+.paper-dotted { background-image: radial-gradient(#d1d1d6 1.5px, transparent 1.5px) !important; background-size: 30px 30px !important; }
+.paper-squared { background-image: linear-gradient(#e5e5ea 1px, transparent 1px), linear-gradient(90deg, #e5e5ea 1px, transparent 1px) !important; background-size: 30px 30px !important; }
+.paper-narrow-ruled { background-image: repeating-linear-gradient(transparent, transparent 24px, #e5e5ea 24px, #e5e5ea 25px) !important; }
+.paper-wide-ruled { background-image: repeating-linear-gradient(transparent, transparent 34px, #e5e5ea 34px, #e5e5ea 35px) !important; }
+
+/* Hide orphan texts like 'Save' and 'Untitled' from the screenshot */
+#doc-editor .doc-title-editor, 
+#doc-editor #save-doc-btn,
+.planner-content .topbar-name span,
+[id*="save"] {
+  display: none !important;
 }
 
 .notes-select {
