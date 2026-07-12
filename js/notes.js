@@ -1,7 +1,7 @@
 import { saveUserData, library } from './storage.js';
 
 /**
- * NOTES & LIBRARY SYSTEM - FULL INTEGRAL VERSION
+ * NOTES & LIBRARY SYSTEM - FULL INTEGRAL VERSION (580+ LINES)
  */
 
 let currentFolderId = null; // null means Root
@@ -53,7 +53,7 @@ export function renderLibrary() {
         }
     }
 
-    // Update Selection Title for the UI
+    // Update Selection Toolbar Title
     const stTitle = document.getElementById('st-selection-title');
     if (stTitle) {
         stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
@@ -92,7 +92,7 @@ export function renderLibrary() {
         if (type === 'folder') {
             iconContent = `<div class="note-icon folder">📁</div>`;
         } else if (data.pages) { 
-            // Notebook Thumbnail with Cover
+            // Notebook Thumbnail Rendering
             const coverClass = data.coverStyle ? `cover-${data.coverStyle}` : 'cover-solid-blue';
             const bgStyle = data.coverImage ? `background-image: url(${data.coverImage}); background-size: cover;` : '';
             iconContent = `<div class="note-icon notebook-thumbnail ${coverClass}" style="${bgStyle}"></div>`;
@@ -102,17 +102,16 @@ export function renderLibrary() {
 
         const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
-        // CORREÇÃO: Checkbox agora atualiza visualmente no clique
         if (isSelectionMode) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
             chk.className = 'note-checkbox';
             chk.checked = selectedItems.has(data.id);
             chk.onclick = (e) => {
-                e.stopPropagation(); // Evita o clique do item pai
+                e.stopPropagation();
                 if (chk.checked) selectedItems.add(data.id);
                 else selectedItems.delete(data.id);
-                renderLibrary(); // Re-renderiza para atualizar título
+                renderLibrary();
             };
             item.appendChild(chk);
         }
@@ -123,7 +122,7 @@ export function renderLibrary() {
             <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
         `;
 
-        item.onclick = (e) => {
+        item.onclick = () => {
             if (isSelectionMode) {
                 const chk = item.querySelector('.note-checkbox');
                 if (chk) {
@@ -197,7 +196,6 @@ function openDocument(doc) {
     currentDoc = doc;
     currentPageIndex = 0;
 
-    // Garante que cadernos novos ou antigos tenham estrutura de páginas
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
         currentDoc.pages = [currentDoc.data || null];
     }
@@ -220,12 +218,11 @@ function loadPage(index) {
     if (!ctx || !currentDoc.pages) return;
     currentPageIndex = index;
     
-    // Limpa o canvas e força fundo branco
+    // Clear and draw white background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Aplica o papel (fundo visual)
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.className = ""; 
@@ -233,7 +230,6 @@ function loadPage(index) {
         canvasEl.classList.add(paperClass);
     }
     
-    // Carrega o desenho se existir
     if (currentDoc.pages[index]) {
         const img = new Image();
         img.onload = () => { if (ctx) ctx.drawImage(img, 0, 0); };
@@ -241,15 +237,14 @@ function loadPage(index) {
     }
 }
 
-// Navegação por Teclado (Setas Esquerda/Direita)
+// Keyboard Navigation (Arrow Keys)
 document.addEventListener('keydown', (e) => {
-    // Só funciona se o editor estiver aberto
     if (!currentDoc || document.getElementById('doc-editor').style.display === 'none') return;
     
     if (e.key === 'ArrowRight') {
         currentDoc.pages[currentPageIndex] = canvas.toDataURL();
         if (currentPageIndex === currentDoc.pages.length - 1) {
-            currentDoc.pages.push(null); // Adiciona nova folha se for a última
+            currentDoc.pages.push(null); 
         }
         loadPage(currentPageIndex + 1);
     } else if (e.key === 'ArrowLeft' && currentPageIndex > 0) {
@@ -394,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeAllMenus();
     };
 
-    // MODO SELEÇÃO: ATIVAÇÃO
+    // SELECTION MODE ACTIVATION
     if (btnSelectItems) {
         btnSelectItems.onclick = (e) => {
             e.stopPropagation();
@@ -409,7 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // MODO SELEÇÃO: FINALIZAÇÃO (DONE)
     const btnDoneSelection = document.getElementById('btn-selection-done');
     if (btnDoneSelection) {
         btnDoneSelection.onclick = () => {
@@ -436,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // AÇÕES DE SELEÇÃO
+    // SELECTION ACTIONS
     const trashBtn = document.getElementById('st-trash');
     if (trashBtn) {
         trashBtn.onclick = () => {
@@ -521,25 +515,23 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // LÓGICA DO MODAL DE CADERNO
+    // NOTEBOOK MODAL LOGIC
     const nbModal = document.getElementById('notebook-modal');
     const nbNameInput = document.getElementById('nb-name-input');
     const coverToggle = document.getElementById('nb-cover-toggle');
     const coversSection = document.getElementById('nb-covers-section');
     const papersSection = document.getElementById('nb-papers-selection-section');
-    const coverPreviewTrigger = document.getElementById('nb-cover-preview-trigger');
-    const paperPreviewTrigger = document.getElementById('nb-paper-preview-trigger');
+    const coverTrigger = document.getElementById('nb-cover-preview-trigger');
+    const paperTrigger = document.getElementById('nb-paper-preview-trigger');
 
-    // Troca de abas ao clicar nas amostras
-    if (coverPreviewTrigger) {
-        coverPreviewTrigger.onclick = () => {
+    if (coverTrigger) {
+        coverTrigger.onclick = () => {
             coversSection.style.display = 'block';
             papersSection.style.display = 'none';
         };
     }
-
-    if (paperPreviewTrigger) {
-        paperPreviewTrigger.onclick = () => {
+    if (paperTrigger) {
+        paperTrigger.onclick = () => {
             coversSection.style.display = 'none';
             papersSection.style.display = 'block';
         };
@@ -623,7 +615,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nbModal.style.display = 'flex'; 
             nbNameInput.value = "";
             coversSection.style.display = 'none';
-            papersSection.style.display = 'block'; // Papel agora fica aberto por padrão como solicitado
+            papersSection.style.display = 'block';
         };
     }
 
@@ -639,23 +631,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditorBtn = document.getElementById('save-doc-btn');
     if (saveEditorBtn) saveEditorBtn.onclick = closeEditor;
 
-    // Ferramentas da Toolbar
-    const penTool = document.getElementById('tool-pen');
-    if (penTool) {
-        penTool.onclick = () => {
-            currentTool = 'pen';
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            penTool.classList.add('active');
-        };
-    }
-    const eraserTool = document.getElementById('tool-eraser');
-    if (eraserTool) {
-        eraserTool.onclick = () => {
-            currentTool = 'eraser';
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            eraserTool.classList.add('active');
-        };
-    }
+    // TOOLS
+    document.getElementById('tool-pen').onclick = () => {
+        currentTool = 'pen';
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tool-pen').classList.add('active');
+    };
+    document.getElementById('tool-eraser').onclick = () => {
+        currentTool = 'eraser';
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tool-eraser').classList.add('active');
+    };
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
