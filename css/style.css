@@ -315,6 +315,8 @@ canvas {
   inset: 0 !important;
   z-index: 9999 !important;
   background: #222 !important;
+  display: none;
+  flex-direction: column;
 }
 
 /* Make paper patterns visible and clear */
@@ -328,7 +330,8 @@ canvas {
 #doc-editor .doc-title-editor, 
 #doc-editor #save-doc-btn,
 #doc-editor + div[style*="Save"],
-.editor-toolbar + div {
+.editor-toolbar + div,
+.topbar-name span {
   display: none !important;
 }
 
