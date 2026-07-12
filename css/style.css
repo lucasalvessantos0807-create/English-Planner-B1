@@ -291,9 +291,10 @@ button, input, select, textarea {
 
 .canvas-container {
   flex: 1;
-  background: #333;
+  background: #f0f0f0;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: 40px 20px;
   overflow: auto;
   position: relative;
@@ -302,13 +303,12 @@ button, input, select, textarea {
 
 canvas {
   background-color: white !important;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
   cursor: crosshair;
   touch-action: none;
   background-attachment: local;
   display: block !important;
   margin: 0 auto;
-  /* Garante que o canvas tenha tamanho mesmo vazio */
   min-width: 850px;
   min-height: 1100px;
 }
@@ -381,25 +381,6 @@ canvas {
   cursor: pointer;
 }
 
-/* Canvas Container */
-.canvas-container {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 0;
-  background: #f0f0f0;
-}
-
-#note-canvas {
-  background-color: white !important;
-  box-shadow: 0 0 30px rgba(0,0,0,0.1);
-  display: block;
-  margin: 0 auto;
-}
-
-/* Page Indicator Style */
 .editor-footer {
   position: absolute;
   bottom: 25px;
@@ -418,16 +399,6 @@ canvas {
   backdrop-filter: blur(5px);
 }
 
-/* Mobile Adaptation */
-@media (max-width: 768px) {
-  .editor-header { height: 50px; padding: 0 10px; }
-  .tool-group { gap: 8px; padding: 5px; }
-  .editor-title-text { display: none; }
-  #pen-width { width: 70px; }
-}
-
-/* Menu de Opções (3 pontos) */
-.more-menu-wrapper { position: relative; }
 .editor-context-menu {
   position: absolute;
   top: 100%;
@@ -454,12 +425,12 @@ canvas {
 
 .editor-context-menu button:hover { background: #f2f2f7; }
 
-/* Ajustes Mobile */
+/* Ajustes Mobile Adaptados */
 @media (max-width: 768px) {
-  .tool-group { gap: 8px; padding: 5px 10px; }
-  #pen-width { width: 60px; }
+  .editor-header { height: 50px; padding: 0 10px; }
+  .tool-group { gap: 8px; padding: 5px; }
   .editor-title-text { display: none; }
-  .canvas-container { padding: 10px 5px; }
+  #pen-width { width: 70px; }
 }
 
 .notes-select {
