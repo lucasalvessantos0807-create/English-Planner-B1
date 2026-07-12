@@ -266,13 +266,11 @@
         <button class="tool-btn active" id="tool-pen">🖋️</button>
         <button class="tool-btn" id="tool-eraser">🧽</button>
         <input type="color" id="pen-color" value="#000000">
+        <input type="range" id="pen-width" min="1" max="20" value="2">
       </div>
-      <div class="page-controls">
-        <button id="prev-page-btn">◀</button>
-        <span id="page-number-display">Page 1 / 1</span>
-        <button id="next-page-btn">▶</button>
-        <button id="add-page-btn" title="Add Page">+</button>
-      </div>
+      <div class="doc-title-editor" id="current-doc-title">Untitled</div>
+      <button id="save-doc-btn">✅ Save</button>
+    </div>
       <div class="doc-title-editor" id="current-doc-title">Untitled</div>
       <button id="save-doc-btn">✅ Save</button>
     </div>
@@ -439,26 +437,24 @@
 <!-- ── NEW NOTEBOOK MODAL (REVISADO) ── -->
 <div id="notebook-modal" style="display:none; position:fixed; inset:0; z-index:7000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px; font-family: system-ui, -apple-system, sans-serif;">
   <div class="nb-modal-container">
-    <!-- Header -->
     <div class="nb-header">
       <button id="nb-cancel" class="nb-btn-text">Cancel</button>
       <span class="nb-title">New Notebook</span>
       <button id="nb-create" class="nb-btn-primary">Create</button>
     </div>
 
-    <!-- Main Content -->
     <div class="nb-body">
       <div class="nb-top-section">
         <div class="nb-previews">
-          <div class="nb-preview-item" id="preview-cover-container">
+          <div class="nb-preview-item">
             <div class="nb-label-preview">COVER</div>
-            <div id="nb-cover-preview" class="nb-preview-box cover-solid-blue">
-              <div class="nb-preview-title-text" id="nb-preview-title-display">Untitled</div>
+            <div id="nb-cover-preview-trigger" class="nb-preview-box cover-solid-blue" style="cursor:pointer; border: 2px solid var(--accent);">
+              <!-- Título removido da capa conforme solicitado -->
             </div>
           </div>
           <div class="nb-preview-item">
             <div class="nb-label-preview">PAPER</div>
-            <div id="nb-paper-preview" class="nb-preview-box paper-blank"></div>
+            <div id="nb-paper-preview-trigger" class="nb-preview-box paper-blank" style="cursor:pointer;"></div>
             <div class="nb-preview-sub" id="nb-selected-paper-name">Blank</div>
           </div>
         </div>
@@ -469,43 +465,22 @@
             <input type="text" id="nb-name-input" placeholder="Untitled Notebook">
           </div>
           <div class="nb-setting-row nb-flex-between">
-            <label>Cover</label>
+            <label>Include Cover</label>
             <label class="nb-switch">
               <input type="checkbox" id="nb-cover-toggle" checked>
               <span class="nb-slider"></span>
             </label>
           </div>
-          
-          <div class="nb-divider-mini">SPECIFICATIONS</div>
-          <div class="nb-setting-row">
-            <label>Size</label>
-            <select id="nb-size-select">
-              <option>Goodnotes Standard</option>
-              <option>A4</option>
-            </select>
-          </div>
         </div>
       </div>
 
-      <!-- Cover Selection -->
-      <div class="nb-papers-section" id="nb-covers-section">
-        <div class="nb-section-header">
-          <span>Cover Models</span>
-        </div>
-        <div class="nb-group-label">Essentials</div>
+      <!-- Seção de Capas (Escondida por padrão) -->
+      <div class="nb-papers-section" id="nb-covers-section" style="display:none;">
+        <div class="nb-section-header"><span>Cover Models</span></div>
         <div class="nb-papers-grid">
-          <div class="nb-cover-card active" data-cover="solid-blue">
-            <div class="nb-cover-thumb thumb-blue"></div>
-            <div class="nb-cover-name">Classic Blue</div>
-          </div>
-          <div class="nb-cover-card" data-cover="solid-pink">
-            <div class="nb-cover-thumb thumb-pink"></div>
-            <div class="nb-cover-name">Rose</div>
-          </div>
-          <div class="nb-cover-card" data-cover="pattern-dots">
-            <div class="nb-cover-thumb thumb-dots"></div>
-            <div class="nb-cover-name">Dots</div>
-          </div>
+          <div class="nb-cover-card active" data-cover="solid-blue"><div class="nb-cover-thumb thumb-blue"></div><div class="nb-cover-name">Classic Blue</div></div>
+          <div class="nb-cover-card" data-cover="solid-pink"><div class="nb-cover-thumb thumb-pink"></div><div class="nb-cover-name">Rose</div></div>
+          <div class="nb-cover-card" data-cover="pattern-dots"><div class="nb-cover-thumb thumb-dots"></div><div class="nb-cover-name">Dots</div></div>
           <div class="nb-cover-card" id="nb-import-cover-btn">
             <div class="nb-cover-thumb thumb-import">+</div>
             <div class="nb-cover-name">Import</div>
@@ -514,28 +489,14 @@
         </div>
       </div>
 
-      <!-- Paper Selection -->
-      <div class="nb-papers-section">
-        <div class="nb-section-header">
-          <span>Paper Models</span>
-        </div>
+      <!-- Seção de Papéis (Escondida por padrão) -->
+      <div class="nb-papers-section" id="nb-papers-selection-section" style="display:none;">
+        <div class="nb-section-header"><span>Paper Models</span></div>
         <div class="nb-papers-grid">
-          <div class="nb-paper-card active" data-paper="Blank">
-            <div class="nb-paper-thumb thumb-blank"></div>
-            <div class="nb-paper-name">Blank</div>
-          </div>
-          <div class="nb-paper-card" data-paper="Dotted">
-            <div class="nb-paper-thumb thumb-dotted"></div>
-            <div class="nb-paper-name">Dotted</div>
-          </div>
-          <div class="nb-paper-card" data-paper="Squared">
-            <div class="nb-paper-thumb thumb-squared"></div>
-            <div class="nb-paper-name">Squared</div>
-          </div>
-          <div class="nb-paper-card" data-paper="Narrow Ruled">
-            <div class="nb-paper-thumb thumb-ruled"></div>
-            <div class="nb-paper-name">Ruled</div>
-          </div>
+          <div class="nb-paper-card active" data-paper="Blank"><div class="nb-paper-thumb thumb-blank"></div><div class="nb-paper-name">Blank</div></div>
+          <div class="nb-paper-card" data-paper="Dotted"><div class="nb-paper-thumb thumb-dotted"></div><div class="nb-paper-name">Dotted</div></div>
+          <div class="nb-paper-card" data-paper="Squared"><div class="nb-paper-thumb thumb-squared"></div><div class="nb-paper-name">Squared</div></div>
+          <div class="nb-paper-card" data-paper="Narrow Ruled"><div class="nb-paper-thumb thumb-ruled"></div><div class="nb-paper-name">Ruled</div></div>
         </div>
       </div>
     </div>
