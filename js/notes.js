@@ -11,7 +11,7 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
-let currentView = 'all'; 
+let currentView = 'all'; // 'all', 'favorites', 'shared'
 let currentLayout = 'grid'; // 'grid' or 'list'
 let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
 let isSelectionMode = false;
@@ -31,14 +31,24 @@ export function renderLibrary() {
     if (isSelectionMode) grid.classList.add('selection-active');
 
     if (breadcrumb) {
-        if (currentView === 'favorites') breadcrumb.innerText = 'Favorites';
-        else if (currentView === 'shared') breadcrumb.innerText = 'Shared Documents';
-        else if (!currentFolderId) breadcrumb.innerText = 'Documents';
-        else {
+        if (currentView === 'favorites') {
+            breadcrumb.innerText = 'Favorites';
+        } else if (currentView === 'shared') {
+            breadcrumb.innerText = 'Shared Documents';
+        } else if (!currentFolderId) {
+            breadcrumb.innerText = 'Documents';
+        } else {
             const folder = (library.folders || []).find(f => f.id === currentFolderId);
             breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
+            
             const backBtn = document.getElementById('back-to-root');
-            if (backBtn) backBtn.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
+            if (backBtn) {
+                backBtn.onclick = () => {
+                    currentFolderId = null;
+                    currentView = 'all';
+                    renderLibrary();
+                };
+            }
         }
     }
 
@@ -54,17 +64,18 @@ export function renderLibrary() {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
-    // NEW ENHANCED SORTING LOGIC
+    // ENHANCED SORTING LOGIC
     const sortFn = (a, b) => {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
         if (currentSort === 'modified') return (b.updatedAt || 0) - (a.updatedAt || 0);
         if (currentSort === 'type') {
-             // Folders first, then notebooks, then documents
              const typeOrder = { folder: 1, notebook: 2, document: 3 };
-             const typeA = a.paperType ? 'notebook' : (a.parentId !== undefined ? 'document' : 'folder');
-             const typeB = b.paperType ? 'notebook' : (b.parentId !== undefined ? 'document' : 'folder');
-             return typeOrder[typeA] - typeOrder[typeB];
+             const typeA = a.paperType ? 'notebook' : (a.parentId !== undefined && a.id.startsWith('fld_') === false ? 'document' : 'folder');
+             const typeB = b.paperType ? 'notebook' : (b.parentId !== undefined && b.id.startsWith('fld_') === false ? 'document' : 'folder');
+             const orderA = a.id.startsWith('fld_') ? 1 : (a.paperType ? 2 : 3);
+             const orderB = b.id.startsWith('fld_') ? 1 : (b.paperType ? 2 : 3);
+             return orderA - orderB;
         }
         return 0;
     };
@@ -101,94 +112,25 @@ export function renderLibrary() {
         item.onclick = () => {
             if (isSelectionMode) {
                 const chk = item.querySelector('.note-checkbox');
-                chk.checked = !chk.checked;
-                if (chk.checked) selectedItems.add(data.id);
-                else selectedItems.delete(data.id);
+                if (chk) {
+                    chk.checked = !chk.checked;
+                    if (chk.checked) selectedItems.add(data.id);
+                    else selectedItems.delete(data.id);
+                }
                 return;
             }
-            if (type === 'folder') { currentFolderId = data.id; renderLibrary(); }
-            else openDocument(data);
+            if (type === 'folder') { 
+                currentFolderId = data.id; 
+                renderLibrary(); 
+            } else {
+                openDocument(data);
+            }
         };
         grid.appendChild(item);
     };
 
     foldersToShow.forEach(f => renderItem(f, 'folder'));
     docsToShow.forEach(d => renderItem(d, 'document'));
-}
-    let foldersToShow = [];
-    let docsToShow = [];
-
-    if (currentView === 'all') {
-        foldersToShow = (library.folders || []).filter(f => f.parentId === currentFolderId);
-        docsToShow = (library.documents || []).filter(d => d.parentId === currentFolderId);
-    } else if (currentView === 'favorites') {
-        docsToShow = (library.documents || []).filter(d => d.favorite);
-    } else if (currentView === 'shared') {
-        docsToShow = (library.documents || []).filter(d => d.shared);
-    }
-
-    const sortFn = (a, b) => {
-        if (sortVal === 'name') return a.name.localeCompare(b.name);
-        if (sortVal === 'date') return (b.updatedAt || 0) - (a.updatedAt || 0);
-        if (sortVal === 'size') {
-            const sizeA = a.data ? a.data.length : 0;
-            const sizeB = b.data ? b.data.length : 0;
-            return sizeB - sizeA;
-        }
-        return 0;
-    };
-
-    foldersToShow.sort(sortFn);
-    docsToShow.sort(sortFn);
-
-    foldersToShow.forEach(folder => {
-        const item = document.createElement('div');
-        item.className = 'note-item';
-        item.innerHTML = `
-            <div class="note-icon folder">📁</div>
-            <div class="note-name">${folder.name}</div>
-            <div class="note-meta" style="font-size:10px; color:var(--muted);">${new Date(folder.updatedAt).toLocaleDateString()}</div>
-        `;
-        item.onclick = () => {
-            currentFolderId = folder.id;
-            currentView = 'all';
-            renderLibrary();
-        };
-        item.oncontextmenu = (e) => {
-            e.preventDefault();
-            if (confirm(`Delete folder "${folder.name}" and all its contents?`)) {
-                deleteFolder(folder.id);
-            }
-        };
-        grid.appendChild(item);
-    });
-
-    docsToShow.forEach(doc => {
-        const item = document.createElement('div');
-        item.className = 'note-item';
-        const isFav = doc.favorite ? '⭐' : '';
-        item.innerHTML = `
-            <div class="note-icon">📄<span style="position:absolute; top:5px; right:5px; font-size:12px;">${isFav}</span></div>
-            <div class="note-name">${doc.name}</div>
-            <div class="note-meta" style="font-size:10px; color:var(--muted);">${new Date(doc.updatedAt).toLocaleDateString()}</div>
-        `;
-        item.onclick = () => openDocument(doc);
-        
-        item.oncontextmenu = (e) => {
-            e.preventDefault();
-            const action = confirm("Press OK to Toggle Favorite, or Cancel to Delete Document.");
-            if (action) {
-                doc.favorite = !doc.favorite;
-                doc.updatedAt = Date.now();
-                saveLibrary();
-            } else {
-                if (confirm("Delete this document?")) {
-                    deleteDocument(doc.id);
-                }
-            }
-        };
-        grid.appendChild(item);
-    });
 }
 
 export function createFolder() {
@@ -368,9 +310,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const closeBtn = document.getElementById('close-editor-btn');
     const saveDocBtn = document.getElementById('save-doc-btn');
-    const sortSelect = document.getElementById('sort-docs-select'); // Mantido para compatibilidade, mas o novo menu é o principal agora
+    const sortSelect = document.getElementById('sort-docs-select');
 
-    // Toggle "New" Menu
+    // Menus Toggle Logic
     if (mainNewBtn && newMenu) {
         mainNewBtn.onclick = (e) => {
             e.stopPropagation();
@@ -380,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Toggle "View/Sort" Menu
     if (viewOptionsBtn && viewMenu) {
         viewOptionsBtn.onclick = (e) => {
             e.stopPropagation();
@@ -405,6 +346,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnListView = document.getElementById('btn-view-list');
     const btnSelectItems = document.getElementById('btn-select-items');
 
+    function updateViewCheckmarks() {
+        if (btnGridView) btnGridView.querySelector('.vlist-check').style.visibility = currentLayout === 'grid' ? 'visible' : 'hidden';
+        if (btnListView) btnListView.querySelector('.vlist-check').style.visibility = currentLayout === 'list' ? 'visible' : 'hidden';
+        
+        document.querySelectorAll('.sort-opt').forEach(btn => {
+            const check = btn.querySelector('.vlist-check');
+            if (check) check.style.visibility = currentSort === btn.dataset.sort ? 'visible' : 'hidden';
+        });
+    }
+
     if (btnGridView) btnGridView.onclick = () => {
         currentLayout = 'grid';
         updateViewCheckmarks();
@@ -422,12 +373,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSelectItems) btnSelectItems.onclick = () => {
         isSelectionMode = !isSelectionMode;
         selectedItems.clear();
-        btnSelectItems.classList.toggle('active', isSelectionMode);
         renderLibrary();
         closeAllMenus();
     };
 
-    // Sorting buttons
     document.querySelectorAll('.sort-opt').forEach(btn => {
         btn.onclick = () => {
             currentSort = btn.dataset.sort;
@@ -436,22 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
             closeAllMenus();
         };
     });
-
-    function updateViewCheckmarks() {
-        // Layout checks
-        if (btnGridView) btnGridView.querySelector('.vlist-check').style.visibility = currentLayout === 'grid' ? 'visible' : 'hidden';
-        if (btnListView) btnListView.querySelector('.vlist-check').style.visibility = currentLayout === 'list' ? 'visible' : 'hidden';
-        
-        // Sort checks
-        document.querySelectorAll('.sort-opt').forEach(btn => {
-            const check = btn.querySelector('.vlist-check');
-            if (check) check.style.visibility = currentSort === btn.dataset.sort ? 'visible' : 'hidden';
-        });
-    }
-
-    // ... Restante dos listeners (Notebook Modal, etc) permanece igual ...
-
-    const closeMenu = () => { if (newMenu) newMenu.style.display = 'none'; };
 
     // Notebook Modal Elements
     const nbModal = document.getElementById('notebook-modal');
@@ -474,9 +407,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnNewTextDoc = document.getElementById('btn-new-text-doc');
     const btnCreateFolder = document.getElementById('btn-create-folder');
 
-    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeMenu(); openNotebookModal(); };
-    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeMenu(); createDocument(); };
-    if (btnCreateFolder) btnCreateFolder.onclick = () => { closeMenu(); createFolder(); };
+    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeAllMenus(); openNotebookModal(); };
+    if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeAllMenus(); createDocument(); };
+    if (btnCreateFolder) btnCreateFolder.onclick = () => { closeAllMenus(); createFolder(); };
     if (nbCancel) nbCancel.onclick = closeNotebookModal;
 
     if (nbCreate) {
@@ -578,4 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
         if (activeBtn) activeBtn.classList.add('active');
     }
+
+    // Initialize UI states
+    updateViewCheckmarks();
 });
