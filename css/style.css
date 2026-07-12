@@ -413,6 +413,114 @@ canvas {
 .list-icon { font-size: 1.1rem; color: #555; width: 24px; text-align: center; }
 .list-text { font-size: 0.85rem; font-weight: 400; color: #000; }
 .menu-footer { margin-top: 5px; }
+/* --- VIEW OPTIONS DROPDOWN --- */
+.nbtn-icon-only {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.nbtn-icon-only:hover {
+  background: var(--white);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.view-options-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+  z-index: 2000;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.vlist-item {
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  transition: background 0.15s;
+}
+.vlist-item:hover { background: #f2f2f7; }
+
+.vlist-check {
+  width: 20px;
+  font-weight: bold;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+.vlist-text { flex: 1; text-align: left; }
+.vlist-icon { color: var(--muted); font-size: 1rem; }
+.vlist-divider { height: 1px; background: #eee; margin: 6px 0; }
+
+/* --- LIST VIEW LAYOUT --- */
+.notes-grid.list-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.notes-grid.list-mode .note-item {
+  flex-direction: row;
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 0;
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+.notes-grid.list-mode .note-item:hover { transform: none; box-shadow: none; background: #fafafa; }
+.notes-grid.list-mode .note-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  box-shadow: none;
+  border: none;
+  background: none;
+}
+.notes-grid.list-mode .note-name {
+  max-width: none;
+  flex: 1;
+  font-size: 1rem;
+}
+.notes-grid.list-mode .note-meta {
+  margin-left: auto;
+}
+
+/* Selection Mode Styles */
+.note-item.selectable { position: relative; }
+.note-checkbox {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    z-index: 10;
+}
+.notes-grid.selection-active .note-item { padding-left: 40px; }
 
 /* --- NOTEBOOK MODAL STYLES --- */
 .nb-modal-container {
