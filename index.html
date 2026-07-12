@@ -435,6 +435,7 @@
 </div>
     <!-- ── NEW NOTEBOOK MODAL ── -->
 <!-- ── NEW NOTEBOOK MODAL (REVISADO) ── -->
+<!-- ── NEW NOTEBOOK MODAL (RESTAURADO E COMPLETO) ── -->
 <div id="notebook-modal" style="display:none; position:fixed; inset:0; z-index:7000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; padding:20px; font-family: system-ui, -apple-system, sans-serif;">
   <div class="nb-modal-container">
     <div class="nb-header">
@@ -448,7 +449,7 @@
         <div class="nb-previews">
           <div class="nb-preview-item">
             <div class="nb-label-preview">COVER</div>
-            <div id="nb-cover-preview-trigger" class="nb-preview-box cover-solid-blue" style="cursor:pointer;"></div>
+            <div id="nb-cover-preview-trigger" class="nb-preview-box cover-solid-blue" style="cursor:pointer; border: 2px solid var(--border);"></div>
           </div>
           <div class="nb-preview-item">
             <div class="nb-label-preview">PAPER</div>
@@ -462,6 +463,14 @@
             <label>Name</label>
             <input type="text" id="nb-name-input" placeholder="Untitled Notebook">
           </div>
+          <div class="nb-setting-row">
+            <label>Language</label>
+            <select id="nb-lang-select">
+              <option>Auto Detect</option>
+              <option>English</option>
+              <option>Portuguese</option>
+            </select>
+          </div>
           <div class="nb-setting-row nb-flex-between">
             <label>Include Cover</label>
             <label class="nb-switch">
@@ -469,27 +478,38 @@
               <span class="nb-slider"></span>
             </label>
           </div>
+          <div class="nb-divider-mini">PAPER MODELS</div>
+          <div class="nb-setting-row">
+            <label>Size</label>
+            <select id="nb-size-select">
+              <option>Goodnotes Standard, Vertical</option>
+              <option>A4, Vertical</option>
+              <option>Letter, Vertical</option>
+            </select>
+          </div>
+          <div class="nb-setting-row">
+            <label>Color</label>
+            <select id="nb-color-select">
+              <option>White</option>
+              <option>Yellow</option>
+              <option>Dark</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <!-- Seção de Capas (Escondida por padrão até clicar na miniatura) -->
       <div class="nb-papers-section" id="nb-covers-section" style="display:none;">
         <div class="nb-section-header"><span>Cover Models</span></div>
         <div class="nb-papers-grid">
           <div class="nb-cover-card active" data-cover="solid-blue"><div class="nb-cover-thumb thumb-blue"></div><div class="nb-cover-name">Classic Blue</div></div>
           <div class="nb-cover-card" data-cover="solid-pink"><div class="nb-cover-thumb thumb-pink"></div><div class="nb-cover-name">Rose</div></div>
           <div class="nb-cover-card" data-cover="pattern-dots"><div class="nb-cover-thumb thumb-dots"></div><div class="nb-cover-name">Dots</div></div>
-          <div class="nb-cover-card" id="nb-import-cover-btn">
-            <div class="nb-cover-thumb thumb-import">+</div><div class="nb-cover-name">Import</div>
-            <input type="file" id="nb-cover-upload" style="display:none" accept="image/*">
-          </div>
+          <div class="nb-cover-card" id="nb-import-cover-btn"><div class="nb-cover-thumb thumb-import">+</div><div class="nb-cover-name">Import</div><input type="file" id="nb-cover-upload" style="display:none" accept="image/*"></div>
         </div>
       </div>
 
-      <!-- Seção de Papéis (ABERTA POR PADRÃO) -->
       <div class="nb-papers-section" id="nb-papers-selection-section" style="display:block;">
         <div class="nb-section-header"><span>Paper Models</span></div>
-        
         <div class="nb-group-label">Essentials</div>
         <div class="nb-papers-grid">
           <div class="nb-paper-card active" data-paper="Blank"><div class="nb-paper-thumb thumb-blank"></div><div class="nb-paper-name">Blank</div></div>
@@ -497,7 +517,6 @@
           <div class="nb-paper-card" data-paper="Squared"><div class="nb-paper-thumb thumb-squared"></div><div class="nb-paper-name">Squared</div></div>
           <div class="nb-paper-card" data-paper="Narrow Ruled"><div class="nb-paper-thumb thumb-ruled"></div><div class="nb-paper-name">Ruled</div></div>
         </div>
-
         <div class="nb-group-label">Writing Sheets</div>
         <div class="nb-papers-grid">
           <div class="nb-paper-card" data-paper="Cornell"><div class="nb-paper-thumb thumb-cornell"></div><div class="nb-paper-name">Cornell</div></div>
