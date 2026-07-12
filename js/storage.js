@@ -6,19 +6,18 @@ export let plannerConfig = {};
 export let pageContent = {};
 export let history = [];
 export let importHistory = [];
-// Mantemos como const para preservar a referência de memória para o notes.js
 export const library = { folders: [], documents: [] };
 
 export function resetLocalData() {
     state = {};
     const starterConfig = {};
     
-    // Gerar 3 meses automáticos
+    // Gerar 3 meses automáticos no primeiro acesso (30 dias cada)
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     for (let m = 1; m <= 3; m++) {
         let currentDay = 1;
         for (let w = 1; w <= 5; w++) {
-            const daysInW = (w === 5) ? 2 : 7; 
+            const daysInW = (w === 5) ? 2 : 7; // Semana 5 com 2 dias para totalizar 30
             starterConfig[`${m}-${w}`] = {
                 label: `Week ${w}`,
                 theme: "Month Plans",
@@ -58,7 +57,7 @@ export function resetLocalData() {
     history = [];
     importHistory = [];
     
-    // CORREÇÃO: Limpamos as propriedades em vez de reatribuir a variável constante
+    // Resetando a biblioteca sem quebrar a referência constante
     library.folders = [];
     library.documents = [];
 
@@ -70,8 +69,11 @@ export function resetLocalData() {
 export function applySnapshot(newConfig, newContent) {
     window.plannerConfig = JSON.parse(JSON.stringify(newConfig || {}));
     window.pageContent = JSON.parse(JSON.stringify(newContent || {}));
+    
     plannerConfig = window.plannerConfig;
     pageContent = window.pageContent;
+
+    console.log("Global data synchronized for Preview.");
 }
 
 export async function loadUserData(uid) {
@@ -81,7 +83,7 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             
-            // CORREÇÃO: Atualizamos o conteúdo da constante library
+            // Sincronizando a biblioteca do banco com o objeto constante
             if (data.library) {
                 library.folders = data.library.folders || [];
                 library.documents = data.library.documents || [];
@@ -133,6 +135,7 @@ export function addHistoryEntry(label, config, content) {
         id: Date.now(),
         timestamp: Date.now(),
         label: label,
+        plannerConfig: JSON.parse(JSON.stringify(config)),
         plannerConfig: JSON.parse(JSON.stringify(config)),
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
