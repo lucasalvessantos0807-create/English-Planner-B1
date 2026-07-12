@@ -259,29 +259,21 @@
   </div>
 
   <!-- Document Editor View (Canvas) -->
-  <div id="doc-editor" style="display:none; flex-direction: column; height: 100vh; width: 100%; background: #555; position: fixed; inset: 0; z-index: 5000;">
-    <div class="editor-toolbar">
-      <div style="display:flex; align-items:center; gap:15px;">
-        <button id="close-editor-btn">✕ Exit</button>
-        <div class="page-nav-controls" style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.1); padding:4px 12px; border-radius:20px;">
-          <button id="prev-page-btn" class="tool-btn" title="Previous Page">◀</button>
-          <span id="page-counter" style="font-size:13px; min-width:80px; text-align:center; font-family:sans-serif;">Page 1 / 1</span>
-          <button id="next-page-btn" class="tool-btn" title="Next Page">▶</button>
-          <button id="add-page-btn" class="tool-btn" style="margin-left:5px; background:var(--accent); font-weight:bold;">+ Add Page</button>
-        </div>
+ <div class="editor-toolbar" style="background:#1a1a1a; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333;">
+      <button id="close-editor-btn" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-family:sans-serif;">✕ Exit</button>
+      
+      <div class="tool-group" style="display:flex; gap:20px; align-items:center;">
+        <button class="tool-btn active" id="tool-pen" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🖋️</button>
+        <button class="tool-btn" id="tool-eraser" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🧽</button>
+        <div style="width:1px; height:20px; background:#444;"></div>
+        <input type="color" id="pen-color" value="#000000" style="width:30px; height:30px; border:none; background:none; cursor:pointer;">
+        <input type="range" id="pen-width" min="1" max="20" value="2" style="width:100px; accent-color:var(--accent);">
       </div>
-        <button class="tool-btn active" id="tool-pen">🖋️</button>
-        <button class="tool-btn" id="tool-eraser">🧽</button>
-        <input type="color" id="pen-color" value="#000000">
-        <input type="range" id="pen-width" min="1" max="20" value="2">
-      </div>
-      <div class="doc-title-editor" id="current-doc-title">Untitled</div>
-      <button id="save-doc-btn">✅ Save</button>
+
+      <div style="color:#888; font-size:12px; font-family:sans-serif; min-width:80px; text-align:right;" id="page-indicator-text">Page 1</div>
     </div>
-      <div class="doc-title-editor" id="current-doc-title">Untitled</div>
-      <button id="save-doc-btn">✅ Save</button>
-    </div>
-  </div>
+    <div class="canvas-container">
+      <canvas id="note-canvas"></canvas>
     
     <!-- DRAWERS PRINCIPAIS -->
     <div id="customDrawer" class="custom-drawer">
