@@ -158,7 +158,7 @@ export function createDocument(type = 'Document', paper = 'Blank') {
         favorite: false,
         shared: false,
         paperType: paper,
-        pages: [null, null], // Initial cover + first page
+        pages: [null, null], // Initial cover + first writing page
         updatedAt: Date.now()
     };
     if (!library.documents) library.documents = [];
@@ -191,25 +191,19 @@ async function saveLibrary() {
 function openDocument(doc) {
     currentDoc = doc;
     
-    // Notebook logic: Page 0 is always the Cover, Page 1+ is writing content
+    // Ensure the notebook has a cover (index 0) and at least one writing page
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
-        currentDoc.pages = [null, null]; 
+        currentDoc.pages = [null, null];
     } else if (currentDoc.pages.length === 1) {
         currentDoc.pages.push(null);
     }
     
-    currentPageIndex = 0; // Starts on cover
+    currentPageIndex = 0; // Starts on the cover
 
-    // Hide all planner and library elements to prevent layout "invasion"
-    const notesArea = document.getElementById('notes-area');
-    const notesSidebar = document.getElementById('notes-sidebar');
-    const plannerContent = document.getElementById('planner-content');
-    const docEditor = document.getElementById('doc-editor');
-
-    if (notesArea) notesArea.style.display = 'none';
-    if (notesSidebar) notesSidebar.style.display = 'none';
-    if (plannerContent) plannerContent.style.display = 'none';
-    if (docEditor) docEditor.style.display = 'flex';
+    document.getElementById('notes-area').style.display = 'none';
+    document.getElementById('notes-sidebar').style.display = 'none';
+    document.getElementById('planner-content').style.display = 'none';
+    document.getElementById('doc-editor').style.display = 'flex';
 
     const titleEl = document.getElementById('editor-doc-title');
     if (titleEl) titleEl.innerText = doc.name;
@@ -229,17 +223,23 @@ function renderPage() {
     if (canvasEl) canvasEl.className = ""; 
 
     if (currentPageIndex === 0) {
-        // --- COVER PAGE RENDERING ---
-        canvasEl.style.backgroundColor = "#2a4f8a"; // Solid blue cover
+        // BLUE COVER LOGIC
+        canvasEl.style.backgroundColor = "#2a4f8a"; 
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
-        ctx.font = "bold 40px Georgia";
+        ctx.font = "bold 45px Georgia";
         ctx.fillText(currentDoc.name, 425, 450);
-        ctx.font = "italic 18px Georgia";
+        ctx.font = "italic 20px Georgia";
         ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText("Personal Notebook", 425, 490);
+        ctx.fillText("Notebook Collection", 425, 500);
+        
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(350, 530); ctx.lineTo(500, 530);
+        ctx.stroke();
     } else {
-        // --- WRITING PAGE RENDERING ---
+        // WRITING PAGE LOGIC
         canvasEl.style.backgroundColor = "white";
         const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
@@ -305,9 +305,8 @@ function initCanvas() {
 }
 
 function startDrawing(e) {
-    // Prevent writing if on the cover (Page 1 / Index 0)
+    // Disable drawing on cover (Index 0)
     if (currentPageIndex === 0) return;
-
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
     lastX = (e.clientX - rect.left);
@@ -452,7 +451,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-new-text-doc').onclick = () => { closeAllMenus(); createDocument('Text Document'); };
     document.getElementById('btn-create-folder').onclick = () => { closeAllMenus(); createFolder(); };
-    document.getElementById('close-editor-btn').onclick = closeEditor;
+    
+    const closeEditorBtn = document.getElementById('close-editor-btn');
+    if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
 
     document.getElementById('tool-pen').onclick = () => { currentTool = 'pen'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-pen').classList.add('active'); };
     document.getElementById('tool-eraser').onclick = () => { currentTool = 'eraser'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-eraser').classList.add('active'); };
@@ -465,10 +466,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
-    // Toolbar logic
-  const btnExportNotebook = document.getElementById('btn-export-doc');
-    if (btnExportNotebook) {
-        btnExportNotebook.onclick = () => {
+    // TOOLBAR LOGIC (Unique names to avoid double declaration)
+    const btnExportNote = document.getElementById('btn-export-doc');
+    if (btnExportNote) {
+        btnExportNote.onclick = () => {
             const link = document.createElement('a');
             link.download = `${currentDoc.name}_page_${currentPageIndex + 1}.png`;
             link.href = canvas.toDataURL();
@@ -476,17 +477,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    const btnMoreNotebook = document.getElementById('btn-more-options');
-    const moreMenuNotebook = document.getElementById('editor-more-menu');
-    if (btnMoreNotebook && moreMenuNotebook) {
-        btnMoreNotebook.onclick = (e) => {
+    const btnMoreNote = document.getElementById('btn-more-options');
+    const moreMenuNote = document.getElementById('editor-more-menu');
+    if (btnMoreNote && moreMenuNote) {
+        btnMoreNote.onclick = (e) => {
             e.stopPropagation();
-            moreMenuNotebook.style.display = moreMenuNotebook.style.display === 'flex' ? 'none' : 'flex';
+            moreMenuNote.style.display = moreMenuNote.style.display === 'flex' ? 'none' : 'flex';
         };
     }
 
     document.addEventListener('click', () => {
-        if (moreMenuNotebook) moreMenuNotebook.style.display = 'none';
+        if (moreMenuNote) moreMenuNote.style.display = 'none';
     });
 
     let touchStartX = 0;
