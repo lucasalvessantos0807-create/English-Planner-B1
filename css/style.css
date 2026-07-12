@@ -297,22 +297,40 @@ button, input, select, textarea {
   padding: 20px;
   overflow: auto;
   position: relative;
+  z-index: 1;
 }
 
 canvas {
   background: white;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   cursor: crosshair;
   touch-action: none;
   background-attachment: local;
   display: block;
 }
 
-/* Visibility of the paper lines and dots */
+/* Fix overlap: Ensure editor is on top of everything */
+#doc-editor {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background: #222 !important;
+}
+
+/* Make paper patterns visible and clear */
 .paper-dotted { background-image: radial-gradient(#d1d1d6 1.5px, transparent 1.5px) !important; background-size: 30px 30px !important; }
 .paper-squared { background-image: linear-gradient(#e5e5ea 1px, transparent 1px), linear-gradient(90deg, #e5e5ea 1px, transparent 1px) !important; background-size: 30px 30px !important; }
 .paper-narrow-ruled { background-image: repeating-linear-gradient(transparent, transparent 24px, #e5e5ea 24px, #e5e5ea 25px) !important; }
 .paper-wide-ruled { background-image: repeating-linear-gradient(transparent, transparent 34px, #e5e5ea 34px, #e5e5ea 35px) !important; }
+.paper-blank { background: white !important; }
+
+/* Hide floating Save and Untitled indicators in Editor Mode */
+#doc-editor .doc-title-editor, 
+#doc-editor #save-doc-btn,
+#doc-editor + div[style*="Save"],
+.editor-toolbar + div {
+  display: none !important;
+}
 
 /* Hide orphan texts like 'Save' and 'Untitled' from the screenshot */
 #doc-editor .doc-title-editor, 
