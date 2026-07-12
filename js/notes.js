@@ -11,10 +11,10 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
+let currentPageIndex = 0;
 let currentView = 'all'; // 'all', 'favorites', 'shared'
 let currentLayout = 'grid'; // 'grid' or 'list'
 let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
-let isSelectionMode = false;
 let selectedItems = new Set();
 let currentPageIndex = 0;
 
@@ -194,11 +194,12 @@ async function saveLibrary() {
 
 function openDocument(doc) {
     currentDoc = doc;
-    currentPageIndex = 0;
-
-    if (!currentDoc.pages || currentDoc.pages.length === 0) {
-        currentDoc.pages = [currentDoc.data || null];
+    
+    // Migração de dados legados: Se o documento tinha 'data' mas não 'pages', converte para array de páginas
+    if (!currentDoc.pages) {
+        currentDoc.pages = currentDoc.data ? [currentDoc.data] : [null];
     }
+    currentPageIndex = 0;
 
     const notesArea = document.getElementById('notes-area');
     const notesSidebar = document.getElementById('notes-sidebar');
@@ -211,30 +212,68 @@ function openDocument(doc) {
     if (docTitle) docTitle.innerText = doc.name;
 
     initCanvas();
-    loadPage(0);
-}
 
-function loadPage(index) {
-    if (!ctx || !currentDoc.pages) return;
-    currentPageIndex = index;
-    
-    // Clear and draw white background
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.className = ""; 
-        const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+        const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
     }
     
-    if (currentDoc.pages[index]) {
+    renderPage();
+}
+
+function renderPage() {
+    if (!ctx || !canvas || !currentDoc) return;
+    
+    // Limpa o canvas antes de desenhar a nova página
+    // Como usamos ctx.scale no initCanvas, precisamos limpar a área real
+    const ratio = window.devicePixelRatio || 1;
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+    
+    const pageData = currentDoc.pages[currentPageIndex];
+    if (pageData) {
         const img = new Image();
-        img.onload = () => { if (ctx) ctx.drawImage(img, 0, 0); };
-        img.src = currentDoc.pages[index];
+        img.onload = () => { 
+            ctx.drawImage(img, 0, 0, 850, 1100); 
+        };
+        img.src = pageData;
     }
+    
+    // Atualiza o contador de páginas na UI
+    const counter = document.getElementById('page-counter');
+    if (counter) {
+        counter.innerText = `Page ${currentPageIndex + 1} / ${currentDoc.pages.length}`;
+    }
+}
+
+function saveCurrentPage() {
+    if (currentDoc && canvas) {
+        currentDoc.pages[currentPageIndex] = canvas.toDataURL();
+    }
+}
+
+export function nextPage() {
+    if (!currentDoc || currentPageIndex >= currentDoc.pages.length - 1) return;
+    saveCurrentPage();
+    currentPageIndex++;
+    renderPage();
+}
+
+export function prevPage() {
+    if (!currentDoc || currentPageIndex <= 0) return;
+    saveCurrentPage();
+    currentPageIndex--;
+    renderPage();
+}
+
+export function addNewPage() {
+    if (!currentDoc) return;
+    saveCurrentPage();
+    currentDoc.pages.push(null);
+    currentPageIndex = currentDoc.pages.length - 1;
+    renderPage();
 }
 
 // Keyboard Navigation (Arrow Keys)
@@ -306,14 +345,12 @@ function draw(e) {
 
 function stopDrawing() {
     isDrawing = false;
-    if (currentDoc && canvas) { 
-        currentDoc.pages[currentPageIndex] = canvas.toDataURL(); 
-    }
+    saveCurrentPage();
 }
 
 export function closeEditor() {
     if (currentDoc && canvas) {
-        currentDoc.pages[currentPageIndex] = canvas.toDataURL();
+        saveCurrentPage();
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
@@ -631,17 +668,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditorBtn = document.getElementById('save-doc-btn');
     if (saveEditorBtn) saveEditorBtn.onclick = closeEditor;
 
-    // TOOLS
-    document.getElementById('tool-pen').onclick = () => {
-        currentTool = 'pen';
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tool-pen').classList.add('active');
-    };
-    document.getElementById('tool-eraser').onclick = () => {
-        currentTool = 'eraser';
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tool-eraser').classList.add('active');
-    };
+    // Configuração dos botões de navegação de páginas
+    const btnNext = document.getElementById('next-page-btn');
+    const btnPrev = document.getElementById('prev-page-btn');
+    const btnAddPage = document.getElementById('add-page-btn');
+
+    if (btnNext) btnNext.onclick = nextPage;
+    if (btnPrev) btnPrev.onclick = prevPage;
+    if (btnAddPage) btnAddPage.onclick = addNewPage;
+
+    // Suporte a gestos (Swipe) para passar páginas
+    let touchStartX = 0;
+    const canvasEl = document.getElementById('note-canvas');
+    if (canvasEl) {
+        canvasEl.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        canvasEl.addEventListener('touchend', (e) => {
+            let touchEndX = e.changedTouches[0].screenX;
+            let diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) { // Limiar de 50px para detectar deslize
+                if (diff > 0) nextPage();
+                else prevPage();
+            }
+        }, { passive: true });
+    }
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
