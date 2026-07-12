@@ -191,26 +191,26 @@ async function saveLibrary() {
 function openDocument(doc) {
     currentDoc = doc;
     
-    if (!currentDoc.pages) {
-        currentDoc.pages = [null];
+    // Se o documento não tem páginas ou só tem 1 (nova lógica de capa)
+    // Garantimos que a página 0 seja a capa e a página 1 em diante o conteúdo
+    if (!currentDoc.pages || currentDoc.pages.length === 0) {
+        currentDoc.pages = [null, null]; // [0] = Capa, [1] = Primeira folha
+    } else if (currentDoc.pages.length === 1) {
+        currentDoc.pages.push(null);
     }
-    currentPageIndex = 0;
+    
+    currentPageIndex = 0; // Começa sempre na capa
 
-    // Hide other areas to prevent overlap
     document.getElementById('notes-area').style.display = 'none';
     document.getElementById('notes-sidebar').style.display = 'none';
     document.getElementById('planner-content').style.display = 'none';
     document.getElementById('doc-editor').style.display = 'flex';
 
-    initCanvas();
+    // Atualiza título no header
+    const titleEl = document.getElementById('editor-doc-title');
+    if (titleEl) titleEl.innerText = doc.name;
 
-    const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) {
-        canvasEl.className = ""; // Reset patterns
-        const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
-        canvasEl.classList.add(paperClass);
-    }
-    
+    initCanvas();
     renderPage();
 }
 
@@ -218,26 +218,47 @@ function renderPage() {
     if (!ctx || !canvas || !currentDoc) return;
     
     const ratio = window.devicePixelRatio || 1;
-    // Reset transform to clear the entire canvas correctly
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Apply scale again for drawing
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     
-    const pageData = currentDoc.pages[currentPageIndex];
-    if (pageData) {
-        const img = new Image();
-        img.onload = () => { 
-            // Clear again just before drawing to avoid flickers on slow loads
-            ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
-            ctx.drawImage(img, 0, 0, 850, 1100); 
-        };
-        img.src = pageData;
+    const canvasEl = document.getElementById('note-canvas');
+    canvasEl.className = ""; // Limpa classes de papel
+
+    // LÓGICA DE CAPA (Página 1 / Índice 0)
+    if (currentPageIndex === 0) {
+        // Estilização visual da Capa
+        canvasEl.style.backgroundColor = "#2a4f8a"; // Cor da capa (exemplo azul)
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 40px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(currentDoc.name, 425, 400);
+        ctx.font = "20px Arial";
+        ctx.fillText("Notebook Cover", 425, 450);
+        // Se houver desenho salvo na capa, desenha por cima
+        const pageData = currentDoc.pages[0];
+        if (pageData) {
+            const img = new Image();
+            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
+            img.src = pageData;
+        }
+    } else {
+        // LÓGICA DE FOLHA DE ESCRITA (Página 2 em diante)
+        const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+        canvasEl.classList.add(paperClass);
+        canvasEl.style.backgroundColor = "white";
+
+        const pageData = currentDoc.pages[currentPageIndex];
+        if (pageData) {
+            const img = new Image();
+            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
+            img.src = pageData;
+        }
     }
     
+    // Atualiza o indicador "X de Y"
     const indicator = document.getElementById('page-indicator-text');
     if (indicator) {
-        indicator.innerText = `Page ${currentPageIndex + 1} / ${currentDoc.pages.length}`;
+        indicator.innerText = `${currentPageIndex + 1} de ${currentDoc.pages.length}`;
     }
 }
 
@@ -399,6 +420,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
 
+    // Lógica do menu de 3 pontos
+    const btnMore = document.getElementById('btn-more-options');
+    const moreMenu = document.getElementById('editor-more-menu');
+    if (btnMore && moreMenu) {
+        btnMore.onclick = (e) => {
+            e.stopPropagation();
+            moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
+        };
+    }
+
+    // Fechar menu ao clicar fora
+    document.addEventListener('click', () => {
+        if (moreMenu) moreMenu.style.display = 'none';
+    });
+
+    // Lógica de exportar (Download como imagem do canvas atual)
+    const btnExport = document.getElementById('btn-export-doc');
+    if (btnExport) {
+        btnExport.onclick = () => {
+            const link = document.createElement('a');
+            link.download = `${currentDoc.name}_page_${currentPageIndex + 1}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        };
+    }
+    
     // Modal Paper Selection Preview Update
     const paperCards = document.querySelectorAll('.nb-paper-card');
     paperCards.forEach(card => {
