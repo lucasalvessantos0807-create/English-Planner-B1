@@ -260,36 +260,40 @@
 
   <!-- Document Editor View (Immersive Tablet Layout) -->
   <div id="doc-editor">
-    <!-- Header: Navigation & Tools -->
     <header class="editor-header">
       <div class="header-left">
         <button id="close-editor-btn" class="header-btn">✕</button>
-        <span id="editor-doc-title" class="editor-title-text">Notebook Name</span>
+        <span id="editor-doc-title" class="editor-title-text">Notebook</span>
       </div>
-      
       <div class="header-center">
         <div class="tool-group">
           <button class="tool-btn active" id="tool-pen">🖋️</button>
           <button class="tool-btn" id="tool-eraser">🧽</button>
           <div class="tool-divider"></div>
-          <div class="color-swatch">
-            <input type="color" id="pen-color" value="#000000">
-          </div>
+          <div class="color-swatch"><input type="color" id="pen-color" value="#000000"></div>
           <input type="range" id="pen-width" min="1" max="20" value="2">
         </div>
       </div>
-
       <div class="header-right">
-        <button class="header-btn" id="btn-export-doc" title="Export">📤</button>
+        <button class="header-btn" id="btn-export-doc">📤</button>
         <div class="more-menu-wrapper">
           <button class="header-btn" id="btn-more-options">⋮</button>
           <div id="editor-more-menu" class="editor-context-menu">
-            <button id="btn-toggle-read-only">🔒 Read Only Mode</button>
-            <button id="btn-change-paper">📝 Change Paper Template</button>
-            <button id="btn-delete-page" style="color: #cc0000;">🗑️ Delete Current Page</button>
+            <button>🔒 Read Only Mode</button>
+            <button style="color: #cc0000;">🗑️ Delete Page</button>
           </div>
         </div>
       </div>
+    </header>
+    <main class="canvas-container">
+      <canvas id="note-canvas"></canvas>
+    </main>
+    <footer class="editor-footer">
+      <div class="page-indicator-pill">
+        <span id="page-indicator-text">1 de 1</span>
+      </div>
+    </footer>
+  </div>
     </header>
 
     <!-- Main Drawing Area -->
