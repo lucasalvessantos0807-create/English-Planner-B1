@@ -350,7 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Keyboard Navigation: Left/Right keys
     document.addEventListener('keydown', (e) => {
-        if (document.getElementById('doc-editor').style.display === 'flex') {
+        const editor = document.getElementById('doc-editor');
+        if (editor && editor.style.display === 'flex') {
             if (e.key === 'ArrowRight') nextPage();
             else if (e.key === 'ArrowLeft') prevPage();
         }
@@ -389,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
 
-    // Modal Selection Logic for Preview
+    // Modal Paper Selection Preview Update
     const paperCards = document.querySelectorAll('.nb-paper-card');
     paperCards.forEach(card => {
         card.onclick = () => {
@@ -397,13 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
             card.classList.add('active');
             const paper = card.dataset.paper;
             const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
-            const nbPaperPreview = document.getElementById('nb-paper-preview');
+            const nbPaperPreview = document.getElementById('nb-paper-preview-trigger');
             
             if (nbSelectedPaperName) nbSelectedPaperName.innerText = paper;
             if (nbPaperPreview) {
-                // Remove all possible paper classes first
-                nbPaperPreview.classList.remove('paper-blank', 'paper-dotted', 'paper-squared', 'paper-narrow-ruled', 'paper-wide-ruled', 'paper-ruled', 'paper-cornell', 'paper-legal', 'paper-single-column', 'paper-three-columns');
-                // Apply the selected paper class
+                // Clear old paper patterns
+                nbPaperPreview.classList.remove('paper-blank', 'paper-dotted', 'paper-squared', 'paper-narrow-ruled', 'paper-wide-ruled', 'paper-cornell', 'paper-legal', 'paper-single-column', 'paper-three-columns');
+                // Apply selected pattern to preview
                 const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
                 nbPaperPreview.classList.add(paperClass);
             }
