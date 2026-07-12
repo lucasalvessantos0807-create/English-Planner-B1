@@ -260,19 +260,21 @@
 
   <!-- Document Editor View (Canvas) -->
   <div id="doc-editor" style="display:none; flex-direction: column; height: 100vh; width: 100%; background: #555; position: fixed; inset: 0; z-index: 5000;">
-    <div class="editor-toolbar">
+   <div class="editor-toolbar">
       <button id="close-editor-btn">✕ Exit</button>
       <div class="tool-group">
         <button class="tool-btn active" id="tool-pen">🖋️</button>
         <button class="tool-btn" id="tool-eraser">🧽</button>
         <input type="color" id="pen-color" value="#000000">
-        <input type="range" id="pen-width" min="1" max="20" value="2">
+      </div>
+      <div class="page-controls">
+        <button id="prev-page-btn">◀</button>
+        <span id="page-number-display">Page 1 / 1</span>
+        <button id="next-page-btn">▶</button>
+        <button id="add-page-btn" title="Add Page">+</button>
       </div>
       <div class="doc-title-editor" id="current-doc-title">Untitled</div>
-      <button id="save-doc-btn">✅ Save & Close</button>
-    </div>
-    <div class="canvas-container">
-      <canvas id="note-canvas"></canvas>
+      <button id="save-doc-btn">✅ Save</button>
     </div>
   </div>
     
@@ -436,24 +438,20 @@
     <!-- ── NEW NOTEBOOK MODAL ── -->
 <div id="notebook-modal" style="display:none; position:fixed; inset:0; z-index:6000; background:rgba(0,0,0,0.4); align-items:center; justify-content:center; padding:20px; font-family: system-ui, -apple-system, sans-serif;">
   <div class="nb-modal-container">
-    <!-- Header -->
     <div class="nb-header">
       <button id="nb-cancel" class="nb-btn-text">Cancel</button>
       <span class="nb-title">New Notebook</span>
       <button id="nb-create" class="nb-btn-primary">Create</button>
     </div>
 
-    <!-- Main Content -->
     <div class="nb-body">
-      <!-- Preview and Basic Settings -->
       <div class="nb-top-section">
         <div class="nb-previews">
-          <div class="nb-preview-item">
+          <div class="nb-preview-item" id="preview-cover-container">
             <div class="nb-label-preview">COVER</div>
-            <div id="nb-cover-preview" class="nb-preview-box cover-img">
-              <div class="nb-preview-text">Make Your Dreams Come True</div>
+            <div id="nb-cover-preview" class="nb-preview-box cover-solid-blue">
+              <div class="nb-preview-title-text" id="nb-preview-title-display">Untitled</div>
             </div>
-            <div class="nb-preview-sub">Imported Image</div>
           </div>
           <div class="nb-preview-item">
             <div class="nb-label-preview">PAPER</div>
@@ -467,50 +465,79 @@
             <label>Name</label>
             <input type="text" id="nb-name-input" placeholder="Untitled Notebook">
           </div>
-          <div class="nb-setting-row">
-            <label>Language</label>
-            <select>
-              <option>Auto Detect</option>
-              <option>English</option>
-              <option>Portuguese</option>
-            </select>
-          </div>
           <div class="nb-setting-row nb-flex-between">
             <label>Cover</label>
             <label class="nb-switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" id="nb-cover-toggle" checked>
               <span class="nb-slider"></span>
             </label>
           </div>
           
-          <div class="nb-divider-mini">PAPER MODELS</div>
-          
+          <div class="nb-divider-mini">SPECIFICATIONS</div>
           <div class="nb-setting-row">
             <label>Size</label>
-            <select>
-              <option>Goodnotes Standard, Vertical</option>
-              <option>A4, Vertical</option>
-              <option>Letter, Vertical</option>
-            </select>
-          </div>
-          <div class="nb-setting-row nb-flex-between">
-            <label>Color</label>
-            <select style="width: 80px;">
-              <option>White</option>
-              <option>Yellow</option>
-              <option>Dark</option>
+            <select id="nb-size-select">
+              <option>Goodnotes Standard</option>
+              <option>A4</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- Paper Selection Grid -->
+      <!-- Cover Selection -->
+      <div class="nb-papers-section" id="nb-covers-section">
+        <div class="nb-section-header">
+          <span>Cover Models</span>
+        </div>
+        <div class="nb-group-label">Essentials</div>
+        <div class="nb-papers-grid">
+          <div class="nb-cover-card active" data-cover="solid-blue">
+            <div class="nb-cover-thumb thumb-blue"></div>
+            <div class="nb-cover-name">Classic Blue</div>
+          </div>
+          <div class="nb-cover-card" data-cover="solid-pink">
+            <div class="nb-cover-thumb thumb-pink"></div>
+            <div class="nb-cover-name">Rose</div>
+          </div>
+          <div class="nb-cover-card" data-cover="pattern-dots">
+            <div class="nb-cover-thumb thumb-dots"></div>
+            <div class="nb-cover-name">Dots</div>
+          </div>
+          <div class="nb-cover-card" id="nb-import-cover-btn">
+            <div class="nb-cover-thumb thumb-import">+</div>
+            <div class="nb-cover-name">Import</div>
+            <input type="file" id="nb-cover-upload" style="display:none" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <!-- Paper Selection -->
       <div class="nb-papers-section">
         <div class="nb-section-header">
           <span>Paper Models</span>
-          <button class="nb-edit-link">Edit</button>
         </div>
-
+        <div class="nb-papers-grid">
+          <div class="nb-paper-card active" data-paper="Blank">
+            <div class="nb-paper-thumb thumb-blank"></div>
+            <div class="nb-paper-name">Blank</div>
+          </div>
+          <div class="nb-paper-card" data-paper="Dotted">
+            <div class="nb-paper-thumb thumb-dotted"></div>
+            <div class="nb-paper-name">Dotted</div>
+          </div>
+          <div class="nb-paper-card" data-paper="Squared">
+            <div class="nb-paper-thumb thumb-squared"></div>
+            <div class="nb-paper-name">Squared</div>
+          </div>
+          <div class="nb-paper-card" data-paper="Narrow Ruled">
+            <div class="nb-paper-thumb thumb-ruled"></div>
+            <div class="nb-paper-name">Ruled</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
         <!-- Essentials -->
         <div class="nb-group-label">Essentials</div>
         <div class="nb-papers-grid">
