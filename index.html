@@ -86,80 +86,81 @@
           <option value="date">Sort by Last Modified</option>
           <option value="size">Sort by Size</option>
         </select>
-        <div class="new-menu-container" style="position: relative;">
+        <div class="new-menu-container" style="display: flex; align-items: center; gap: 8px; position: relative;">
           <button class="nbtn-primary" id="main-new-btn">+ New</button>
           
-          <div id="new-options-menu" class="new-options-dropdown" style="display: none;">
-            <!-- Top Grid Options -->
-            <div class="menu-grid">
-              <button class="grid-item" id="btn-new-notebook">
-                <span class="grid-icon">📓</span>
-                <span class="grid-text">Notebook</span>
-              </button>
-              <button class="grid-item" id="btn-new-text-doc">
-                <span class="grid-icon">📄</span>
-                <span class="grid-text">Text Document</span>
-              </button>
-              <button class="grid-item" id="btn-new-whiteboard">
-                <span class="grid-icon">📋</span>
-                <span class="grid-text">Whiteboard</span>
-                <span class="new-badge">NEW</span>
-              </button>
-            </div>
+          <!-- View Options Button (4 squares) -->
+          <div class="view-menu-wrapper" style="position: relative;">
+            <button id="view-options-btn" class="nbtn-icon-only">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+              </svg>
+            </button>
 
-            <!-- Middle Buttons -->
-            <div class="menu-row-btns">
-              <button class="row-btn" id="btn-import-doc">
-                <span class="row-icon">📥</span>
-                <span class="row-text">Import</span>
+            <!-- View/Sort Dropdown Menu -->
+            <div id="view-options-menu" class="view-options-dropdown" style="display: none;">
+              <button class="vlist-item" id="btn-select-items">
+                <span class="vlist-text">Select Items</span>
+                <span class="vlist-icon">☑️</span>
               </button>
-              <button class="row-btn" id="btn-quick-record">
-                <span class="row-icon">🎙️</span>
-                <span class="row-text">Quick Recording</span>
+              
+              <div class="vlist-divider"></div>
+              
+              <button class="vlist-item checkable" id="btn-view-grid">
+                <span class="vlist-check">✓</span>
+                <span class="vlist-text">Grid</span>
               </button>
-            </div>
+              <button class="vlist-item checkable" id="btn-view-list">
+                <span class="vlist-check" style="visibility: hidden;">✓</span>
+                <span class="vlist-text">List</span>
+                <span class="vlist-icon">≡</span>
+              </button>
 
-            <!-- List Options -->
-            <div class="menu-list">
-              <button class="list-item" id="btn-quick-note">
-                <span class="list-icon">📝</span>
-                <span class="list-text">QuickNote</span>
-              </button>
-              <button class="list-item" id="btn-scan-doc">
-                <span class="list-icon">📷</span>
-                <span class="list-text">Scan Documents</span>
-              </button>
-              <button class="list-item" id="btn-study-set">
-                <span class="list-icon">📁</span>
-                <span class="list-text">Study Set</span>
-              </button>
-              <button class="list-item" id="btn-add-image">
-                <span class="list-icon">🖼️</span>
-                <span class="list-text">Image</span>
-              </button>
-              <button class="list-item" id="btn-take-photo">
-                <span class="list-icon">📸</span>
-                <span class="list-text">Take Photo</span>
-              </button>
-            </div>
+              <div class="vlist-divider"></div>
 
-            <!-- Bottom Folder Option -->
-            <div class="menu-footer">
-              <button class="list-item" id="btn-create-folder">
-                <span class="list-icon">📂</span>
-                <span class="list-text">Folder</span>
+              <button class="vlist-item checkable sort-opt" data-sort="date">
+                <span class="vlist-check" style="visibility: hidden;">✓</span>
+                <span class="vlist-text">Creation Date</span>
+              </button>
+              <button class="vlist-item checkable sort-opt" data-sort="modified">
+                <span class="vlist-check">✓</span>
+                <span class="vlist-text">Last Modified</span>
+                <span class="vlist-icon">⌄</span>
+              </button>
+              <button class="vlist-item checkable sort-opt" data-sort="name">
+                <span class="vlist-check" style="visibility: hidden;">✓</span>
+                <span class="vlist-text">Name</span>
+              </button>
+              <button class="vlist-item checkable sort-opt" data-sort="type">
+                <span class="vlist-check" style="visibility: hidden;">✓</span>
+                <span class="vlist-text">Type</span>
               </button>
             </div>
           </div>
+          
+          <!-- New Menu Dropdown (Manteve o anterior, apenas injetado aqui) -->
+          <div id="new-options-menu" class="new-options-dropdown" style="display: none;">
+            <div class="menu-grid">
+              <button class="grid-item" id="btn-new-notebook"><span class="grid-icon">📓</span><span class="grid-text">Notebook</span></button>
+              <button class="grid-item" id="btn-new-text-doc"><span class="grid-icon">📄</span><span class="grid-text">Text Document</span></button>
+              <button class="grid-item" id="btn-new-whiteboard"><span class="grid-icon">📋</span><span class="grid-text">Whiteboard</span><span class="new-badge">NEW</span></button>
+            </div>
+            <div class="menu-row-btns">
+              <button class="row-btn" id="btn-import-doc"><span class="row-icon">📥</span><span class="row-text">Import</span></button>
+              <button class="row-btn" id="btn-quick-record"><span class="row-icon">🎙️</span><span class="row-text">Quick Recording</span></button>
+            </div>
+            <div class="menu-list">
+              <button class="list-item" id="btn-quick-note"><span class="list-icon">📝</span><span class="list-text">QuickNote</span></button>
+              <button class="list-item" id="btn-scan-doc"><span class="list-icon">📷</span><span class="list-text">Scan Documents</span></button>
+              <button class="list-item" id="btn-study-set"><span class="list-icon">📁</span><span class="list-text">Study Set</span></button>
+              <button class="list-item" id="btn-add-image"><span class="list-icon">🖼️</span><span class="list-text">Image</span></button>
+              <button class="list-item" id="btn-take-photo"><span class="list-icon">📸</span><span class="list-text">Take Photo</span></button>
+            </div>
+            <div class="menu-footer">
+              <button class="list-item" id="btn-create-folder"><span class="list-icon">📂</span><span class="list-text">Folder</span></button>
+            </div>
+          </div>
         </div>
-        <button class="nbtn-secondary" id="import-library-btn">Import Library</button>
-        <button class="nbtn-secondary" id="export-library-btn">Export Library</button>
-        <button class="nbtn-close" id="close-notes-btn">Back to Planner</button>
-      </div>
-    </div>
-    <div id="notes-grid" class="notes-grid">
-      <!-- Content injected by notes.js -->
-    </div>
   </main>
 
  <!-- Planner Container (Original Content) -->
