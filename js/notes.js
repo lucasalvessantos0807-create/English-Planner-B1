@@ -191,24 +191,23 @@ async function saveLibrary() {
 function openDocument(doc) {
     currentDoc = doc;
     
-    // Se o documento não tem páginas ou só tem 1 (nova lógica de capa)
-    // Garantimos que a página 0 seja a capa e a página 1 em diante o conteúdo
+    // Ensure the notebook has at least a cover (page 0) and one writing page (page 1)
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
-        currentDoc.pages = [null, null]; // [0] = Capa, [1] = Primeira folha
+        currentDoc.pages = [null, null]; 
     } else if (currentDoc.pages.length === 1) {
         currentDoc.pages.push(null);
     }
     
-    currentPageIndex = 0; // Começa sempre na capa
+    currentPageIndex = 0; // Always start on the cover
 
     document.getElementById('notes-area').style.display = 'none';
     document.getElementById('notes-sidebar').style.display = 'none';
     document.getElementById('planner-content').style.display = 'none';
     document.getElementById('doc-editor').style.display = 'flex';
 
-    // Atualiza título no header
+    // Update Doc Title in Header
     const titleEl = document.getElementById('editor-doc-title');
-    if (titleEl) titleEl.innerText = doc.name;
+    if (titleEl) titleEl.innerText = currentDoc.name;
 
     initCanvas();
     renderPage();
@@ -222,40 +221,49 @@ function renderPage() {
     ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     
     const canvasEl = document.getElementById('note-canvas');
-    canvasEl.className = ""; // Limpa classes de papel
+    canvasEl.className = ""; // Reset patterns
 
-    // LÓGICA DE CAPA (Página 1 / Índice 0)
     if (currentPageIndex === 0) {
-        // Estilização visual da Capa
-        canvasEl.style.backgroundColor = "#2a4f8a"; // Cor da capa (exemplo azul)
+        // --- RENDER COVER PAGE ---
+        canvasEl.style.backgroundColor = "#2a4f8a"; // Classic blue cover
+        
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 40px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(currentDoc.name, 425, 400);
-        ctx.font = "20px Arial";
-        ctx.fillText("Notebook Cover", 425, 450);
-        // Se houver desenho salvo na capa, desenha por cima
-        const pageData = currentDoc.pages[0];
-        if (pageData) {
-            const img = new Image();
-            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
-            img.src = pageData;
-        }
+        
+        // Notebook Title
+        ctx.font = "bold 45px Georgia";
+        ctx.fillText(currentDoc.name, 425, 450);
+        
+        // Subtitle
+        ctx.font = "italic 20px Georgia";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillText("Notebook Collection", 425, 500);
+        
+        // Ornamental Line
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(350, 530);
+        ctx.lineTo(500, 530);
+        ctx.stroke();
+
     } else {
-        // LÓGICA DE FOLHA DE ESCRITA (Página 2 em diante)
+        // --- RENDER WRITING PAGE ---
+        canvasEl.style.backgroundColor = "white";
         const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
-        canvasEl.style.backgroundColor = "white";
 
         const pageData = currentDoc.pages[currentPageIndex];
         if (pageData) {
             const img = new Image();
-            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
+            img.onload = () => { 
+                ctx.drawImage(img, 0, 0, 850, 1100); 
+            };
             img.src = pageData;
         }
     }
     
-    // Atualiza o indicador "X de Y"
+    // Update "X de Y" indicator
     const indicator = document.getElementById('page-indicator-text');
     if (indicator) {
         indicator.innerText = `${currentPageIndex + 1} de ${currentDoc.pages.length}`;
@@ -312,6 +320,9 @@ function initCanvas() {
 }
 
 function startDrawing(e) {
+    // SECURITY: Prevent drawing if the current page is the cover (index 0)
+    if (currentPageIndex === 0) return;
+
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
     lastX = (e.clientX - rect.left);
@@ -493,6 +504,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('tool-pen').onclick = () => { currentTool = 'pen'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-pen').classList.add('active'); };
     document.getElementById('tool-eraser').onclick = () => { currentTool = 'eraser'; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); document.getElementById('tool-eraser').classList.add('active'); };
+    // Toolbar: Export and Options logic
+    const btnExport = document.getElementById('btn-export-doc');
+    if (btnExport) {
+        btnExport.onclick = () => {
+            const link = document.createElement('a');
+            link.download = `${currentDoc.name}_page_${currentPageIndex + 1}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        };
+    }
+
+    const btnMore = document.getElementById('btn-more-options');
+    const moreMenu = document.getElementById('editor-more-menu');
+    if (btnMore && moreMenu) {
+        btnMore.onclick = (e) => {
+            e.stopPropagation();
+            moreMenu.style.display = moreMenu.style.display === 'flex' ? 'none' : 'flex';
+        };
+    }
+
+    document.addEventListener('click', () => {
+        if (moreMenu) moreMenu.style.display = 'none';
+    });
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
