@@ -11,40 +11,110 @@ let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
-let currentView = 'all'; // 'all', 'favorites', 'shared'
+let currentView = 'all'; 
+let currentLayout = 'grid'; // 'grid' or 'list'
+let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
+let isSelectionMode = false;
+let selectedItems = new Set();
 
 // --- 1. LIBRARY MANAGEMENT ---
 
 export function renderLibrary() {
     const grid = document.getElementById('notes-grid');
     const breadcrumb = document.getElementById('notes-breadcrumb');
-    const sortVal = document.getElementById('sort-docs-select')?.value || 'name';
 
     if (!grid) return;
     grid.innerHTML = '';
+    
+    // Apply layout class
+    grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
+    if (isSelectionMode) grid.classList.add('selection-active');
 
     if (breadcrumb) {
-        if (currentView === 'favorites') {
-            breadcrumb.innerText = 'Favorites';
-        } else if (currentView === 'shared') {
-            breadcrumb.innerText = 'Shared Documents';
-        } else if (!currentFolderId) {
-            breadcrumb.innerText = 'Documents';
-        } else {
+        if (currentView === 'favorites') breadcrumb.innerText = 'Favorites';
+        else if (currentView === 'shared') breadcrumb.innerText = 'Shared Documents';
+        else if (!currentFolderId) breadcrumb.innerText = 'Documents';
+        else {
             const folder = (library.folders || []).find(f => f.id === currentFolderId);
             breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
-            
             const backBtn = document.getElementById('back-to-root');
-            if (backBtn) {
-                backBtn.onclick = () => {
-                    currentFolderId = null;
-                    currentView = 'all';
-                    renderLibrary();
-                };
-            }
+            if (backBtn) backBtn.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
         }
     }
 
+    let foldersToShow = [];
+    let docsToShow = [];
+
+    if (currentView === 'all') {
+        foldersToShow = (library.folders || []).filter(f => f.parentId === currentFolderId);
+        docsToShow = (library.documents || []).filter(d => d.parentId === currentFolderId);
+    } else if (currentView === 'favorites') {
+        docsToShow = (library.documents || []).filter(d => d.favorite);
+    } else if (currentView === 'shared') {
+        docsToShow = (library.documents || []).filter(d => d.shared);
+    }
+
+    // NEW ENHANCED SORTING LOGIC
+    const sortFn = (a, b) => {
+        if (currentSort === 'name') return a.name.localeCompare(b.name);
+        if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
+        if (currentSort === 'modified') return (b.updatedAt || 0) - (a.updatedAt || 0);
+        if (currentSort === 'type') {
+             // Folders first, then notebooks, then documents
+             const typeOrder = { folder: 1, notebook: 2, document: 3 };
+             const typeA = a.paperType ? 'notebook' : (a.parentId !== undefined ? 'document' : 'folder');
+             const typeB = b.paperType ? 'notebook' : (b.parentId !== undefined ? 'document' : 'folder');
+             return typeOrder[typeA] - typeOrder[typeB];
+        }
+        return 0;
+    };
+
+    foldersToShow.sort(sortFn);
+    docsToShow.sort(sortFn);
+
+    const renderItem = (data, type) => {
+        const item = document.createElement('div');
+        item.className = 'note-item' + (isSelectionMode ? ' selectable' : '');
+        
+        const icon = type === 'folder' ? '📁' : (data.paperType ? '📓' : '📄');
+        const meta = new Date(data.updatedAt).toLocaleDateString();
+        
+        if (isSelectionMode) {
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'note-checkbox';
+            chk.checked = selectedItems.has(data.id);
+            chk.onclick = (e) => {
+                e.stopPropagation();
+                if (chk.checked) selectedItems.add(data.id);
+                else selectedItems.delete(data.id);
+            };
+            item.appendChild(chk);
+        }
+
+        item.innerHTML += `
+            <div class="note-icon ${type === 'folder' ? 'folder' : ''}">${icon}</div>
+            <div class="note-name">${data.name}</div>
+            <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
+        `;
+
+        item.onclick = () => {
+            if (isSelectionMode) {
+                const chk = item.querySelector('.note-checkbox');
+                chk.checked = !chk.checked;
+                if (chk.checked) selectedItems.add(data.id);
+                else selectedItems.delete(data.id);
+                return;
+            }
+            if (type === 'folder') { currentFolderId = data.id; renderLibrary(); }
+            else openDocument(data);
+        };
+        grid.appendChild(item);
+    };
+
+    foldersToShow.forEach(f => renderItem(f, 'folder'));
+    docsToShow.forEach(d => renderItem(d, 'document'));
+}
     let foldersToShow = [];
     let docsToShow = [];
 
@@ -293,24 +363,93 @@ export function exportLibrary() {
 document.addEventListener('DOMContentLoaded', () => {
     const mainNewBtn = document.getElementById('main-new-btn');
     const newMenu = document.getElementById('new-options-menu');
+    const viewOptionsBtn = document.getElementById('view-options-btn');
+    const viewMenu = document.getElementById('view-options-menu');
+    
     const closeBtn = document.getElementById('close-editor-btn');
     const saveDocBtn = document.getElementById('save-doc-btn');
-    const sortSelect = document.getElementById('sort-docs-select');
+    const sortSelect = document.getElementById('sort-docs-select'); // Mantido para compatibilidade, mas o novo menu é o principal agora
 
-    // Toggle Menu dropdown logic
+    // Toggle "New" Menu
     if (mainNewBtn && newMenu) {
         mainNewBtn.onclick = (e) => {
             e.stopPropagation();
+            if (viewMenu) viewMenu.style.display = 'none';
             const isOpen = newMenu.style.display === 'flex';
             newMenu.style.display = isOpen ? 'none' : 'flex';
         };
     }
 
+    // Toggle "View/Sort" Menu
+    if (viewOptionsBtn && viewMenu) {
+        viewOptionsBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (newMenu) newMenu.style.display = 'none';
+            const isOpen = viewMenu.style.display === 'flex';
+            viewMenu.style.display = isOpen ? 'none' : 'flex';
+        };
+    }
+
     document.addEventListener('click', (e) => {
-        if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) {
-            newMenu.style.display = 'none';
-        }
+        if (newMenu && !newMenu.contains(e.target) && e.target !== mainNewBtn) newMenu.style.display = 'none';
+        if (viewMenu && !viewMenu.contains(e.target) && e.target !== viewOptionsBtn) viewMenu.style.display = 'none';
     });
+
+    const closeAllMenus = () => {
+        if (newMenu) newMenu.style.display = 'none';
+        if (viewMenu) viewMenu.style.display = 'none';
+    };
+
+    // --- VIEW OPTIONS LOGIC ---
+    const btnGridView = document.getElementById('btn-view-grid');
+    const btnListView = document.getElementById('btn-view-list');
+    const btnSelectItems = document.getElementById('btn-select-items');
+
+    if (btnGridView) btnGridView.onclick = () => {
+        currentLayout = 'grid';
+        updateViewCheckmarks();
+        renderLibrary();
+        closeAllMenus();
+    };
+
+    if (btnListView) btnListView.onclick = () => {
+        currentLayout = 'list';
+        updateViewCheckmarks();
+        renderLibrary();
+        closeAllMenus();
+    };
+
+    if (btnSelectItems) btnSelectItems.onclick = () => {
+        isSelectionMode = !isSelectionMode;
+        selectedItems.clear();
+        btnSelectItems.classList.toggle('active', isSelectionMode);
+        renderLibrary();
+        closeAllMenus();
+    };
+
+    // Sorting buttons
+    document.querySelectorAll('.sort-opt').forEach(btn => {
+        btn.onclick = () => {
+            currentSort = btn.dataset.sort;
+            updateViewCheckmarks();
+            renderLibrary();
+            closeAllMenus();
+        };
+    });
+
+    function updateViewCheckmarks() {
+        // Layout checks
+        if (btnGridView) btnGridView.querySelector('.vlist-check').style.visibility = currentLayout === 'grid' ? 'visible' : 'hidden';
+        if (btnListView) btnListView.querySelector('.vlist-check').style.visibility = currentLayout === 'list' ? 'visible' : 'hidden';
+        
+        // Sort checks
+        document.querySelectorAll('.sort-opt').forEach(btn => {
+            const check = btn.querySelector('.vlist-check');
+            if (check) check.style.visibility = currentSort === btn.dataset.sort ? 'visible' : 'hidden';
+        });
+    }
+
+    // ... Restante dos listeners (Notebook Modal, etc) permanece igual ...
 
     const closeMenu = () => { if (newMenu) newMenu.style.display = 'none'; };
 
