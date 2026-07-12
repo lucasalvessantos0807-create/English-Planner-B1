@@ -4,7 +4,7 @@ import { saveUserData, library } from './storage.js';
  * NOTES & LIBRARY SYSTEM
  */
 
-let currentFolderId = null; // null means Root
+let currentFolderId = null; 
 let isDrawing = false;
 let currentTool = 'pen';
 let canvas, ctx;
@@ -12,9 +12,9 @@ let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
 let currentPageIndex = 0; 
-let currentView = 'all'; // 'all', 'favorites', 'shared'
-let currentLayout = 'grid'; // 'grid' or 'list'
-let currentSort = 'modified'; // 'name', 'date', 'modified', 'type'
+let currentView = 'all'; 
+let currentLayout = 'grid'; 
+let currentSort = 'modified'; 
 let isSelectionMode = false;
 let selectedItems = new Set();
 
@@ -27,9 +27,9 @@ export function renderLibrary() {
     if (!grid) return;
     grid.innerHTML = '';
     
-    // Apply layout mode
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
+    
     const stTitle = document.getElementById('st-selection-title');
     if (stTitle) {
         stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
@@ -59,8 +59,6 @@ export function renderLibrary() {
 
     let foldersToShow = [];
     let docsToShow = [];
-
-    // Helper to normalize parentId comparison
     const activeFolder = currentFolderId || null;
 
     if (currentView === 'all') {
@@ -72,7 +70,6 @@ export function renderLibrary() {
         docsToShow = (library.documents || []).filter(d => d.shared);
     }
 
-    // Sorting Logic
     const sortFn = (a, b) => {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
@@ -170,17 +167,6 @@ export function createDocument(type = 'Document', paper = 'Blank') {
     openDocument(newDoc);
 }
 
-function deleteDocument(id) {
-    library.documents = (library.documents || []).filter(d => d.id !== id);
-    saveLibrary();
-}
-
-function deleteFolder(id) {
-    library.documents = (library.documents || []).filter(d => d.parentId !== id);
-    library.folders = (library.folders || []).filter(f => f.id !== id);
-    saveLibrary();
-}
-
 async function saveLibrary() {
     const user = window.auth.currentUser;
     if (user) {
@@ -189,34 +175,31 @@ async function saveLibrary() {
     }
 }
 
-// --- 2. CANVAS & MULTI-PAGE DRAWING SYSTEM ---
+// --- 2. CANVAS & MULTI-PAGE SYSTEM ---
 
 function openDocument(doc) {
     currentDoc = doc;
     
-    // Migração de dados: Se o documento tinha 'data' (formato antigo) e não tem 'pages', converte para array
     if (!currentDoc.pages) {
-        currentDoc.pages = currentDoc.data ? [currentDoc.data] : [null];
+        currentDoc.pages = [null];
     }
     currentPageIndex = 0;
 
     const notesArea = document.getElementById('notes-area');
     const notesSidebar = document.getElementById('notes-sidebar');
     const docEditor = document.getElementById('doc-editor');
-    const docTitle = document.getElementById('current-doc-title');
+    const plannerContent = document.getElementById('planner-content');
 
     if (notesArea) notesArea.style.display = 'none';
     if (notesSidebar) notesSidebar.style.display = 'none';
     if (docEditor) docEditor.style.display = 'flex';
-    if (docTitle) docTitle.innerText = doc.name;
+    if (plannerContent) plannerContent.style.display = 'none';
 
     initCanvas();
 
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
-        canvasEl.className = ""; 
-        const paperClass = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
-        canvasEl.classList.add(paperClass);
+        canvasEl.className = "paper-" + (doc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
     }
     
     renderPage();
@@ -238,9 +221,9 @@ function renderPage() {
         img.src = pageData;
     }
     
-    const counter = document.getElementById('page-counter');
-    if (counter) {
-        counter.innerText = `Page ${currentPageIndex + 1} / ${currentDoc.pages.length}`;
+    const indicator = document.getElementById('page-indicator-text');
+    if (indicator) {
+        indicator.innerText = `Page ${currentPageIndex + 1} / ${currentDoc.pages.length}`;
     }
 }
 
@@ -251,8 +234,13 @@ function saveCurrentPage() {
 }
 
 export function nextPage() {
-    if (!currentDoc || currentPageIndex >= currentDoc.pages.length - 1) return;
+    if (!currentDoc) return;
     saveCurrentPage();
+    
+    if (currentPageIndex === currentDoc.pages.length - 1) {
+        currentDoc.pages.push(null);
+    }
+    
     currentPageIndex++;
     renderPage();
 }
@@ -261,14 +249,6 @@ export function prevPage() {
     if (!currentDoc || currentPageIndex <= 0) return;
     saveCurrentPage();
     currentPageIndex--;
-    renderPage();
-}
-
-export function addNewPage() {
-    if (!currentDoc) return;
-    saveCurrentPage();
-    currentDoc.pages.push(null);
-    currentPageIndex = currentDoc.pages.length - 1;
     renderPage();
 }
 
@@ -337,26 +317,31 @@ export function closeEditor() {
     const docEditor = document.getElementById('doc-editor');
     const notesArea = document.getElementById('notes-area');
     const notesSidebar = document.getElementById('notes-sidebar');
+    const plannerContent = document.getElementById('planner-content');
+    
     if (docEditor) docEditor.style.display = 'none';
     if (notesArea) notesArea.style.display = 'flex';
     if (notesSidebar) notesSidebar.style.display = 'flex';
+    if (plannerContent) plannerContent.style.display = 'none';
     currentDoc = null;
-}
-
-export function exportLibrary() {
-    const dataStr = JSON.stringify(library, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `library_backup_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
 }
 
 // --- 3. INITIALIZATION & UI LOGIC ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // Keyboard navigation: Arrows Left/Right
+    document.addEventListener('keydown', (e) => {
+        const docEditor = document.getElementById('doc-editor');
+        if (docEditor && docEditor.style.display === 'flex') {
+            if (e.key === 'ArrowRight') {
+                nextPage();
+            } else if (e.key === 'ArrowLeft') {
+                prevPage();
+            }
+        }
+    });
+
     const mainNewBtn = document.getElementById('main-new-btn');
     const newMenu = document.getElementById('new-options-menu');
     const viewOptionsBtn = document.getElementById('view-options-btn');
@@ -394,25 +379,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnListView = document.getElementById('btn-view-list');
     const btnSelectItems = document.getElementById('btn-select-items');
 
-    const updateViewCheckmarks = () => {
-        if (btnGridView) btnGridView.querySelector('.vlist-check').style.visibility = currentLayout === 'grid' ? 'visible' : 'hidden';
-        if (btnListView) btnListView.querySelector('.vlist-check').style.visibility = currentLayout === 'list' ? 'visible' : 'hidden';
-        document.querySelectorAll('.sort-opt').forEach(btn => {
-            const check = btn.querySelector('.vlist-check');
-            if (check) check.style.visibility = currentSort === btn.dataset.sort ? 'visible' : 'hidden';
-        });
-    };
-
     if (btnGridView) btnGridView.onclick = () => {
         currentLayout = 'grid';
-        updateViewCheckmarks();
         renderLibrary();
         closeAllMenus();
     };
 
     if (btnListView) btnListView.onclick = () => {
         currentLayout = 'list';
-        updateViewCheckmarks();
         renderLibrary();
         closeAllMenus();
     };
@@ -431,155 +405,36 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    const btnDoneSelection = document.getElementById('btn-selection-done');
-    if (btnDoneSelection) {
-        btnDoneSelection.onclick = () => {
-            isSelectionMode = false;
-            selectedItems.clear();
-            const topbar = document.getElementById('notes-topbar');
-            const selectionBar = document.getElementById('selection-toolbar');
-            if (topbar) topbar.style.display = 'flex';
-            if (selectionBar) selectionBar.style.display = 'none';
-            renderLibrary();
-        };
-    }
-
-    const btnSelectAllItems = document.getElementById('btn-select-all');
-    if (btnSelectAllItems) {
-        btnSelectAllItems.onclick = () => {
-            const allItems = [...(library.folders || []), ...(library.documents || [])];
-            if (selectedItems.size >= allItems.length && allItems.length > 0) {
-                selectedItems.clear();
-            } else {
-                allItems.forEach(item => selectedItems.add(item.id));
-            }
-            renderLibrary();
-        };
-    }
-
-    if (document.getElementById('st-trash')) {
-        document.getElementById('st-trash').onclick = () => {
-            if (selectedItems.size === 0) return;
-            if (confirm(`Delete ${selectedItems.size} items?`)) {
-                selectedItems.forEach(id => {
-                    library.documents = (library.documents || []).filter(d => d.id !== id);
-                    library.folders = (library.folders || []).filter(f => f.id !== id);
-                });
-                saveLibrary();
-                selectedItems.clear();
-                if (btnDoneSelection) btnDoneSelection.click();
-            }
-        };
-    }
-
-    if (document.getElementById('st-duplicate')) {
-        document.getElementById('st-duplicate').onclick = () => {
-            if (selectedItems.size === 0) return;
-            selectedItems.forEach(id => {
-                const docToCopy = library.documents.find(d => d.id === id);
-                if (docToCopy) {
-                    const newDoc = JSON.parse(JSON.stringify(docToCopy));
-                    newDoc.id = 'doc_' + Date.now() + Math.floor(Math.random() * 1000);
-                    newDoc.name = docToCopy.name + " Copy";
-                    newDoc.updatedAt = Date.now();
-                    library.documents.push(newDoc);
-                }
-            });
-            saveLibrary();
-            selectedItems.clear();
-            if (btnDoneSelection) btnDoneSelection.click();
-        };
-    }
-
-    if (document.getElementById('st-export')) {
-        document.getElementById('st-export').onclick = () => {
-            if (selectedItems.size === 0) return;
-            const selection = {
-                documents: library.documents.filter(d => selectedItems.has(d.id)),
-                folders: library.folders.filter(f => selectedItems.has(f.id))
-            };
-            const blob = new Blob([JSON.stringify(selection, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `export_${Date.now()}.json`;
-            a.click();
-        };
-    }
-
-    if (document.getElementById('st-move')) {
-        document.getElementById('st-move').onclick = () => {
-            if (selectedItems.size === 0) return;
-            const dest = prompt("Destination folder name (Leave empty for root):");
-            let targetId = null;
-            if (dest) {
-                const folder = library.folders.find(f => f.name.toLowerCase() === dest.toLowerCase());
-                if (folder) targetId = folder.id;
-                else { alert("Folder not found."); return; }
-            }
-            selectedItems.forEach(id => {
-                const doc = library.documents.find(d => d.id === id);
-                if (doc) doc.parentId = targetId;
-                const fld = library.folders.find(f => f.id === id);
-                if (fld) fld.parentId = targetId;
-            });
-            saveLibrary();
-            selectedItems.clear();
-            if (btnDoneSelection) btnDoneSelection.click();
-        };
-    }
-
-    document.querySelectorAll('.sort-opt').forEach(btn => {
-        btn.onclick = () => {
-            currentSort = btn.dataset.sort;
-            updateViewCheckmarks();
-            renderLibrary();
-            closeAllMenus();
-        };
-    });
-
     const nbModal = document.getElementById('notebook-modal');
     const nbCancel = document.getElementById('nb-cancel');
     const nbCreate = document.getElementById('nb-create');
-    const nbNameInput = document.getElementById('nb-name-input');
-    const nbPaperPreview = document.getElementById('nb-paper-preview');
-    const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
-    const paperCards = document.querySelectorAll('.nb-paper-card');
 
     if (nbCancel) nbCancel.onclick = () => { if (nbModal) nbModal.style.display = 'none'; };
 
     if (nbCreate) {
         nbCreate.onclick = () => {
+            const nbNameInput = document.getElementById('nb-name-input');
+            const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
             const name = nbNameInput.value.trim() || "Untitled Notebook";
             const paperType = nbSelectedPaperName.innerText;
-            const newDoc = {
-                id: 'doc_' + Date.now(),
-                name: name,
-                paperType: paperType,
-                parentId: currentFolderId || null,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                favorite: false,
-                shared: false,
-                pages: [null],
-                data: null 
-            };
-            if (!library.documents) library.documents = [];
-            library.documents.push(newDoc);
-            saveLibrary();
+            createDocument('Notebook', paperType);
             if (nbModal) nbModal.style.display = 'none';
-            openDocument(newDoc);
         };
     }
 
+    const paperCards = document.querySelectorAll('.nb-paper-card');
     paperCards.forEach(card => {
         card.onclick = () => {
             paperCards.forEach(c => c.classList.remove('active'));
             card.classList.add('active');
             const paper = card.dataset.paper;
+            const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
+            const nbPaperPreview = document.getElementById('nb-paper-preview');
             if (nbSelectedPaperName) nbSelectedPaperName.innerText = paper;
-            const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
-            if (nbPaperPreview) { nbPaperPreview.className = 'nb-preview-box ' + paperClass; }
+            if (nbPaperPreview) { 
+                const paperClass = "paper-" + paper.toLowerCase().replace(/ /g, '-');
+                nbPaperPreview.className = 'nb-preview-box ' + paperClass; 
+            }
         };
     });
 
@@ -590,41 +445,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnNewNotebook) btnNewNotebook.onclick = () => { 
         closeAllMenus(); 
         if (nbModal) nbModal.style.display = 'flex'; 
-        if (nbNameInput) nbNameInput.value = "";
     };
     if (btnNewTextDoc) btnNewTextDoc.onclick = () => { closeAllMenus(); createDocument('Text Document'); };
     if (btnCreateFolder) btnCreateFolder.onclick = () => { closeAllMenus(); createFolder(); };
 
     const closeEditorBtn = document.getElementById('close-editor-btn');
     if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
-    
-    const saveEditorBtn = document.getElementById('save-doc-btn');
-    if (saveEditorBtn) saveEditorBtn.onclick = closeEditor;
-
-    const btnNext = document.getElementById('next-page-btn');
-    const btnPrev = document.getElementById('prev-page-btn');
-    const btnAddPage = document.getElementById('add-page-btn');
-
-    if (btnNext) btnNext.onclick = nextPage;
-    if (btnPrev) btnPrev.onclick = prevPage;
-    if (btnAddPage) btnAddPage.onclick = addNewPage;
-
-    let touchStartX = 0;
-    const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) {
-        canvasEl.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        canvasEl.addEventListener('touchend', (e) => {
-            let touchEndX = e.changedTouches[0].screenX;
-            let diff = touchStartX - touchEndX;
-            if (Math.abs(diff) > 50) { 
-                if (diff > 0) nextPage();
-                else prevPage();
-            }
-        }, { passive: true });
-    }
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
@@ -634,6 +460,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
-    updateViewCheckmarks();
+    // Swipe gestures (iPad/Mobile)
+    let touchStartX = 0;
+    const canvasEl = document.getElementById('note-canvas');
+    if (canvasEl) {
+        canvasEl.addEventListener('touchstart', (e) => touchStartX = e.changedTouches[0].screenX, { passive: true });
+        canvasEl.addEventListener('touchend', (e) => {
+            let touchEndX = e.changedTouches[0].screenX;
+            let diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 70) { 
+                if (diff > 0) nextPage();
+                else prevPage();
+            }
+        }, { passive: true });
+    }
+
     renderLibrary();
 });
