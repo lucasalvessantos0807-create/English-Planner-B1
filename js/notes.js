@@ -53,7 +53,7 @@ export function renderLibrary() {
         }
     }
 
-    // Update Selection Title
+    // Update Selection Title for the UI
     const stTitle = document.getElementById('st-selection-title');
     if (stTitle) {
         stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
@@ -92,7 +92,7 @@ export function renderLibrary() {
         if (type === 'folder') {
             iconContent = `<div class="note-icon folder">📁</div>`;
         } else if (data.pages) { 
-            // Thumbnail de Caderno com Capa
+            // Notebook Thumbnail with Cover
             const coverClass = data.coverStyle ? `cover-${data.coverStyle}` : 'cover-solid-blue';
             const bgStyle = data.coverImage ? `background-image: url(${data.coverImage}); background-size: cover;` : '';
             iconContent = `<div class="note-icon notebook-thumbnail ${coverClass}" style="${bgStyle}"></div>`;
@@ -102,16 +102,17 @@ export function renderLibrary() {
 
         const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
+        // CORREÇÃO: Checkbox agora atualiza visualmente no clique
         if (isSelectionMode) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
             chk.className = 'note-checkbox';
             chk.checked = selectedItems.has(data.id);
             chk.onclick = (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Evita o clique do item pai
                 if (chk.checked) selectedItems.add(data.id);
                 else selectedItems.delete(data.id);
-                renderLibrary();
+                renderLibrary(); // Re-renderiza para atualizar título
             };
             item.appendChild(chk);
         }
@@ -122,7 +123,7 @@ export function renderLibrary() {
             <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
         `;
 
-        item.onclick = () => {
+        item.onclick = (e) => {
             if (isSelectionMode) {
                 const chk = item.querySelector('.note-checkbox');
                 if (chk) {
@@ -190,7 +191,7 @@ async function saveLibrary() {
     }
 }
 
-// --- 2. CANVAS / DRAWING SYSTEM (WITH MULTI-PAGE) ---
+// --- 2. CANVAS / DRAWING SYSTEM (WITH MULTI-PAGE & KEYBOARD) ---
 
 function openDocument(doc) {
     currentDoc = doc;
@@ -218,8 +219,13 @@ function openDocument(doc) {
 function loadPage(index) {
     if (!ctx || !currentDoc.pages) return;
     currentPageIndex = index;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Limpa o canvas e força fundo branco
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Aplica o papel (fundo visual)
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.className = ""; 
@@ -227,6 +233,7 @@ function loadPage(index) {
         canvasEl.classList.add(paperClass);
     }
     
+    // Carrega o desenho se existir
     if (currentDoc.pages[index]) {
         const img = new Image();
         img.onload = () => { if (ctx) ctx.drawImage(img, 0, 0); };
@@ -234,14 +241,15 @@ function loadPage(index) {
     }
 }
 
-// Navegação por Teclado (Setas)
+// Navegação por Teclado (Setas Esquerda/Direita)
 document.addEventListener('keydown', (e) => {
+    // Só funciona se o editor estiver aberto
     if (!currentDoc || document.getElementById('doc-editor').style.display === 'none') return;
     
     if (e.key === 'ArrowRight') {
         currentDoc.pages[currentPageIndex] = canvas.toDataURL();
         if (currentPageIndex === currentDoc.pages.length - 1) {
-            currentDoc.pages.push(null); // Adiciona nova folha ao chegar no fim
+            currentDoc.pages.push(null); // Adiciona nova folha se for a última
         }
         loadPage(currentPageIndex + 1);
     } else if (e.key === 'ArrowLeft' && currentPageIndex > 0) {
@@ -272,15 +280,16 @@ function initCanvas() {
 function startDrawing(e) {
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    lastX = (e.clientX - rect.left);
-    lastY = (e.clientY - rect.top);
+    lastX = (e.clientX - rect.left) * (canvas.width / rect.width / (window.devicePixelRatio || 1));
+    lastY = (e.clientY - rect.top) * (canvas.height / rect.height / (window.devicePixelRatio || 1));
 }
 
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left);
-    const y = (e.clientY - rect.top);
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width / (window.devicePixelRatio || 1));
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height / (window.devicePixelRatio || 1));
+    
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
@@ -428,8 +437,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // AÇÕES DE SELEÇÃO
-    if (document.getElementById('st-trash')) {
-        document.getElementById('st-trash').onclick = () => {
+    const trashBtn = document.getElementById('st-trash');
+    if (trashBtn) {
+        trashBtn.onclick = () => {
             if (selectedItems.size === 0) return;
             if (confirm(`Delete ${selectedItems.size} items?`)) {
                 selectedItems.forEach(id => {
@@ -443,8 +453,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    if (document.getElementById('st-duplicate')) {
-        document.getElementById('st-duplicate').onclick = () => {
+    const duplicateBtn = document.getElementById('st-duplicate');
+    if (duplicateBtn) {
+        duplicateBtn.onclick = () => {
             if (selectedItems.size === 0) return;
             selectedItems.forEach(id => {
                 const doc = library.documents.find(d => d.id === id);
@@ -461,8 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    if (document.getElementById('st-export')) {
-        document.getElementById('st-export').onclick = () => {
+    const exportBtn = document.getElementById('st-export');
+    if (exportBtn) {
+        exportBtn.onclick = () => {
             if (selectedItems.size === 0) return;
             const selection = {
                 documents: library.documents.filter(d => selectedItems.has(d.id)),
@@ -477,8 +489,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    if (document.getElementById('st-move')) {
-        document.getElementById('st-move').onclick = () => {
+    const moveBtn = document.getElementById('st-move');
+    if (moveBtn) {
+        moveBtn.onclick = () => {
             if (selectedItems.size === 0) return;
             const dest = prompt("Destination folder name (Leave empty for root):");
             let targetId = null;
@@ -610,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
             nbModal.style.display = 'flex'; 
             nbNameInput.value = "";
             coversSection.style.display = 'none';
-            papersSection.style.display = 'none';
+            papersSection.style.display = 'block'; // Papel agora fica aberto por padrão como solicitado
         };
     }
 
@@ -626,17 +639,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditorBtn = document.getElementById('save-doc-btn');
     if (saveEditorBtn) saveEditorBtn.onclick = closeEditor;
 
-    // TOOLBAR TOOLS
-    document.getElementById('tool-pen').onclick = () => {
-        currentTool = 'pen';
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tool-pen').classList.add('active');
-    };
-    document.getElementById('tool-eraser').onclick = () => {
-        currentTool = 'eraser';
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tool-eraser').classList.add('active');
-    };
+    // Ferramentas da Toolbar
+    const penTool = document.getElementById('tool-pen');
+    if (penTool) {
+        penTool.onclick = () => {
+            currentTool = 'pen';
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            penTool.classList.add('active');
+        };
+    }
+    const eraserTool = document.getElementById('tool-eraser');
+    if (eraserTool) {
+        eraserTool.onclick = () => {
+            currentTool = 'eraser';
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            eraserTool.classList.add('active');
+        };
+    }
 
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
