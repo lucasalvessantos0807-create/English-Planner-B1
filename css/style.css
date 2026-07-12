@@ -1293,20 +1293,22 @@ body.preview-open {
   flex-direction: column;
   background: #f2f2f7;
   border-bottom: 2px solid var(--border);
-  padding: 10px 25px;
-  height: auto;
-  min-height: 100px;
+  padding: 15px 25px;
+  height: 110px;
+  min-height: 110px;
+  width: 100%;
 }
 .st-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 .st-title {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--ink);
+  font-family: var(--main-font);
 }
 .st-btn-text {
   background: none;
@@ -1314,12 +1316,13 @@ body.preview-open {
   color: var(--accent);
   font-weight: 600;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-family: var(--main-font);
 }
 .st-actions {
   display: flex;
   justify-content: center;
-  gap: 50px;
+  gap: 60px;
 }
 .st-action-btn {
   background: none;
@@ -1328,12 +1331,13 @@ body.preview-open {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  gap: 4px;
+  gap: 6px;
+  transition: opacity 0.2s;
 }
-.st-icon { font-size: 1.5rem; }
-.st-label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+.st-action-btn:hover { opacity: 0.6; }
+.st-icon { font-size: 1.6rem; }
+.st-label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; font-family: var(--main-font); }
 
-/* Ajuste na Grid quando seleção ativa */
 .notes-grid.selection-active {
-  padding-top: 15px;
+  padding-top: 20px;
 }
