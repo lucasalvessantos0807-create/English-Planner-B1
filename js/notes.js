@@ -163,11 +163,18 @@ export function createFolder() {
     saveLibrary();
 }
 
-export function createDocument(type = 'Document', paper = 'Blank') {
-    const name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
+export function createDocument(type = 'Document', paper = 'Blank', customName = null) {
+    let name = customName;
+    
+    // Se não houver nome customizado (vindo do modal), pede via prompt (para documentos de texto simples)
+    if (!name) {
+        name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
+    }
+    
     if (!name) return;
+    
     const newDoc = {
-        id: 'doc_' + Date.now(),
+        id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5),
         name: name,
         parentId: currentFolderId || null,
         createdAt: Date.now(),
@@ -175,7 +182,7 @@ export function createDocument(type = 'Document', paper = 'Blank') {
         favorite: false,
         shared: false,
         paperType: paper,
-        pages: [null, null], // Initial cover + first writing page
+        pages: [null, null], 
         updatedAt: Date.now()
     };
     if (!library.documents) library.documents = [];
@@ -183,7 +190,6 @@ export function createDocument(type = 'Document', paper = 'Blank') {
     saveLibrary();
     openDocument(newDoc);
 }
-
 function deleteDocument(id) {
     library.documents = (library.documents || []).filter(d => d.id !== id);
     saveLibrary();
@@ -465,13 +471,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
             const name = nbNameInput.value.trim() || "Untitled Notebook";
             const paperType = nbSelectedPaperName.innerText;
-            createDocument('Notebook', paperType);
+            // Passamos o nome extraído do modal como terceiro argumento para evitar o prompt
+            createDocument('Notebook', paperType, name);
             if (nbModal) nbModal.style.display = 'none';
         };
     }
 
     const btnNewNotebook = document.getElementById('btn-new-notebook');
-    if (btnNewNotebook) btnNewNotebook.onclick = () => { closeAllMenus(); if (nbModal) nbModal.style.display = 'flex'; };
+    if (btnNewNotebook) {
+        btnNewNotebook.onclick = () => { 
+            closeAllMenus(); 
+            // Limpa o campo de nome sempre que o modal de criação for aberto
+            const nbNameInput = document.getElementById('nb-name-input');
+            if (nbNameInput) nbNameInput.value = "";
+            if (nbModal) nbModal.style.display = 'flex'; 
+        };
+    }
     
     document.getElementById('btn-new-text-doc').onclick = () => { closeAllMenus(); createDocument('Text Document'); };
     document.getElementById('btn-create-folder').onclick = () => { closeAllMenus(); createFolder(); };
@@ -590,6 +605,84 @@ export async function deleteSelectedItems() {
     });
 
     selectedItems.clear();
+    await saveLibrary();
+    toggleSelectionMode(false);
+}
+
+export async function duplicateSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    selectedItems.forEach(id => {
+        const originalDoc = library.documents.find(d => d.id === id);
+        if (originalDoc) {
+            const copy = JSON.parse(JSON.stringify(originalDoc));
+            copy.id = 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            copy.name = originalDoc.name + " (Copy)";
+            copy.createdAt = Date.now();
+            copy.updatedAt = Date.now();
+            library.documents.push(copy);
+        }
+        
+        const originalFolder = library.folders.find(f => f.id === id);
+        if (originalFolder) {
+            const copy = JSON.parse(JSON.stringify(originalFolder));
+            copy.id = 'fld_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            copy.name = originalFolder.name + " (Copy)";
+            copy.createdAt = Date.now();
+            copy.updatedAt = Date.now();
+            library.folders.push(copy);
+        }
+    });
+    
+    await saveLibrary();
+    toggleSelectionMode(false);
+}
+
+export function exportSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    const exportData = {
+        documents: library.documents.filter(d => selectedItems.has(d.id)),
+        folders: library.folders.filter(f => selectedItems.has(f.id)),
+        exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `exported_notes_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toggleSelectionMode(false);
+}
+
+export async function moveSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    const targetName = prompt("Move to which folder? (Type 'Root' for main directory or the Folder Name):", "Root");
+    
+    if (targetName === null) return;
+    
+    let targetId = null;
+    if (targetName.toLowerCase() !== 'root') {
+        const found = library.folders.find(f => f.name.toLowerCase() === targetName.toLowerCase());
+        if (found) {
+            targetId = found.id;
+        } else {
+            alert("Folder not found.");
+            return;
+        }
+    }
+    
+    selectedItems.forEach(id => {
+        const doc = library.documents.find(d => d.id === id);
+        if (doc) doc.parentId = targetId;
+        
+        const folder = library.folders.find(f => f.id === id);
+        if (folder && folder.id !== targetId) folder.parentId = targetId;
+    });
+    
     await saveLibrary();
     toggleSelectionMode(false);
 }
