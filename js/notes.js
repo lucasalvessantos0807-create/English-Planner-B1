@@ -176,12 +176,18 @@ export function createFolder() {
 export function createDocument(type = 'Document', paper = 'Blank', customName = null) {
     let name = customName;
     
-    // Se não houver nome customizado (vindo do modal), pede via prompt (para documentos de texto simples)
     if (!name) {
         name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
     }
     
     if (!name) return;
+
+    // Captura as novas configurações do modal
+    const size = document.getElementById('nb-size-select')?.value || 'goodnotes';
+    const orientation = document.querySelector('.nb-orient-btn.active')?.dataset.orientation || 'portrait';
+    const paperColor = document.querySelector('.nb-color-option.active')?.dataset.color === 'custom' 
+        ? document.getElementById('nb-custom-color-input').value 
+        : (document.querySelector('.nb-color-option.active')?.dataset.color || 'white');
     
     const newDoc = {
         id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5),
@@ -192,9 +198,13 @@ export function createDocument(type = 'Document', paper = 'Blank', customName = 
         favorite: false,
         shared: false,
         paperType: paper,
+        paperSize: size,
+        orientation: orientation,
+        paperColor: paperColor,
         pages: [null, null], 
         updatedAt: Date.now()
     };
+    
     if (!library.documents) library.documents = [];
     library.documents.push(newDoc);
     saveLibrary();
@@ -249,8 +259,19 @@ function renderPage() {
     if (!ctx || !canvas || !currentDoc) return;
     
     const ratio = window.devicePixelRatio || 1;
+    
+    // Ajusta o tamanho do Canvas baseado na orientação
+    const isLandscape = currentDoc.orientation === 'landscape';
+    const baseW = isLandscape ? 1100 : 850;
+    const baseH = isLandscape ? 850 : 1100;
+    
+    canvas.width = baseW * ratio;
+    canvas.height = baseH * ratio;
+    canvas.style.width = baseW + 'px';
+    canvas.style.height = baseH + 'px';
+
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+    ctx.clearRect(0, 0, baseW, baseH);
     
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) canvasEl.className = ""; 
@@ -261,19 +282,20 @@ function renderPage() {
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
         ctx.font = "bold 45px Georgia";
-        ctx.fillText(currentDoc.name, 425, 450);
+        ctx.fillText(currentDoc.name, baseW / 2, baseH / 2 - 50);
         ctx.font = "italic 20px Georgia";
         ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText("Notebook Collection", 425, 500);
-        
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(350, 530); ctx.lineTo(500, 530);
-        ctx.stroke();
+        ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
     } else {
         // WRITING PAGE LOGIC
-        canvasEl.style.backgroundColor = "white";
+        // Aplica a cor do papel salva
+        let bgColor = "#ffffff";
+        if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
+        else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
+        else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
+        
+        canvasEl.style.backgroundColor = bgColor;
+        
         const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
         canvasEl.classList.add(paperClass);
 
@@ -556,6 +578,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: true });
     }
 
+    // Listeners para Orientação (Tabs)
+    document.querySelectorAll('.nb-orient-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.nb-orient-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const preview = document.getElementById('nb-paper-preview-trigger');
+            if (preview) {
+                if (btn.dataset.orientation === 'landscape') preview.style.aspectRatio = '4/3';
+                else preview.style.aspectRatio = '3/4';
+            }
+        };
+    });
+
+    // Listeners para Cores
+    document.querySelectorAll('.nb-color-option').forEach(opt => {
+        opt.onclick = () => {
+            if (opt.id === 'nb-custom-color-btn') {
+                document.getElementById('nb-custom-color-input').click();
+                return;
+            }
+            document.querySelectorAll('.nb-color-option').forEach(o => b.classList.remove('active'));
+            opt.classList.add('active');
+            const preview = document.getElementById('nb-paper-preview-trigger');
+            if (preview) preview.style.backgroundColor = opt.style.backgroundColor;
+        };
+    });
+
+    const customColorInput = document.getElementById('nb-custom-color-input');
+    if (customColorInput) {
+        customColorInput.oninput = (e) => {
+            const btn = document.getElementById('nb-custom-color-btn');
+            btn.style.background = e.target.value;
+            document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
+            btn.classList.add('active');
+            const preview = document.getElementById('nb-paper-preview-trigger');
+            if (preview) preview.style.backgroundColor = e.target.value;
+        };
+    }
+    
     renderLibrary();
 });
 
