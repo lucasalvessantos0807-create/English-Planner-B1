@@ -721,63 +721,61 @@ canvas {
 .nb-paper-dots span { width: 6px; height: 6px; border-radius: 50%; border: 1px solid #d1d1d6; }
 
 /* --- PAPER PATTERNS (Thumbnails & Canvas) --- */
-/* Removemos o background-color fixo para permitir que o JS aplique a cor escolhida */
-.thumb-blank, .paper-blank { background-color: transparent; }
+/* Removemos o background-color das classes de padrão. 
+   O fundo agora será definido pelo elemento pai (Canvas ou Preview Box) via JS ou estilo base. */
 
-/* --- PAPER PATTERNS (Thumbnails & Canvas) --- */
-.thumb-blank, .paper-blank { background-color: transparent !important; }
+.paper-blank { } 
 
-.thumb-dotted, .paper-dotted { 
-  background-color: transparent !important;
-  background-image: radial-gradient(#d1d1d6 1px, transparent 1px); 
-  background-size: 15px 15px; 
-}
-
-.thumb-squared, .paper-squared { 
-  background-color: transparent !important;
-  background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); 
+.paper-dotted { 
+  background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px); 
   background-size: 20px 20px; 
 }
 
-.thumb-ruled, .paper-narrow-ruled { 
-  background-color: transparent !important;
-  background-image: repeating-linear-gradient(transparent, transparent 19px, #e5e5ea 19px, #e5e5ea 20px); 
+.paper-squared { 
+  background-image: linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px); 
+  background-size: 25px 25px; 
 }
 
-.thumb-ruled-wide, .paper-wide-ruled { 
-  background-color: transparent !important;
-  background-image: repeating-linear-gradient(transparent, transparent 29px, #e5e5ea 29px, #e5e5ea 30px); 
+.paper-narrow-ruled { 
+  background-image: repeating-linear-gradient(transparent, transparent 24px, rgba(0,0,0,0.07) 24px, rgba(0,0,0,0.07) 25px); 
 }
 
-.thumb-cornell, .paper-cornell {
-  background-color: transparent !important;
+.paper-wide-ruled { 
+  background-image: repeating-linear-gradient(transparent, transparent 34px, rgba(0,0,0,0.07) 34px, rgba(0,0,0,0.07) 35px); 
+}
+
+.paper-cornell {
   background-image: 
-    linear-gradient(90deg, transparent 79px, #abced7 1px, transparent 1px),
-    linear-gradient(#eee 1px, transparent 1px);
-  background-size: 100% 100%, 100% 25px;
+    linear-gradient(90deg, transparent 79px, rgba(171, 206, 215, 0.4) 1px, transparent 1px),
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 30px;
 }
 
-.thumb-legal, .paper-legal {
-  background-color: transparent !important;
+.paper-legal {
   background-image: 
-    linear-gradient(90deg, transparent 70px, #ffadad 1px, transparent 80px),
-    linear-gradient(#e5e5ea 1px, transparent 1px);
-  background-size: 100% 100%, 100% 25px;
+    linear-gradient(90deg, transparent 70px, rgba(255, 173, 173, 0.5) 1px, transparent 80px),
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 30px;
 }
 
-.thumb-column, .paper-single-column {
-  background-color: transparent !important;
+.paper-single-column {
   background-image: 
-    linear-gradient(90deg, #e5e5ea 1px, transparent 1px, transparent calc(100% - 1px), #e5e5ea 1px);
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px, transparent calc(100% - 1px), rgba(0,0,0,0.05) 1px);
   background-size: 80% 100%;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.thumb-three-columns, .paper-three-columns {
-  background-color: transparent !important;
+.paper-three-columns {
   background-image: 
-    linear-gradient(90deg, transparent 33%, #e5e5ea 33%, #e5e5ea calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, #e5e5ea 66%, #e5e5ea calc(66% + 1px), transparent calc(66% + 1px));
+    linear-gradient(90deg, transparent 33%, rgba(0,0,0,0.05) 33%, rgba(0,0,0,0.05) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgba(0,0,0,0.05) 66%, rgba(0,0,0,0.05) calc(66% + 1px), transparent calc(66% + 1px));
+}
+
+/* Garante que o preview no modal tenha um fundo branco por padrão para os modelos aparecerem */
+.nb-preview-box {
+    background-color: white;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Estilo para garantir que o papel no Canvas tenha o tamanho correto */
@@ -1590,7 +1588,7 @@ body.preview-open {
 }
 /* Garante que o canvas tenha fundo branco e apareça sobre o fundo cinza do editor */
 #note-canvas {
-    background-color: white;
+    background-color: white; /* Sem !important para o JS poder alterar */
     display: block;
     margin: 0 auto;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
