@@ -1649,9 +1649,10 @@ body.preview-open {
     transition: transform 0.2s;
 }
 .nb-color-option.active {
-    border-color: #007aff;
-    color: #007aff;
-    transform: scale(1.1);
+    border-color: #007aff !important;
+    color: #007aff !important;
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #007aff;
 }
 .nb-color-option[data-color="dark"].active {
     color: white;
