@@ -721,48 +721,49 @@ canvas {
 .nb-paper-dots span { width: 6px; height: 6px; border-radius: 50%; border: 1px solid #d1d1d6; }
 
 /* --- PAPER PATTERNS (Thumbnails & Canvas) --- */
-.thumb-blank, .paper-blank { background: white; }
+/* Removemos o background-color fixo para permitir que o JS aplique a cor escolhida */
+.thumb-blank, .paper-blank { background-color: transparent; }
 
 .thumb-dotted, .paper-dotted { 
-  background-color: white;
+  background-color: transparent;
   background-image: radial-gradient(#d1d1d6 1px, transparent 1px); 
   background-size: 15px 15px; 
 }
 
 .thumb-squared, .paper-squared { 
-  background-color: white;
+  background-color: transparent;
   background-image: linear-gradient(#f0f0f0 1px, transparent 1px), linear-gradient(90deg, #f0f0f0 1px, transparent 1px); 
   background-size: 20px 20px; 
 }
 
 .thumb-ruled, .paper-narrow-ruled { 
-  background-color: white;
+  background-color: transparent;
   background-image: repeating-linear-gradient(transparent, transparent 19px, #e5e5ea 19px, #e5e5ea 20px); 
 }
 
 .thumb-ruled-wide, .paper-wide-ruled { 
-  background-color: white;
+  background-color: transparent;
   background-image: repeating-linear-gradient(transparent, transparent 29px, #e5e5ea 29px, #e5e5ea 30px); 
 }
 
 .thumb-cornell, .paper-cornell {
-  background-color: white;
+  background-color: transparent;
   background-image: 
-    linear-gradient(90deg, transparent 79px, #abced7 1px, transparent 1px), /* Linha Vertical */
-    linear-gradient(#eee 1px, transparent 1px); /* Linhas Horizontais */
+    linear-gradient(90deg, transparent 79px, #abced7 1px, transparent 1px), 
+    linear-gradient(#eee 1px, transparent 1px); 
   background-size: 100% 100%, 100% 25px;
 }
 
 .thumb-legal, .paper-legal {
-  background-color: white;
+  background-color: transparent;
   background-image: 
-    linear-gradient(90deg, transparent 70px, #ffadad 1px, transparent 80px), /* Linha de Margem Rosa */
+    linear-gradient(90deg, transparent 70px, #ffadad 1px, transparent 80px), 
     linear-gradient(#e5e5ea 1px, transparent 1px);
   background-size: 100% 100%, 100% 25px;
 }
 
 .thumb-column, .paper-single-column {
-  background-color: white;
+  background-color: transparent;
   background-image: 
     linear-gradient(90deg, #e5e5ea 1px, transparent 1px, transparent calc(100% - 1px), #e5e5ea 1px);
   background-size: 80% 100%;
@@ -771,7 +772,7 @@ canvas {
 }
 
 .thumb-three-columns, .paper-three-columns {
-  background-color: white;
+  background-color: transparent;
   background-image: 
     linear-gradient(90deg, transparent 33%, #e5e5ea 33%, #e5e5ea calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, #e5e5ea 66%, #e5e5ea calc(66% + 1px), transparent calc(66% + 1px));
 }
@@ -1506,7 +1507,7 @@ body.preview-open {
 }
 
 #note-canvas {
-  background-color: white !important;
+    background-color: white; /* Removemos o !important para o JS poder alterar a cor */
   box-shadow: 0 10px 40px rgba(0,0,0,0.4);
   flex-shrink: 0;
   display: block;
