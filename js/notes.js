@@ -12,21 +12,12 @@ let lastX = 0;
 let lastY = 0;
 let currentDoc = null;
 let currentPageIndex = 0; 
-let currentView = 'all'; 
+export let currentView = 'all'; 
 let currentLayout = 'grid'; 
 export let currentSort = 'modified'; 
 export let isSelectionMode = false;
 export let selectedItems = new Set();
 
-export function setLibraryLayout(layout) {
-    currentLayout = layout;
-    renderLibrary();
-}
-
-export function setLibrarySort(sort) {
-    currentSort = sort;
-    renderLibrary();
-}
 // --- 1. LIBRARY MANAGEMENT ---
 
 export function renderLibrary() {
@@ -39,10 +30,7 @@ export function renderLibrary() {
     grid.className = 'notes-grid ' + (currentLayout === 'list' ? 'list-mode' : '');
     if (isSelectionMode) grid.classList.add('selection-active');
     
-    const stTitle = document.getElementById('st-selection-title');
-    if (stTitle) {
-        stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
-    }
+    updateSelectionUI();
 
     if (breadcrumb) {
         if (currentView === 'favorites') {
@@ -83,7 +71,7 @@ export function renderLibrary() {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
         if (currentSort === 'modified') return (b.updatedAt || 0) - (a.updatedAt || 0);
-        if (currentSort === 'type') return 0; // Pastas já aparecem primeiro na lógica abaixo
+        if (currentSort === 'type') return 0;
         return 0;
     };
 
@@ -97,12 +85,10 @@ export function renderLibrary() {
         const isNotebook = data.paperType ? true : false;
         const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
-        // Define o HTML do ícone/capa
         let iconHtml = '';
         if (type === 'folder') {
             iconHtml = `<div class="note-icon folder">📁</div>`;
         } else if (isNotebook) {
-            // Capa azul estilizada com o título do caderno
             iconHtml = `
                 <div class="note-icon notebook-thumbnail cover-solid-blue">
                     <div class="thumb-title">${data.name}</div>
@@ -111,7 +97,6 @@ export function renderLibrary() {
             iconHtml = `<div class="note-icon">📄</div>`;
         }
 
-        // Adiciona o checkbox se o modo de seleção estiver ativo
         if (isSelectionMode) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
@@ -126,7 +111,6 @@ export function renderLibrary() {
             item.appendChild(chk);
         }
 
-        // Monta o restante do item (Nome e Meta)
         item.innerHTML += `
             ${iconHtml}
             <div class="note-name">${data.name}</div>
@@ -175,20 +159,25 @@ export function createFolder() {
 
 export function createDocument(type = 'Document', paper = 'Blank', customName = null) {
     let name = customName;
-    
     if (!name) {
         name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
     }
-    
     if (!name) return;
 
-    // Captura as novas configurações do modal
     const size = document.getElementById('nb-size-select')?.value || 'goodnotes';
     const orientation = document.querySelector('.nb-orient-btn.active')?.dataset.orientation || 'portrait';
-    const paperColor = document.querySelector('.nb-color-option.active')?.dataset.color === 'custom' 
-        ? document.getElementById('nb-custom-color-input').value 
-        : (document.querySelector('.nb-color-option.active')?.dataset.color || 'white');
     
+    // Captura a cor do papel selecionada no modal
+    const activeColorOpt = document.querySelector('.nb-color-option.active');
+    let paperColor = 'white';
+    if (activeColorOpt) {
+        if (activeColorOpt.dataset.color === 'custom') {
+            paperColor = document.getElementById('nb-custom-color-input').value;
+        } else {
+            paperColor = activeColorOpt.dataset.color;
+        }
+    }
+
     const newDoc = {
         id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5),
         name: name,
@@ -204,21 +193,10 @@ export function createDocument(type = 'Document', paper = 'Blank', customName = 
         pages: [null, null], 
         updatedAt: Date.now()
     };
-    
     if (!library.documents) library.documents = [];
     library.documents.push(newDoc);
     saveLibrary();
     openDocument(newDoc);
-}
-function deleteDocument(id) {
-    library.documents = (library.documents || []).filter(d => d.id !== id);
-    saveLibrary();
-}
-
-function deleteFolder(id) {
-    library.documents = (library.documents || []).filter(d => d.parentId !== id);
-    library.folders = (library.folders || []).filter(f => f.id !== id);
-    saveLibrary();
 }
 
 async function saveLibrary() {
@@ -233,31 +211,24 @@ async function saveLibrary() {
 
 function openDocument(doc) {
     currentDoc = doc;
-    
-    // Ensure the notebook has a cover (index 0) and at least one writing page
     if (!currentDoc.pages || currentDoc.pages.length === 0) {
         currentDoc.pages = [null, null];
     } else if (currentDoc.pages.length === 1) {
         currentDoc.pages.push(null);
     }
-    
-    currentPageIndex = 0; // Starts on the cover
-
+    currentPageIndex = 0; 
     document.getElementById('notes-area').style.display = 'none';
     document.getElementById('notes-sidebar').style.display = 'none';
     document.getElementById('planner-content').style.display = 'none';
     document.getElementById('doc-editor').style.display = 'flex';
-
     const titleEl = document.getElementById('editor-doc-title');
     if (titleEl) titleEl.innerText = doc.name;
-
     initCanvas();
     renderPage();
 }
 
 function renderPage() {
     if (!ctx || !canvas || !currentDoc) return;
-    
     const ratio = window.devicePixelRatio || 1;
     
     // Ajusta o tamanho do Canvas baseado na orientação
@@ -265,7 +236,6 @@ function renderPage() {
     const baseW = isLandscape ? 1100 : 850;
     const baseH = isLandscape ? 850 : 1100;
     
-    // IMPORTANTE: Definir width/height reseta o contexto, por isso aplicamos o scale logo após
     canvas.width = baseW * ratio;
     canvas.height = baseH * ratio;
     canvas.style.width = baseW + 'px';
@@ -276,10 +246,9 @@ function renderPage() {
     
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
-        canvasEl.className = ""; // Limpa classes de papel anteriores
-        
+        canvasEl.className = ""; 
+
         if (currentPageIndex === 0) {
-            // BLUE COVER LOGIC
             canvasEl.style.backgroundColor = "#2a4f8a"; 
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
@@ -289,15 +258,12 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
-            // WRITING PAGE LOGIC
-            // Aplica a cor do papel salva no banco
             let bgColor = "#ffffff";
             if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
             else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
             
             canvasEl.style.backgroundColor = bgColor;
-            
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
@@ -307,14 +273,6 @@ function renderPage() {
                 img.onload = () => { ctx.drawImage(img, 0, 0, baseW, baseH); };
                 img.src = pageData;
             }
-        }
-    }
-
-        const pageData = currentDoc.pages[currentPageIndex];
-        if (pageData) {
-            const img = new Image();
-            img.onload = () => { ctx.drawImage(img, 0, 0, 850, 1100); };
-            img.src = pageData;
         }
     }
     
@@ -356,14 +314,8 @@ function initCanvas() {
     if (!canvas) return;
     ctx = canvas.getContext('2d');
     const ratio = window.devicePixelRatio || 1;
-    canvas.width = 850 * ratio;
-    canvas.height = 1100 * ratio;
-    canvas.style.width = '850px';
-    canvas.style.height = '1100px';
-    ctx.scale(ratio, ratio);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
@@ -371,25 +323,27 @@ function initCanvas() {
 }
 
 function startDrawing(e) {
-    // Disable drawing on cover (Index 0)
     if (currentPageIndex === 0) return;
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
+    const isLandscape = currentDoc.orientation === 'landscape';
+    const baseW = isLandscape ? 1100 : 850;
+    const baseH = isLandscape ? 850 : 1100;
     
-    // Correção de Offset: Normaliza a posição do clique com base no tamanho real vs visual do canvas
-    lastX = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
-    lastY = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
+    lastX = (e.clientX - rect.left) * (baseW / rect.width);
+    lastY = (e.clientY - rect.top) * (baseH / rect.height);
 }
 
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
+    const isLandscape = currentDoc.orientation === 'landscape';
+    const baseW = isLandscape ? 1100 : 850;
+    const baseH = isLandscape ? 850 : 1100;
 
-    // Correção de Offset: Normaliza a posição do rastro com base no tamanho real vs visual do canvas
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
+    const x = (e.clientX - rect.left) * (baseW / rect.width);
+    const y = (e.clientY - rect.top) * (baseH / rect.height);
+    
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
@@ -421,14 +375,8 @@ export function closeEditor() {
         currentDoc.updatedAt = Date.now();
         saveLibrary();
     }
-    
-    // Explicitly hide the immersive editor
     const docEditor = document.getElementById('doc-editor');
-    if (docEditor) {
-        docEditor.style.display = 'none';
-    }
-
-    // Restore standard view visibility
+    if (docEditor) docEditor.style.display = 'none';
     document.getElementById('notes-area').style.display = 'flex';
     document.getElementById('notes-sidebar').style.display = 'flex';
     document.getElementById('planner-content').style.display = 'none'; 
@@ -449,7 +397,6 @@ export function exportLibrary() {
 // --- 3. INITIALIZATION & GESTURE SYSTEM ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    
     document.addEventListener('keydown', (e) => {
         const editor = document.getElementById('doc-editor');
         if (editor && editor.style.display === 'flex') {
@@ -462,6 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newMenu = document.getElementById('new-options-menu');
     const viewOptionsBtn = document.getElementById('view-options-btn');
     const viewMenu = document.getElementById('view-options-menu');
+    const nbModal = document.getElementById('notebook-modal');
 
     const closeAllMenus = () => {
         if (newMenu) newMenu.style.display = 'none';
@@ -508,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    const nbModal = document.getElementById('notebook-modal');
     const nbCancel = document.getElementById('nb-cancel');
     const nbCreate = document.getElementById('nb-create');
 
@@ -520,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const nbSelectedPaperName = document.getElementById('nb-selected-paper-name');
             const name = nbNameInput.value.trim() || "Untitled Notebook";
             const paperType = nbSelectedPaperName.innerText;
-            // Passamos o nome extraído do modal como terceiro argumento para evitar o prompt
             createDocument('Notebook', paperType, name);
             if (nbModal) nbModal.style.display = 'none';
         };
@@ -530,7 +476,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnNewNotebook) {
         btnNewNotebook.onclick = () => { 
             closeAllMenus(); 
-            // Limpa o campo de nome sempre que o modal de criação for aberto
             const nbNameInput = document.getElementById('nb-name-input');
             if (nbNameInput) nbNameInput.value = "";
             if (nbModal) nbModal.style.display = 'flex'; 
@@ -539,7 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-new-text-doc').onclick = () => { closeAllMenus(); createDocument('Text Document'); };
     document.getElementById('btn-create-folder').onclick = () => { closeAllMenus(); createFolder(); };
-    
     const closeEditorBtn = document.getElementById('close-editor-btn');
     if (closeEditorBtn) closeEditorBtn.onclick = closeEditor;
 
@@ -549,12 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const navAll = document.getElementById('nav-all-docs');
     const navFav = document.getElementById('nav-favorites');
     const navShared = document.getElementById('nav-shared');
-
     if (navAll) navAll.onclick = () => { currentFolderId = null; currentView = 'all'; renderLibrary(); };
     if (navFav) navFav.onclick = () => { currentView = 'favorites'; renderLibrary(); };
     if (navShared) navShared.onclick = () => { currentView = 'shared'; renderLibrary(); };
 
-    // TOOLBAR LOGIC (Unique names to avoid double declaration)
     const btnExportNote = document.getElementById('btn-export-doc');
     if (btnExportNote) {
         btnExportNote.onclick = () => {
@@ -574,26 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    document.addEventListener('click', () => {
-        if (moreMenuNote) moreMenuNote.style.display = 'none';
-    });
-
-    let touchStartX = 0;
-    const editorContainer = document.querySelector('.canvas-container');
-    if (editorContainer) {
-        editorContainer.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-        editorContainer.addEventListener('touchend', (e) => {
-            if (e.changedTouches.length === 1) {
-                let diff = touchStartX - e.changedTouches[0].screenX;
-                if (Math.abs(diff) > 80) { 
-                    if (diff > 0) nextPage();
-                    else prevPage();
-                }
-            }
-        }, { passive: true });
-    }
+    document.addEventListener('click', () => { if (moreMenuNote) moreMenuNote.style.display = 'none'; });
 
     // Listeners para Orientação (Tabs)
     document.querySelectorAll('.nb-orient-btn').forEach(btn => {
@@ -615,15 +538,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('nb-custom-color-input').click();
                 return;
             }
-            // Remove 'active' de todos e adiciona no clicado
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
-            
             const preview = document.getElementById('nb-paper-preview-trigger');
-            if (preview) {
-                // Sincroniza a cor da folha amostra no modal
-                preview.style.backgroundColor = opt.style.backgroundColor;
-            }
+            if (preview) preview.style.backgroundColor = opt.style.backgroundColor;
         };
     });
 
@@ -638,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (preview) preview.style.backgroundColor = e.target.value;
         };
     }
-    
+
     renderLibrary();
 });
 
@@ -647,10 +565,8 @@ document.addEventListener('DOMContentLoaded', () => {
 export function toggleSelectionMode(active) {
     isSelectionMode = active;
     if (!active) selectedItems.clear();
-    
     const notesTopbar = document.getElementById('notes-topbar');
     const selectionToolbar = document.getElementById('selection-toolbar');
-    
     if (active) {
         if (notesTopbar) notesTopbar.style.display = 'none';
         if (selectionToolbar) selectionToolbar.style.display = 'flex';
@@ -658,7 +574,6 @@ export function toggleSelectionMode(active) {
         if (notesTopbar) notesTopbar.style.display = 'flex';
         if (selectionToolbar) selectionToolbar.style.display = 'none';
     }
-    
     renderLibrary();
 }
 
@@ -672,7 +587,6 @@ export function updateSelectionUI() {
 export function selectAllItems() {
     const activeFolder = currentFolderId || null;
     let items = [];
-    
     if (currentView === 'all') {
         const folders = (library.folders || []).filter(f => (f.parentId || null) === activeFolder);
         const docs = (library.documents || []).filter(d => (d.parentId || null) === activeFolder);
@@ -682,7 +596,6 @@ export function selectAllItems() {
     } else if (currentView === 'shared') {
         items = (library.documents || []).filter(d => d.shared);
     }
-
     items.forEach(item => selectedItems.add(item.id));
     updateSelectionUI();
     renderLibrary();
@@ -691,12 +604,10 @@ export function selectAllItems() {
 export async function deleteSelectedItems() {
     if (selectedItems.size === 0) return;
     if (!confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) return;
-
     selectedItems.forEach(id => {
         library.documents = (library.documents || []).filter(d => d.id !== id);
         library.folders = (library.folders || []).filter(f => f.id !== id);
     });
-
     selectedItems.clear();
     await saveLibrary();
     toggleSelectionMode(false);
@@ -704,7 +615,6 @@ export async function deleteSelectedItems() {
 
 export async function duplicateSelectedItems() {
     if (selectedItems.size === 0) return;
-    
     selectedItems.forEach(id => {
         const originalDoc = library.documents.find(d => d.id === id);
         if (originalDoc) {
@@ -715,7 +625,6 @@ export async function duplicateSelectedItems() {
             copy.updatedAt = Date.now();
             library.documents.push(copy);
         }
-        
         const originalFolder = library.folders.find(f => f.id === id);
         if (originalFolder) {
             const copy = JSON.parse(JSON.stringify(originalFolder));
@@ -726,20 +635,17 @@ export async function duplicateSelectedItems() {
             library.folders.push(copy);
         }
     });
-    
     await saveLibrary();
     toggleSelectionMode(false);
 }
 
 export function exportSelectedItems() {
     if (selectedItems.size === 0) return;
-    
     const exportData = {
         documents: library.documents.filter(d => selectedItems.has(d.id)),
         folders: library.folders.filter(f => selectedItems.has(f.id)),
         exportDate: new Date().toISOString()
     };
-    
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -752,30 +658,20 @@ export function exportSelectedItems() {
 
 export async function moveSelectedItems() {
     if (selectedItems.size === 0) return;
-    
     const targetName = prompt("Move to which folder? (Type 'Root' for main directory or the Folder Name):", "Root");
-    
     if (targetName === null) return;
-    
     let targetId = null;
     if (targetName.toLowerCase() !== 'root') {
         const found = library.folders.find(f => f.name.toLowerCase() === targetName.toLowerCase());
-        if (found) {
-            targetId = found.id;
-        } else {
-            alert("Folder not found.");
-            return;
-        }
+        if (found) { targetId = found.id; } 
+        else { alert("Folder not found."); return; }
     }
-    
     selectedItems.forEach(id => {
         const doc = library.documents.find(d => d.id === id);
         if (doc) doc.parentId = targetId;
-        
         const folder = library.folders.find(f => f.id === id);
         if (folder && folder.id !== targetId) folder.parentId = targetId;
     });
-    
     await saveLibrary();
     toggleSelectionMode(false);
 }
@@ -784,31 +680,30 @@ export async function importNoteData(file) {
     try {
         const text = await file.text();
         const imported = JSON.parse(text);
-
-        // Verifica se é uma exportação de múltiplos itens ou item único
         const docsToAdd = imported.documents || (imported.paperType ? [imported] : []);
         const foldersToAdd = imported.folders || (imported.name && !imported.paperType ? [imported] : []);
-
-        if (docsToAdd.length === 0 && foldersToAdd.length === 0) {
-            throw new Error("Invalid file format");
-        }
-
+        if (docsToAdd.length === 0 && foldersToAdd.length === 0) { throw new Error("Invalid file format"); }
         docsToAdd.forEach(doc => {
             doc.id = 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5);
-            doc.parentId = currentFolderId || null; // Importa para a pasta atual
+            doc.parentId = currentFolderId || null;
             library.documents.push(doc);
         });
-
         foldersToAdd.forEach(fld => {
             fld.id = 'fld_' + Date.now() + Math.random().toString(36).substr(2, 5);
             fld.parentId = currentFolderId || null;
             library.folders.push(fld);
         });
-
         await saveLibrary();
         alert("Import successful!");
-    } catch (err) {
-        console.error(err);
-        alert("Failed to import: " + err.message);
-    }
+    } catch (err) { alert("Failed to import: " + err.message); }
+}
+
+export function setLibraryLayout(layout) {
+    currentLayout = layout;
+    renderLibrary();
+}
+
+export function setLibrarySort(sort) {
+    currentSort = sort;
+    renderLibrary();
 }
