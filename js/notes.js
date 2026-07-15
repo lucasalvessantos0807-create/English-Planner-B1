@@ -85,12 +85,14 @@ export function renderLibrary() {
         item.className = 'note-item' + (isSelectionMode ? ' selectable' : '');
         
         const isNotebook = data.paperType ? true : false;
+        const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
+        // Define o HTML do ícone/capa
         let iconHtml = '';
         if (type === 'folder') {
             iconHtml = `<div class="note-icon folder">📁</div>`;
         } else if (isNotebook) {
-            // Renderiza a capa do notebook estilizada
+            // Capa azul estilizada com o título do caderno
             iconHtml = `
                 <div class="note-icon notebook-thumbnail cover-solid-blue">
                     <div class="thumb-title">${data.name}</div>
@@ -99,8 +101,7 @@ export function renderLibrary() {
             iconHtml = `<div class="note-icon">📄</div>`;
         }
 
-        const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
-        
+        // Adiciona o checkbox se o modo de seleção estiver ativo
         if (isSelectionMode) {
             const chk = document.createElement('input');
             chk.type = 'checkbox';
@@ -115,8 +116,9 @@ export function renderLibrary() {
             item.appendChild(chk);
         }
 
-        item.innerHTML += iconHtml +
-            <div class="note-icon ${type === 'folder' ? 'folder' : ''}">${icon}</div>
+        // Monta o restante do item (Nome e Meta)
+        item.innerHTML += `
+            ${iconHtml}
             <div class="note-name">${data.name}</div>
             <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
         `;
@@ -128,6 +130,7 @@ export function renderLibrary() {
                     chk.checked = !chk.checked;
                     if (chk.checked) selectedItems.add(data.id);
                     else selectedItems.delete(data.id);
+                    updateSelectionUI();
                 }
                 return;
             }
