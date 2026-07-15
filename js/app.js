@@ -693,6 +693,63 @@ if (manageAccountBtn) {
             };
         }
 
+        // --- VIEW & SORTING LISTENERS ---
+        const btnViewGrid = document.getElementById('btn-view-grid');
+        const btnViewList = document.getElementById('btn-view-list');
+        const sortSelect = document.getElementById('sort-docs-select');
+
+        const updateViewCheckmarks = (mode) => {
+            if (btnViewGrid) btnViewGrid.querySelector('.vlist-check').style.visibility = mode === 'grid' ? 'visible' : 'hidden';
+            if (btnViewList) btnViewList.querySelector('.vlist-check').style.visibility = mode === 'list' ? 'visible' : 'hidden';
+        };
+
+        if (btnViewGrid) {
+            btnViewGrid.onclick = () => {
+                import('./notes.js').then(mod => mod.setLibraryLayout('grid'));
+                updateViewCheckmarks('grid');
+            };
+        }
+
+        if (btnViewList) {
+            btnViewList.onclick = () => {
+                import('./notes.js').then(mod => mod.setLibraryLayout('list'));
+                updateViewCheckmarks('list');
+            };
+        }
+
+        if (sortSelect) {
+            sortSelect.onchange = (e) => {
+                import('./notes.js').then(mod => mod.setLibrarySort(e.target.value));
+            };
+        }
+
+        document.querySelectorAll('.sort-opt').forEach(opt => {
+            opt.onclick = () => {
+                const sortVal = opt.dataset.sort;
+                import('./notes.js').then(mod => mod.setLibrarySort(sortVal));
+                document.querySelectorAll('.sort-opt .vlist-check').forEach(c => c.style.visibility = 'hidden');
+                opt.querySelector('.vlist-check').style.visibility = 'visible';
+            };
+        });
+
+        // --- IMPORT NOTE LOGIC ---
+        const btnImportNote = document.getElementById('btn-import-doc');
+        if (btnImportNote) {
+            btnImportNote.onclick = () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    if (e.target.files.length > 0) {
+                        import('./notes.js').then(mod => mod.importNoteData(e.target.files[0]));
+                    }
+                };
+                input.click();
+                const newMenu = document.getElementById('new-options-menu');
+                if (newMenu) newMenu.style.display = 'none';
+            };
+        }
+
        // --- REAL IMPLEMENTATION OF SELECTION ACTIONS ---
         const btnExportSelected = document.getElementById('st-export');
         const btnMoveSelected = document.getElementById('st-move');
