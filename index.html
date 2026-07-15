@@ -507,21 +507,38 @@
             </label>
           </div>
           <div class="nb-divider-mini">PAPER MODELS</div>
+          
+          <div class="nb-setting-row">
+            <label>Orientation</label>
+            <div class="nb-orientation-toggle">
+              <button class="nb-orient-btn active" data-orientation="portrait">Portrait</button>
+              <button class="nb-orient-btn" data-orientation="landscape">Landscape</button>
+            </div>
+          </div>
+
           <div class="nb-setting-row">
             <label>Size</label>
             <select id="nb-size-select">
-              <option>Goodnotes Standard, Vertical</option>
-              <option>A4, Vertical</option>
-              <option>Letter, Vertical</option>
+              <option value="goodnotes">Goodnotes Standard</option>
+              <option value="a3">A3</option>
+              <option value="a4">A4</option>
+              <option value="a5">A5</option>
+              <option value="a6">A6</option>
+              <option value="a7">A7 (iPhone)</option>
+              <option value="letter">Letter</option>
+              <option value="tabloid">Tabloid</option>
             </select>
           </div>
+
           <div class="nb-setting-row">
-            <label>Color</label>
-            <select id="nb-color-select">
-              <option>White</option>
-              <option>Yellow</option>
-              <option>Dark</option>
-            </select>
+            <label>Paper Color</label>
+            <div class="nb-color-grid">
+              <div class="nb-color-option active" data-color="white" style="background:#ffffff;" title="White"><span>✓</span></div>
+              <div class="nb-color-option" data-color="yellow" style="background:#fdf5e0;" title="Yellow"><span>✓</span></div>
+              <div class="nb-color-option" data-color="dark" style="background:#1a1814;" title="Dark"><span>✓</span></div>
+              <div class="nb-color-option" data-color="custom" id="nb-custom-color-btn" style="background: linear-gradient(45deg, red, blue, green);" title="Custom Color"><span>+</span></div>
+              <input type="color" id="nb-custom-color-input" style="display:none">
+            </div>
           </div>
         </div>
       </div>
