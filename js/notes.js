@@ -265,6 +265,7 @@ function renderPage() {
     const baseW = isLandscape ? 1100 : 850;
     const baseH = isLandscape ? 850 : 1100;
     
+    // IMPORTANTE: Definir width/height reseta o contexto, por isso aplicamos o scale logo após
     canvas.width = baseW * ratio;
     canvas.height = baseH * ratio;
     canvas.style.width = baseW + 'px';
@@ -274,30 +275,40 @@ function renderPage() {
     ctx.clearRect(0, 0, baseW, baseH);
     
     const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) canvasEl.className = ""; 
+    if (canvasEl) {
+        canvasEl.className = ""; // Limpa classes de papel anteriores
+        
+        if (currentPageIndex === 0) {
+            // BLUE COVER LOGIC
+            canvasEl.style.backgroundColor = "#2a4f8a"; 
+            ctx.fillStyle = "#ffffff";
+            ctx.textAlign = "center";
+            ctx.font = "bold 45px Georgia";
+            ctx.fillText(currentDoc.name, baseW / 2, baseH / 2 - 50);
+            ctx.font = "italic 20px Georgia";
+            ctx.fillStyle = "rgba(255,255,255,0.7)";
+            ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
+        } else {
+            // WRITING PAGE LOGIC
+            // Aplica a cor do papel salva no banco
+            let bgColor = "#ffffff";
+            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
+            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
+            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
+            
+            canvasEl.style.backgroundColor = bgColor;
+            
+            const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
+            canvasEl.classList.add(paperClass);
 
-    if (currentPageIndex === 0) {
-        // BLUE COVER LOGIC
-        canvasEl.style.backgroundColor = "#2a4f8a"; 
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "center";
-        ctx.font = "bold 45px Georgia";
-        ctx.fillText(currentDoc.name, baseW / 2, baseH / 2 - 50);
-        ctx.font = "italic 20px Georgia";
-        ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
-    } else {
-        // WRITING PAGE LOGIC
-        // Aplica a cor do papel salva
-        let bgColor = "#ffffff";
-        if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
-        else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
-        else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
-        
-        canvasEl.style.backgroundColor = bgColor;
-        
-        const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
-        canvasEl.classList.add(paperClass);
+            const pageData = currentDoc.pages[currentPageIndex];
+            if (pageData) {
+                const img = new Image();
+                img.onload = () => { ctx.drawImage(img, 0, 0, baseW, baseH); };
+                img.src = pageData;
+            }
+        }
+    }
 
         const pageData = currentDoc.pages[currentPageIndex];
         if (pageData) {
@@ -364,15 +375,21 @@ function startDrawing(e) {
     if (currentPageIndex === 0) return;
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    lastX = (e.clientX - rect.left);
-    lastY = (e.clientY - rect.top);
+    const ratio = window.devicePixelRatio || 1;
+    
+    // Correção de Offset: Normaliza a posição do clique com base no tamanho real vs visual do canvas
+    lastX = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
+    lastY = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
 }
 
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left);
-    const y = (e.clientY - rect.top);
+    const ratio = window.devicePixelRatio || 1;
+
+    // Correção de Offset: Normaliza a posição do rastro com base no tamanho real vs visual do canvas
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width) / ratio;
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height) / ratio;
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(x, y);
@@ -591,17 +608,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Listeners para Cores
+    // Listeners para Cores (Correção de Seleção)
     document.querySelectorAll('.nb-color-option').forEach(opt => {
         opt.onclick = () => {
             if (opt.id === 'nb-custom-color-btn') {
                 document.getElementById('nb-custom-color-input').click();
                 return;
             }
-            document.querySelectorAll('.nb-color-option').forEach(o => b.classList.remove('active'));
+            // Remove 'active' de todos e adiciona no clicado
+            document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
+            
             const preview = document.getElementById('nb-paper-preview-trigger');
-            if (preview) preview.style.backgroundColor = opt.style.backgroundColor;
+            if (preview) {
+                // Sincroniza a cor da folha amostra no modal
+                preview.style.backgroundColor = opt.style.backgroundColor;
+            }
         };
     });
 
