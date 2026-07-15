@@ -693,11 +693,28 @@ if (manageAccountBtn) {
             };
         }
 
-        // --- EXPORT/MOVE/DUPLICATE (STUBS FOR FUTURE IMPLEMENTATION) ---
-        ['st-export', 'st-move', 'st-duplicate'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.onclick = () => alert("This feature will be available soon.");
-        });
+       // --- REAL IMPLEMENTATION OF SELECTION ACTIONS ---
+        const btnExportSelected = document.getElementById('st-export');
+        const btnMoveSelected = document.getElementById('st-move');
+        const btnDuplicateSelected = document.getElementById('st-duplicate');
+
+        if (btnExportSelected) {
+            btnExportSelected.onclick = () => {
+                import('./notes.js').then(mod => mod.exportSelectedItems());
+            };
+        }
+
+        if (btnMoveSelected) {
+            btnMoveSelected.onclick = () => {
+                import('./notes.js').then(mod => mod.moveSelectedItems());
+            };
+        }
+
+        if (btnDuplicateSelected) {
+            btnDuplicateSelected.onclick = () => {
+                import('./notes.js').then(mod => mod.duplicateSelectedItems());
+            };
+        }
 
         updateProgressBar();
         
