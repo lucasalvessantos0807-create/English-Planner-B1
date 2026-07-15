@@ -18,6 +18,23 @@ export let currentSort = 'modified';
 export let isSelectionMode = false;
 export let selectedItems = new Set();
 
+// Helper para detectar se uma cor é escura
+function isColorDark(color) {
+    if (!color) return false;
+    if (color === 'dark') return true;
+    if (color === 'white' || color === 'yellow') return false;
+    if (color.startsWith('#')) {
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        // Fórmula de Luminância
+        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        return luma < 100; // Considera escuro se luma for menor que 100
+    }
+    return false;
+}
+
 // --- 1. LIBRARY MANAGEMENT ---
 
 export function renderLibrary() {
@@ -167,7 +184,6 @@ export function createDocument(type = 'Document', paper = 'Blank', customName = 
     const size = document.getElementById('nb-size-select')?.value || 'goodnotes';
     const orientation = document.querySelector('.nb-orient-btn.active')?.dataset.orientation || 'portrait';
     
-    // Captura a cor do papel selecionada no modal
     const activeColorOpt = document.querySelector('.nb-color-option.active');
     let paperColor = 'white';
     if (activeColorOpt) {
@@ -246,6 +262,7 @@ function renderPage() {
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.className = ""; 
+        canvasEl.classList.remove('dark-paper'); // Limpa contraste anterior
 
         if (currentPageIndex === 0) {
             canvasEl.style.backgroundColor = "#2a4f8a"; 
@@ -257,13 +274,17 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
-            // Lógica de Cores: Define a cor do papel com base na escolha do usuário
             let bgColor = "#ffffff";
             if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
             else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
             
             canvasEl.style.setProperty('background-color', bgColor, 'important');
+            
+            // Aplica contraste automático se o fundo for escuro
+            if (isColorDark(bgColor)) {
+                canvasEl.classList.add('dark-paper');
+            }
             
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
@@ -430,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             if (newMenu) newMenu.style.display = 'none';
             const isOpen = viewMenu.style.display === 'flex';
-            viewMenu.style.display = isOpen ? 'none' : 'flex';
+            newMenu.style.display = isOpen ? 'none' : 'flex';
         };
     }
 
@@ -531,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Listeners para Cores (Correção de Seleção e Amostra)
+    // Listeners para Cores (Correção de Seleção e Amostra com detecção de contraste)
     document.querySelectorAll('.nb-color-option').forEach(opt => {
         opt.onclick = () => {
             if (opt.id === 'nb-custom-color-btn') {
@@ -540,11 +561,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
+            
             const preview = document.getElementById('nb-paper-preview-trigger');
             if (preview) {
-                // Pega a cor de fundo real do botão e aplica na amostra
                 const bgColor = window.getComputedStyle(opt).backgroundColor;
                 preview.style.backgroundColor = bgColor;
+                
+                // Aplica contraste dinâmico na amostra do modal
+                if (isColorDark(bgColor)) {
+                    preview.classList.add('dark-paper');
+                } else {
+                    preview.classList.remove('dark-paper');
+                }
             }
         };
     });
@@ -556,8 +584,16 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.style.background = e.target.value;
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             btn.classList.add('active');
+            
             const preview = document.getElementById('nb-paper-preview-trigger');
-            if (preview) preview.style.backgroundColor = e.target.value;
+            if (preview) {
+                preview.style.backgroundColor = e.target.value;
+                if (isColorDark(e.target.value)) {
+                    preview.classList.add('dark-paper');
+                } else {
+                    preview.classList.remove('dark-paper');
+                }
+            }
         };
     }
 
