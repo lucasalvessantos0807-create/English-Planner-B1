@@ -722,57 +722,67 @@ canvas {
 
 /* --- PAPER PATTERNS (Thumbnails & Canvas) --- */
 
-/* Base para as miniaturas: sempre fundo branco e PERMITIR REPETIÇÃO do padrão */
+:root {
+  --p-line: rgba(0,0,0,0.12); /* Cor padrão das linhas (escura para fundos claros) */
+}
+
+/* Quando o papel for detectado como escuro, as linhas ficam claras */
+.dark-paper {
+  --p-line: rgba(255,255,255,0.25) !important;
+}
+
+/* Base para as miniaturas do modal (Sempre fundo branco, então linhas sempre escuras) */
 .nb-paper-thumb {
     background-color: white !important;
     background-position: top left;
-    background-repeat: repeat !important; /* Corrigido: Agora o padrão preenche a miniatura toda */
+    background-repeat: repeat !important;
+    --p-line: rgba(0,0,0,0.15); /* Força linhas escuras nas miniaturas */
 }
 
-/* Padrão Dotted (Pontilhado) */
+/* Padrão Dotted */
 .thumb-dotted, .paper-dotted { 
-  background-image: radial-gradient(rgba(0,0,0,0.2) 1px, transparent 1px) !important; 
-  background-size: 15px 15px !important; 
-}
-
-/* Padrão Squared (Quadriculado) */
-.thumb-squared, .paper-squared { 
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), 
-    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px) !important; 
+  background-image: radial-gradient(var(--p-line) 1px, transparent 1px) !important; 
   background-size: 20px 20px !important; 
 }
 
-/* Padrão Ruled (Linhas Estreitas) */
-.thumb-ruled, .paper-narrow-ruled { 
-  background-image: repeating-linear-gradient(transparent, transparent 24px, rgba(0,0,0,0.15) 24px, rgba(0,0,0,0.15) 25px) !important; 
+/* Padrão Squared */
+.thumb-squared, .paper-squared { 
+  background-image: 
+    linear-gradient(var(--p-line) 1px, transparent 1px), 
+    linear-gradient(90deg, var(--p-line) 1px, transparent 1px) !important; 
+  background-size: 25px 25px !important; 
 }
 
-/* Padrão Wide Ruled (Linhas Largas) */
+/* Padrão Ruled (Narrow) */
+.thumb-ruled, .paper-narrow-ruled { 
+  background-image: repeating-linear-gradient(transparent, transparent 24px, var(--p-line) 24px, var(--p-line) 25px) !important; 
+}
+
+/* Padrão Wide Ruled */
 .paper-wide-ruled { 
-  background-image: repeating-linear-gradient(transparent, transparent 34px, rgba(0,0,0,0.15) 34px, rgba(0,0,0,0.15) 35px) !important; 
+  background-image: repeating-linear-gradient(transparent, transparent 34px, var(--p-line) 34px, var(--p-line) 35px) !important; 
 }
 
 /* Padrão Cornell */
 .thumb-cornell, .paper-cornell {
   background-image: 
-    linear-gradient(90deg, transparent 79px, rgba(171, 206, 215, 0.8) 1px, transparent 1px),
-    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px) !important;
+    linear-gradient(90deg, transparent 79px, rgba(171, 206, 215, 0.7) 1px, transparent 1px),
+    linear-gradient(var(--p-line) 1px, transparent 1px) !important;
   background-size: 100% 100%, 100% 30px !important;
 }
 
 /* Padrão Legal */
 .thumb-legal, .paper-legal {
   background-image: 
-    linear-gradient(90deg, transparent 70px, rgba(255, 173, 173, 0.8) 1px, transparent 80px),
-    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px) !important;
+    linear-gradient(90deg, transparent 70px, rgba(255, 173, 173, 0.7) 1px, transparent 80px),
+    linear-gradient(var(--p-line) 1px, transparent 1px) !important;
   background-size: 100% 100%, 100% 30px !important;
 }
 
 /* Padrão Column */
 .thumb-column, .paper-single-column {
   background-image: 
-    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px, transparent calc(100% - 1px), rgba(0,0,0,0.1) 1px) !important;
+    linear-gradient(90deg, var(--p-line) 1px, transparent 1px, transparent calc(100% - 1px), var(--p-line) 1px) !important;
   background-size: 80% 100% !important;
   background-position: center !important;
 }
@@ -780,9 +790,8 @@ canvas {
 /* Padrão 3 Columns */
 .thumb-three-columns, .paper-three-columns {
   background-image: 
-    linear-gradient(90deg, transparent 33%, rgba(0,0,0,0.1) 33%, rgba(0,0,0,0.1) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgba(0,0,0,0.1) 66%, rgba(0,0,0,0.1) calc(66% + 1px), transparent calc(66% + 1px)) !important;
+    linear-gradient(90deg, transparent 33%, var(--p-line) 33%, var(--p-line) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, var(--p-line) 66%, var(--p-line) calc(66% + 1px), transparent calc(66% + 1px)) !important;
 }
-
 /* Ajuste na folha amostra (Preview) para não ser translúcida */
 .nb-preview-box {
     background-color: white; /* Cor inicial */
