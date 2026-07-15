@@ -15,8 +15,8 @@ let currentPageIndex = 0;
 let currentView = 'all'; 
 let currentLayout = 'grid'; 
 let currentSort = 'modified'; 
-let isSelectionMode = false;
-let selectedItems = new Set();
+export let isSelectionMode = false;
+export let selectedItems = new Set();
 
 // --- 1. LIBRARY MANAGEMENT ---
 
@@ -85,7 +85,20 @@ export function renderLibrary() {
         item.className = 'note-item' + (isSelectionMode ? ' selectable' : '');
         
         const isNotebook = data.paperType ? true : false;
-        const icon = type === 'folder' ? '📁' : (isNotebook ? '📓' : '📄');
+        
+        let iconHtml = '';
+        if (type === 'folder') {
+            iconHtml = `<div class="note-icon folder">📁</div>`;
+        } else if (isNotebook) {
+            // Renderiza a capa do notebook estilizada
+            iconHtml = `
+                <div class="note-icon notebook-thumbnail cover-solid-blue">
+                    <div class="thumb-title">${data.name}</div>
+                </div>`;
+        } else {
+            iconHtml = `<div class="note-icon">📄</div>`;
+        }
+
         const meta = new Date(data.updatedAt || Date.now()).toLocaleDateString();
         
         if (isSelectionMode) {
@@ -97,11 +110,12 @@ export function renderLibrary() {
                 e.stopPropagation();
                 if (chk.checked) selectedItems.add(data.id);
                 else selectedItems.delete(data.id);
+                updateSelectionUI();
             };
             item.appendChild(chk);
         }
 
-        item.innerHTML += `
+        item.innerHTML += iconHtml +
             <div class="note-icon ${type === 'folder' ? 'folder' : ''}">${icon}</div>
             <div class="note-name">${data.name}</div>
             <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
@@ -516,3 +530,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderLibrary();
 });
+
+// --- SELECTION SYSTEM FUNCTIONS ---
+
+export function toggleSelectionMode(active) {
+    isSelectionMode = active;
+    if (!active) selectedItems.clear();
+    
+    const notesTopbar = document.getElementById('notes-topbar');
+    const selectionToolbar = document.getElementById('selection-toolbar');
+    
+    if (active) {
+        if (notesTopbar) notesTopbar.style.display = 'none';
+        if (selectionToolbar) selectionToolbar.style.display = 'flex';
+    } else {
+        if (notesTopbar) notesTopbar.style.display = 'flex';
+        if (selectionToolbar) selectionToolbar.style.display = 'none';
+    }
+    
+    renderLibrary();
+}
+
+export function updateSelectionUI() {
+    const stTitle = document.getElementById('st-selection-title');
+    if (stTitle) {
+        stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
+    }
+}
+
+export function selectAllItems() {
+    const activeFolder = currentFolderId || null;
+    let items = [];
+    
+    if (currentView === 'all') {
+        const folders = (library.folders || []).filter(f => (f.parentId || null) === activeFolder);
+        const docs = (library.documents || []).filter(d => (d.parentId || null) === activeFolder);
+        items = [...folders, ...docs];
+    } else if (currentView === 'favorites') {
+        items = (library.documents || []).filter(d => d.favorite);
+    } else if (currentView === 'shared') {
+        items = (library.documents || []).filter(d => d.shared);
+    }
+
+    items.forEach(item => selectedItems.add(item.id));
+    updateSelectionUI();
+    renderLibrary();
+}
+
+export async function deleteSelectedItems() {
+    if (selectedItems.size === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) return;
+
+    selectedItems.forEach(id => {
+        library.documents = (library.documents || []).filter(d => d.id !== id);
+        library.folders = (library.folders || []).filter(f => f.id !== id);
+    });
+
+    selectedItems.clear();
+    await saveLibrary();
+    toggleSelectionMode(false);
+}
