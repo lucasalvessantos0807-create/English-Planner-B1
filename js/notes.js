@@ -246,7 +246,7 @@ function renderPage() {
     
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
-        canvasEl.className = ""; 
+        canvasEl.className = ""; // Limpa classes anteriores
 
         if (currentPageIndex === 0) {
             canvasEl.style.backgroundColor = "#2a4f8a"; 
@@ -258,12 +258,15 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
+            // LÓGICA DE CORES: Aplica a cor do documento ao fundo do canvas
             let bgColor = "#ffffff";
             if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
             else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
             
             canvasEl.style.backgroundColor = bgColor;
+            
+            // Adiciona a classe de padrão (Cornell, Dotted, etc) que agora está transparente no CSS
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
@@ -313,7 +316,6 @@ function initCanvas() {
     canvas = document.getElementById('note-canvas');
     if (!canvas) return;
     ctx = canvas.getContext('2d');
-    const ratio = window.devicePixelRatio || 1;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     canvas.addEventListener('pointerdown', startDrawing);
@@ -330,6 +332,7 @@ function startDrawing(e) {
     const baseW = isLandscape ? 1100 : 850;
     const baseH = isLandscape ? 850 : 1100;
     
+    // CORREÇÃO DE OFFSET: Calcula a posição real baseada no tamanho nativo do canvas vs tamanho visual na tela
     lastX = (e.clientX - rect.left) * (baseW / rect.width);
     lastY = (e.clientY - rect.top) * (baseH / rect.height);
 }
@@ -341,6 +344,7 @@ function draw(e) {
     const baseW = isLandscape ? 1100 : 850;
     const baseH = isLandscape ? 850 : 1100;
 
+    // CORREÇÃO DE OFFSET NO RASTRO
     const x = (e.clientX - rect.left) * (baseW / rect.width);
     const y = (e.clientY - rect.top) * (baseH / rect.height);
     
@@ -541,7 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
             const preview = document.getElementById('nb-paper-preview-trigger');
-            if (preview) preview.style.backgroundColor = opt.style.backgroundColor;
+            if (preview) {
+                // Sincroniza a cor da folha amostra no modal
+                preview.style.backgroundColor = opt.style.backgroundColor;
+            }
         };
     });
 
