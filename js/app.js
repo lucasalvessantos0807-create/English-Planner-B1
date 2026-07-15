@@ -660,6 +660,45 @@ if (manageAccountBtn) {
         }
 
         renderLibrary();
+
+        // --- NOTES SELECTION EVENT LISTENERS ---
+        const btnSelectItems = document.getElementById('btn-select-items');
+        const btnSelectionDone = document.getElementById('btn-selection-done');
+        const btnSelectAll = document.getElementById('btn-select-all');
+        const btnTrashSelected = document.getElementById('st-trash');
+
+        if (btnSelectItems) {
+            btnSelectItems.onclick = () => {
+                import('./notes.js').then(mod => mod.toggleSelectionMode(true));
+                const viewMenu = document.getElementById('view-options-menu');
+                if (viewMenu) viewMenu.style.display = 'none';
+            };
+        }
+
+        if (btnSelectionDone) {
+            btnSelectionDone.onclick = () => {
+                import('./notes.js').then(mod => mod.toggleSelectionMode(false));
+            };
+        }
+
+        if (btnSelectAll) {
+            btnSelectAll.onclick = () => {
+                import('./notes.js').then(mod => mod.selectAllItems());
+            };
+        }
+
+        if (btnTrashSelected) {
+            btnTrashSelected.onclick = () => {
+                import('./notes.js').then(mod => mod.deleteSelectedItems());
+            };
+        }
+
+        // --- EXPORT/MOVE/DUPLICATE (STUBS FOR FUTURE IMPLEMENTATION) ---
+        ['st-export', 'st-move', 'st-duplicate'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.onclick = () => alert("This feature will be available soon.");
+        });
+
         updateProgressBar();
         
     } else {
