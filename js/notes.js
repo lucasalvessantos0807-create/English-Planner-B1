@@ -257,12 +257,14 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
+            // Lógica de Cores: Define a cor do papel com base na escolha do usuário
             let bgColor = "#ffffff";
             if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
             else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
             
-            canvasEl.style.backgroundColor = bgColor;
+            canvasEl.style.setProperty('background-color', bgColor, 'important');
+            
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
@@ -529,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Listeners para Cores
+    // Listeners para Cores (Correção de Seleção e Amostra)
     document.querySelectorAll('.nb-color-option').forEach(opt => {
         opt.onclick = () => {
             if (opt.id === 'nb-custom-color-btn') {
@@ -539,7 +541,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
             const preview = document.getElementById('nb-paper-preview-trigger');
-            if (preview) preview.style.backgroundColor = opt.style.backgroundColor;
+            if (preview) {
+                // Pega a cor de fundo real do botão e aplica na amostra
+                const bgColor = window.getComputedStyle(opt).backgroundColor;
+                preview.style.backgroundColor = bgColor;
+            }
         };
     });
 
