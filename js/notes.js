@@ -14,10 +14,19 @@ let currentDoc = null;
 let currentPageIndex = 0; 
 let currentView = 'all'; 
 let currentLayout = 'grid'; 
-let currentSort = 'modified'; 
+export let currentSort = 'modified'; 
 export let isSelectionMode = false;
 export let selectedItems = new Set();
 
+export function setLibraryLayout(layout) {
+    currentLayout = layout;
+    renderLibrary();
+}
+
+export function setLibrarySort(sort) {
+    currentSort = sort;
+    renderLibrary();
+}
 // --- 1. LIBRARY MANAGEMENT ---
 
 export function renderLibrary() {
@@ -74,6 +83,7 @@ export function renderLibrary() {
         if (currentSort === 'name') return a.name.localeCompare(b.name);
         if (currentSort === 'date') return (a.createdAt || 0) - (b.createdAt || 0);
         if (currentSort === 'modified') return (b.updatedAt || 0) - (a.updatedAt || 0);
+        if (currentSort === 'type') return 0; // Pastas já aparecem primeiro na lógica abaixo
         return 0;
     };
 
@@ -685,4 +695,37 @@ export async function moveSelectedItems() {
     
     await saveLibrary();
     toggleSelectionMode(false);
+}
+
+export async function importNoteData(file) {
+    try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+
+        // Verifica se é uma exportação de múltiplos itens ou item único
+        const docsToAdd = imported.documents || (imported.paperType ? [imported] : []);
+        const foldersToAdd = imported.folders || (imported.name && !imported.paperType ? [imported] : []);
+
+        if (docsToAdd.length === 0 && foldersToAdd.length === 0) {
+            throw new Error("Invalid file format");
+        }
+
+        docsToAdd.forEach(doc => {
+            doc.id = 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            doc.parentId = currentFolderId || null; // Importa para a pasta atual
+            library.documents.push(doc);
+        });
+
+        foldersToAdd.forEach(fld => {
+            fld.id = 'fld_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            fld.parentId = currentFolderId || null;
+            library.folders.push(fld);
+        });
+
+        await saveLibrary();
+        alert("Import successful!");
+    } catch (err) {
+        console.error(err);
+        alert("Failed to import: " + err.message);
+    }
 }
