@@ -33,12 +33,15 @@ function isColorDark(color) {
         b = parseInt(hex.substr(4, 2), 16);
     } else if (c.startsWith('rgb')) {
         const parts = c.match(/\d+/g);
+        if (!parts) return false;
         r = parseInt(parts[0]);
         g = parseInt(parts[1]);
         b = parseInt(parts[2]);
-    } else {
-        return false;
-    }
+    } else { return false; }
+    // Luminância padrão
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
+}
+
     // Cálculo de luminância padrão
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
 }
@@ -282,9 +285,14 @@ function renderPage() {
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
         }
 
-        // Preenche o fundo nos pixels reais do canvas (importante para o export)
+       // Preenche o fundo nos pixels reais do canvas (importante para o export)
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, baseW, baseH);
+
+        // CORREÇÃO: Aplica a classe de contraste no Canvas para as linhas aparecerem em fundos escuros
+        if (isColorDark(bgColor)) {
+            canvasEl.classList.add('dark-paper');
+        }
 
         if (currentPageIndex === 0) {
             ctx.fillStyle = "#ffffff";
@@ -496,9 +504,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (viewOptionsBtn && viewMenu) {
         viewOptionsBtn.onclick = (e) => {
             e.stopPropagation();
+            // Garante que o menu "+ New" feche ao abrir as Opções de Visualização
             if (newMenu) newMenu.style.display = 'none';
-            const isOpen = viewMenu.style.display === 'flex';
-            newMenu.style.display = isOpen ? 'none' : 'flex';
+            const isCurrentlyOpen = viewMenu.style.display === 'flex';
+            viewMenu.style.display = isCurrentlyOpen ? 'none' : 'flex';
         };
     }
 
