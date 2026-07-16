@@ -37,11 +37,10 @@ function isColorDark(color) {
         r = parseInt(parts[0]);
         g = parseInt(parts[1]);
         b = parseInt(parts[2]);
-    } else { return false; }
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
-}
-
-    // Cálculo de luminância padrão
+    } else { 
+        return false; 
+    }
+    // Luminância padrão para contraste
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
 }
 
@@ -274,7 +273,6 @@ function renderPage() {
         canvasEl.className = ""; 
         canvasEl.classList.remove('dark-paper'); 
 
-        // Define a cor de fundo nos pixels para exportação e no elemento para visualização
         let bgColor = "#ffffff";
         if (currentPageIndex === 0) {
             bgColor = "#2a4f8a"; 
@@ -284,11 +282,9 @@ function renderPage() {
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
         }
 
-       // Preenche o fundo nos pixels reais do canvas (importante para o export)
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, baseW, baseH);
 
-        // CORREÇÃO: Aplica contraste dinâmico no Canvas para as linhas aparecerem
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
         } else {
@@ -304,10 +300,6 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
-            if (isColorDark(bgColor)) {
-                canvasEl.classList.add('dark-paper');
-            }
-            
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
@@ -497,8 +489,8 @@ document.addEventListener('DOMContentLoaded', () => {
         mainNewBtn.onclick = (e) => {
             e.stopPropagation();
             if (viewMenu) viewMenu.style.display = 'none';
-            const isOpen = newMenu.style.display === 'flex';
-            newMenu.style.display = isOpen ? 'none' : 'flex';
+            const isNewMenuOpen = newMenu.style.display === 'flex';
+            newMenu.style.display = isNewMenuOpen ? 'none' : 'flex';
         };
     }
 
@@ -608,24 +600,21 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-   // Listeners para Cores (Correção de Seleção e Amostra com detecção de contraste)
+    // Listeners para Cores (Contraste dinâmico para amostra do modal)
     document.querySelectorAll('.nb-color-option').forEach(opt => {
         opt.onclick = () => {
             if (opt.id === 'nb-custom-color-btn') {
                 document.getElementById('nb-custom-color-input').click();
                 return;
             }
-            // Remove active de todos e adiciona no atual
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
             
             const preview = document.getElementById('nb-paper-preview-trigger');
             if (preview) {
-                // Captura a cor real do botão (Hex ou RGB)
                 const bgColor = opt.style.backgroundColor || window.getComputedStyle(opt).backgroundColor;
                 preview.style.backgroundColor = bgColor;
                 
-                // Aplica a classe de contraste na folha demonstrativa do modal
                 if (isColorDark(bgColor)) {
                     preview.classList.add('dark-paper');
                 } else {
