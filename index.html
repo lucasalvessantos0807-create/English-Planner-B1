@@ -60,6 +60,8 @@
 
 <!-- ── PLANNER PRINCIPAL ── -->
 <div id="planner" style="display: none;">
+    <!-- Mobile Sidebar Overlay -->
+  <div id="sidebar-mobile-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000;"></div>
   <!-- Navigation Sidebar for Notes -->
   <aside class="notes-sidebar" id="notes-sidebar">
     <div class="sidebar-header">
@@ -79,7 +81,10 @@
   <!-- Notes Dashboard / Library View -->
   <main id="notes-area">
     <div class="notes-topbar" id="notes-topbar">
-      <div id="notes-breadcrumb" class="notes-breadcrumb">Documents</div>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button id="mobile-lib-menu-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ink);">☰</button>
+        <div id="notes-breadcrumb" class="notes-breadcrumb">Documents</div>
+      </div>
      <div class="notes-actions">
         <select id="sort-docs-select" class="notes-select">
           <option value="name">Sort by Name</option>
@@ -197,11 +202,9 @@
  <!-- Planner Container (Original Content) -->
   <div id="planner-content" style="flex: 1; width: 100%;">
     <div class="topbar">
-      <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
-      <div style="display: flex; gap: 8px;">
-        <button id="saveChangesBtn" style="display:none; font-size:.78rem; color: var(--green); background: var(--green-light); border:1px solid var(--green); border-radius:99px; padding:4px 12px; cursor:pointer; font-weight:600;">✅ Save Changes</button>
-        <button id="cancelEditBtn" style="display:none; font-size:.78rem; color: #cc0000; background:none; border:1px solid #ffcccc; border-radius:99px; padding:4px 12px; cursor:pointer;">✕ Cancel</button>
-        <button id="undoBtn" style="display:none; font-size:.78rem; color:var(--muted); background:none; border:1px solid var(--border); border-radius:99px; padding:4px 12px; cursor:pointer;">↶ Undo</button>
+      <div style="display: flex; align-items: center;">
+        <button id="mobile-planner-menu-btn" style="display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--ink); margin-right: 10px;">☰</button>
+        <div class="topbar-name"><span>Studying as &nbsp;</span><span id="topbarName"></span></div>
       </div>
     </div>
 
@@ -263,7 +266,7 @@
     <!-- Header: Navigation & Tools -->
     <header class="editor-header">
       <div class="header-left">
-        <button id="close-editor-btn" class="header-btn">✕</button>
+        <button id="close-editor-btn" class="header-btn" style="min-width: 44px; min-height: 44px;">✕</button>
         <span id="editor-doc-title" class="editor-title-text">Notebook</span>
       </div>
       
