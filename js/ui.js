@@ -57,7 +57,7 @@ export function updateProgressBar(prefix = "", customConfig = null, customState 
 /**
  * Renderiza os botões de meses e painéis de semanas.
  */
-export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "") {
+export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "", lang = 'en') {
     const monthNav = document.getElementById(prefix + 'monthNav');
     const monthPanels = document.getElementById(prefix + 'monthPanels');
     const addBtn = document.getElementById(prefix + 'addMonthBtn');
@@ -77,7 +77,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         // --- Criar Botão do Mês ---
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
-        mBtn.textContent = `Month ${m}`;
+        const monthLabel = (lang === 'pt' ? 'Mês' : lang === 'es' ? 'Mes' : lang === 'fr' ? 'Mois' : 'Month');
+        mBtn.textContent = `${monthLabel} ${m}`;
         
         if (isPreview || !addBtn) {
             monthNav.appendChild(mBtn);
@@ -91,9 +92,10 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.id = `${prefix}mp${m}`;
         
         // Cabeçalho do Mês
+        const mLabelHeader = (lang === 'pt' ? 'Mês' : lang === 'es' ? 'Mes' : lang === 'fr' ? 'Mois' : 'Month');
         mPanel.innerHTML = `
             <div class="mheader">
-                <h2>Month ${m}</h2>
+                <h2>${mLabelHeader} ${m}</h2>
                 <p class="${isPreview ? '' : 'editable-global'}" id="${prefix}m-desc-${m}" contenteditable="${isEditMode && !isPreview}">English Study Plan — Continuous Progress</p>
                 <div style="display: ${isPreview ? 'none' : 'flex'}; gap: 10px;">
                     <button class="edit-m-btn" data-month="${m}" style="margin-top:10px; font-size:10px; opacity:0.5; background:none; border:1px solid var(--border); border-radius:4px; cursor:pointer;">⚙️ Restructure Month</button>
@@ -115,7 +117,13 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
-            wBtn.textContent = plannerConfig[wkKey].label;
+            
+            let label = plannerConfig[wkKey].label;
+            const weekLabel = (lang === 'pt' ? 'Semana' : lang === 'es' ? 'Semana' : lang === 'fr' ? 'Semaine' : 'Week');
+            if (label.toLowerCase().startsWith('week')) {
+                label = label.replace(/week/i, weekLabel);
+            }
+            wBtn.textContent = label;
             
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
