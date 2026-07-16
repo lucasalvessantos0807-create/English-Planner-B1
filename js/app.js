@@ -239,16 +239,25 @@ if (manageAccountBtn) {
         const mobPlanBtn = document.getElementById('mobile-planner-menu-btn');
         const mobOverlay = document.getElementById('sidebar-mobile-overlay');
 
-        if (mobLibBtn) mobLibBtn.onclick = (e) => { e.stopPropagation(); toggleMobileMenu(); };
-        if (mobPlanBtn) mobPlanBtn.onclick = (e) => { e.stopPropagation(); toggleMobileMenu(); };
-        if (mobOverlay) mobOverlay.onclick = closeMobileMenu;
+        if (mobLibBtn) {
+            mobLibBtn.onclick = (e) => { e.stopPropagation(); toggleMobileMenu(); };
+        }
+        if (mobPlanBtn) {
+            mobPlanBtn.onclick = (e) => { e.stopPropagation(); toggleMobileMenu(); };
+        }
+        if (mobOverlay) {
+            mobOverlay.onclick = (e) => { e.stopPropagation(); closeMobileMenu(); };
+        }
 
         // Close menu when clicking any link inside sidebar on mobile
-        document.querySelectorAll('.snav-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (window.innerWidth <= 768) closeMobileMenu();
+        const sidebarNavBtns = document.querySelectorAll('.snav-btn');
+        if (sidebarNavBtns.length > 0) {
+            sidebarNavBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) closeMobileMenu();
+                });
             });
-        });
+        }
         
         // --- END OF NOTES SYSTEM UI LOGIC ---
         
