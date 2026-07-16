@@ -4,6 +4,66 @@ import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, render
 import { renderStructure, updateProgressBar } from './ui.js';
 import { renderLibrary } from './notes.js';
 
+// --- LANGUAGE DICTIONARY SYSTEM ---
+const translations = {
+    en: {
+        confirmMsg: "Change system language to English? Custom texts will be preserved.",
+        month: "Month", week: "Week", activity: "Activity", dailyAct: "Daily Activity",
+        studyTopic: "Study Topic", editDetails: "Edit details", phase: "Phase", 
+        editFocus: "Edit focus...", editTask: "Edit task description...",
+        personalPlanner: "Personal Study Planner", roadmap: "Your Roadmap",
+        roadmapSub: "Custom Duration · Daily Goals · Your Focus", yourGoal: "🎯 Your Goal",
+        goalHint: "Enter your main goal here — describe what you want to achieve.",
+        overview: "3-Month Overview", dailyTemplate: "Daily Template (1.5–2 hours)",
+        progress: "Your Progress", daysCompleted: "Days completed", learningProg: "Learning Progress",
+        monthlyPlans: "Monthly Plans"
+    },
+    pt: {
+        confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
+        month: "Mês", week: "Semana", activity: "Atividade", dailyAct: "Atividade Diária",
+        studyTopic: "Tópico de Estudo", editDetails: "Editar detalhes", phase: "Fase", 
+        editFocus: "Editar foco...", editTask: "Editar descrição da tarefa...",
+        personalPlanner: "Planejador de Estudos Pessoal", roadmap: "Seu Roteiro",
+        roadmapSub: "Duração Personalizada · Metas Diárias · Seu Foco", yourGoal: "🎯 Sua Meta",
+        goalHint: "Insira sua meta principal aqui — descreva o que deseja alcançar.",
+        overview: "Visão Geral de 3 Meses", dailyTemplate: "Modelo Diário (1.5–2 horas)",
+        progress: "Seu Progresso", daysCompleted: "Dias concluídos", learningProg: "Progresso de Aprendizado",
+        monthlyPlans: "Planos Mensais"
+    },
+    es: {
+        confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
+        month: "Mes", week: "Semana", activity: "Actividad", dailyAct: "Actividad Diaria",
+        studyTopic: "Tema de Estudio", editDetails: "Editar detalles", phase: "Fase", 
+        editFocus: "Editar enfoque...", editTask: "Editar descripción de tarea...",
+        personalPlanner: "Planificador de Estudios Personal", roadmap: "Tu Hoja de Ruta",
+        roadmapSub: "Duración Personalizada · Metas Diarias · Tu Enfoque", yourGoal: "🎯 Tu Meta",
+        goalHint: "Ingresa tu meta principal aquí — describe lo que quieres lograr.",
+        overview: "Resumen de 3 Meses", dailyTemplate: "Plantilla Diaria (1.5–2 horas)",
+        progress: "Tu Progresso", daysCompleted: "Días completados", learningProg: "Progreso de Aprendizaje",
+        monthlyPlans: "Planes Mensuales"
+    },
+    fr: {
+        confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
+        month: "Mois", week: "Semaine", activity: "Activité", dailyAct: "Activité Quotidienne",
+        studyTopic: "Sujet d'Étude", editDetails: "Modifier detalhes", phase: "Phase", 
+        editFocus: "Modifier le focus...", editTask: "Modifier la description...",
+        personalPlanner: "Planificateur d'Études Personnel", roadmap: "Votre Feuille de Route",
+        roadmapSub: "Durée Personnalisée · Objectifs Quotidiens · Votre Focus", yourGoal: "🎯 Votre Objectif",
+        goalHint: "Entrez votre objectif principal aqui — décrivez ce que vous voulez accomplir.",
+        overview: "Aperçu de 3 Mois", dailyTemplate: "Modèle Quotidien (1.5–2 heures)",
+        progress: "Votre Progrès", daysCompleted: "Jours complétés", learningProg: "Progrès d'Apprentissage",
+        monthlyPlans: "Plans Mensuels"
+    }
+};
+
+function isNativeText(text) {
+    if (!text) return true;
+    const flat = [];
+    Object.values(translations).forEach(l => Object.values(l).forEach(v => flat.push(v.toLowerCase())));
+    const extraDefaults = ["personal study planner", "your roadmap", "overview", "daily template", "days completed", "learning progress", "monthly plans", "week", "month", "activity", "study topic", "edit details", "phase", "edit focus..."];
+    return flat.includes(text.toLowerCase()) || extraDefaults.includes(text.toLowerCase());
+}
+
 // --- MOBILE MENU SYSTEM ---
 function toggleMobileMenu() {
     const sidebar = document.getElementById('notes-sidebar');
@@ -26,19 +86,41 @@ function closeMobileMenu() {
 }
 
 // Função para atualizar textos globais (Metas, Títulos, Overview) no DOM
-function refreshGlobalDOM(content, targetPrefix = "") {
+function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const data = content || {};
-    
-    // Conteúdos padrão genéricos
-    const defaults = {
-        "global-cover-eye": "Personal Study Planner",
-        "global-cover-title": "Your Roadmap",
-        "global-cover-sub": "Custom Duration · Daily Goals · Your Focus",
-        "global-goal-strong": "🎯 Your Goal",
-        "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
-        "global-sec-overview": "Overview",
-        "global-sec-template": "Daily Template",
+    const t = translations[langCode] || translations.en;
+    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
+    if (!parent) return;
+
+    const mapping = {
+        "global-cover-eye": t.personalPlanner,
+        "global-cover-title": t.roadmap,
+        "global-cover-sub": t.roadmapSub,
+        "global-goal-strong": t.yourGoal,
+        "global-goal-text": t.goalHint,
+        "global-sec-overview": t.overview,
+        "global-sec-template": t.dailyTemplate,
+        "global-prog-lbl": t.daysCompleted,
+        "global-mstat": t.learningProg,
+        "global-sec-monthly": t.monthlyPlans
     };
+
+    parent.querySelectorAll(".editable-global").forEach(el => {
+        const cleanId = el.id.replace(targetPrefix, '');
+        const val = data[cleanId];
+        if (mapping[cleanId] && isNativeText(val)) {
+            el.innerHTML = mapping[cleanId];
+        } else if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
+            el.innerHTML = val;
+        } else if (mapping[cleanId]) {
+            el.innerHTML = mapping[cleanId];
+        }
+    });
+
+    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
+    renderDynamicOverviewBlocks(uid, targetPrefix, data);
+    renderDailyTemplate(uid, targetPrefix, data);
+}
 
     // No modo Sandbox ou Normal, procuramos os elementos alvo
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
@@ -172,8 +254,9 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // --- RENDERIZAÇÃO INICIAL ---
-        renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
-        refreshGlobalDOM(userData.pageContent);
+       const currentLang = userData.state.language || 'en';
+        renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser), false, "", currentLang);
+        refreshGlobalDOM(userData.pageContent, "", currentLang);
         
         // --- FLOATING ACTION BUTTON LOGIC ---
         const fabWrapper = document.getElementById('fabWrapper');
