@@ -1807,3 +1807,19 @@ body.preview-open {
     display: block !important;
   }
 }
+
+/* Aspect Ratio Safety for Canvas */
+#note-canvas {
+  aspect-ratio: 8.5 / 11; /* Portrait */
+}
+
+#note-canvas.landscape-mode {
+  aspect-ratio: 11 / 8.5; /* Landscape */
+}
+
+@media (max-width: 768px) {
+    .canvas-container {
+        padding: 20px 10px;
+        align-items: flex-start; /* Better for vertical scrolling if needed */
+    }
+}
