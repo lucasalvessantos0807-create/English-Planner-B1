@@ -269,29 +269,20 @@ function renderPage() {
     ctx.clearRect(0, 0, baseW, baseH);
     
     const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) {
+   if (canvasEl) {
         canvasEl.className = ""; 
-        canvasEl.classList.remove('dark-paper'); 
-
-        let bgColor = "#ffffff";
-        if (currentPageIndex === 0) {
-            bgColor = "#2a4f8a"; 
-        } else {
-            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
-            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
-            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
-        }
-
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, baseW, baseH);
+        // Apply the background color to the element style so CSS background-patterns are visible
+        canvasEl.style.backgroundColor = bgColor;
 
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
-        } else {
-            canvasEl.classList.remove('dark-paper');
         }
 
         if (currentPageIndex === 0) {
+            // COVER PAGE: We fill the canvas bitmap to look like a solid book cover
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, baseW, baseH);
+
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.font = "bold 45px Georgia";
@@ -300,6 +291,8 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
+            // INTERNAL PAGES: We do not fill the bitmap with solid color.
+            // This keeps the canvas transparent so the CSS background-image (patterns) shows through.
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
