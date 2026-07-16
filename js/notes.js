@@ -264,8 +264,9 @@ function renderPage() {
     
     canvas.width = baseW * ratio;
     canvas.height = baseH * ratio;
-    canvas.style.width = baseW + 'px';
-    canvas.style.height = baseH + 'px';
+    // We remove fixed pixel styles to let CSS media queries handle responsiveness
+    canvas.style.width = ''; 
+    canvas.style.height = '';
 
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, baseW, baseH);
@@ -292,6 +293,9 @@ function renderPage() {
         } else {
             canvasEl.classList.remove('dark-paper');
         }
+
+        if (isLandscape) canvasEl.classList.add('landscape-mode');
+        else canvasEl.classList.remove('landscape-mode');
 
         if (currentPageIndex === 0) {
             // For the cover, we fill the canvas bitmap so it's solid
