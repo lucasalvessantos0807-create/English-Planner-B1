@@ -23,7 +23,7 @@ function isColorDark(color) {
     if (!color) return false;
     const c = color.toLowerCase();
     if (c === 'dark') return true;
-    if (c === 'white' || c === 'yellow' || c === 'transparent') return false;
+    if (c === 'white' || c === 'yellow' || c === 'transparent' || c === 'rgba(0, 0, 0, 0)') return false;
     
     let r, g, b;
     if (c.startsWith('#')) {
@@ -37,8 +37,10 @@ function isColorDark(color) {
         r = parseInt(parts[0]);
         g = parseInt(parts[1]);
         b = parseInt(parts[2]);
-    } else { return false; }
-    // Luminância padrão
+    } else { 
+        return false; 
+    }
+    // Luminância padrão para contraste
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
 }
 
@@ -504,8 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (viewOptionsBtn && viewMenu) {
         viewOptionsBtn.onclick = (e) => {
             e.stopPropagation();
-            // Garante que o menu "+ New" feche ao abrir as Opções de Visualização
+            // Fecha o menu de "+ New" se estiver aberto
             if (newMenu) newMenu.style.display = 'none';
+            // Alterna a visibilidade do menu de opções de visualização (9 quadrados)
             const isCurrentlyOpen = viewMenu.style.display === 'flex';
             viewMenu.style.display = isCurrentlyOpen ? 'none' : 'flex';
         };
@@ -608,21 +611,24 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
-    // Listeners para Cores (Correção de Seleção e Amostra com detecção de contraste)
+   // Listeners para Cores (Correção de Seleção e Amostra com detecção de contraste)
     document.querySelectorAll('.nb-color-option').forEach(opt => {
         opt.onclick = () => {
             if (opt.id === 'nb-custom-color-btn') {
                 document.getElementById('nb-custom-color-input').click();
                 return;
             }
+            // Remove active de todos e adiciona no atual
             document.querySelectorAll('.nb-color-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
             
             const preview = document.getElementById('nb-paper-preview-trigger');
             if (preview) {
-                const bgColor = window.getComputedStyle(opt).backgroundColor;
+                // Captura a cor real do botão (Hex ou RGB)
+                const bgColor = opt.style.backgroundColor || window.getComputedStyle(opt).backgroundColor;
                 preview.style.backgroundColor = bgColor;
                 
+                // Aplica a classe de contraste na folha demonstrativa do modal
                 if (isColorDark(bgColor)) {
                     preview.classList.add('dark-paper');
                 } else {
