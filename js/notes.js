@@ -30,7 +30,7 @@ function isColorDark(color) {
         const b = parseInt(hex.substr(4, 2), 16);
         // Fórmula de Luminância
         const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        return luma < 100; // Considera escuro se luma for menor que 100
+        return luma < 100; 
     }
     return false;
 }
@@ -262,10 +262,23 @@ function renderPage() {
     const canvasEl = document.getElementById('note-canvas');
     if (canvasEl) {
         canvasEl.className = ""; 
-        canvasEl.classList.remove('dark-paper'); // Limpa contraste anterior
+        canvasEl.classList.remove('dark-paper'); 
+
+        // Define a cor de fundo nos pixels para exportação e no elemento para visualização
+        let bgColor = "#ffffff";
+        if (currentPageIndex === 0) {
+            bgColor = "#2a4f8a"; 
+        } else {
+            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
+            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
+            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
+        }
+
+        // Preenche o fundo nos pixels reais do canvas (importante para o export)
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, baseW, baseH);
 
         if (currentPageIndex === 0) {
-            canvasEl.style.backgroundColor = "#2a4f8a"; 
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.font = "bold 45px Georgia";
@@ -274,14 +287,6 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
-            let bgColor = "#ffffff";
-            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
-            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
-            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
-            
-            canvasEl.style.setProperty('background-color', bgColor, 'important');
-            
-            // Aplica contraste automático se o fundo for escuro
             if (isColorDark(bgColor)) {
                 canvasEl.classList.add('dark-paper');
             }
@@ -413,6 +418,40 @@ export function exportLibrary() {
     a.download = `library_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+}
+
+export function deleteCurrentPage() {
+    if (!currentDoc || currentDoc.pages.length <= 2) {
+        alert("A notebook must have at least a cover and one page.");
+        return;
+    }
+    if (currentPageIndex === 0) {
+        alert("You cannot delete the cover page.");
+        return;
+    }
+    if (confirm("Permanently delete this page?")) {
+        currentDoc.pages.splice(currentPageIndex, 1);
+        if (currentPageIndex >= currentDoc.pages.length) {
+            currentPageIndex = currentDoc.pages.length - 1;
+        }
+        renderPage();
+        saveLibrary();
+    }
+}
+
+export function toggleReadOnly() {
+    const btn = document.getElementById('btn-toggle-read-only');
+    const isLocked = btn.innerText.includes('Unlock');
+    
+    if (!isLocked) {
+        btn.innerHTML = '🔓 Unlock Editing';
+        canvas.removeEventListener('pointerdown', startDrawing);
+        canvas.style.cursor = 'default';
+    } else {
+        btn.innerHTML = '🔒 Read Only Mode';
+        canvas.addEventListener('pointerdown', startDrawing);
+        canvas.style.cursor = 'crosshair';
+    }
 }
 
 // --- 3. INITIALIZATION & GESTURE SYSTEM ---
@@ -567,7 +606,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const bgColor = window.getComputedStyle(opt).backgroundColor;
                 preview.style.backgroundColor = bgColor;
                 
-                // Aplica contraste dinâmico na amostra do modal
                 if (isColorDark(bgColor)) {
                     preview.classList.add('dark-paper');
                 } else {
