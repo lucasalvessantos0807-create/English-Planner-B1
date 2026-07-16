@@ -269,33 +269,16 @@ function renderPage() {
     ctx.clearRect(0, 0, baseW, baseH);
     
     const canvasEl = document.getElementById('note-canvas');
-    if (canvasEl) {
-        canvasEl.className = ""; 
-        canvasEl.classList.remove('dark-paper'); 
-
-        let bgColor = "#ffffff";
-        if (currentPageIndex === 0) {
-            bgColor = "#2a4f8a"; 
-        } else {
-            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
-            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
-            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
-        }
-
+   if (canvasEl) {
+        // Define a cor de fundo no elemento para que os padrões de linha (background-image) apareçam
         canvasEl.style.backgroundColor = bgColor;
+        canvasEl.className = ""; // Limpa classes antigas
 
         if (currentPageIndex === 0) {
+            // CAPA: Preenchimento sólido no bitmap
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, baseW, baseH);
-        }
 
-        if (isColorDark(bgColor)) {
-            canvasEl.classList.add('dark-paper');
-        } else {
-            canvasEl.classList.remove('dark-paper');
-        }
-
-        if (currentPageIndex === 0) {
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.font = "bold 45px Georgia";
@@ -304,9 +287,16 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
+            // PÁGINAS INTERNAS: Aplica o modelo de papel via classe CSS
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
+            // Aplica modo escuro se necessário (muda cor das linhas para branco no CSS)
+            if (isColorDark(bgColor)) {
+                canvasEl.classList.add('dark-paper');
+            }
+
+            // Renderiza os desenhos salvos (tinta)
             const pageData = currentDoc.pages[currentPageIndex];
             if (pageData) {
                 const img = new Image();
