@@ -669,25 +669,33 @@ export function toggleSelectionMode(active) {
 }
 
 export function updateSelectionUI() {
-    const stTitle = document.getElementById('st-selection-title');
-    if (stTitle) {
-        stTitle.innerText = selectedItems.size > 0 ? `${selectedItems.size} Selected` : 'Select Items';
-    }
-}
 
 export function selectAllItems() {
     const activeFolder = currentFolderId || null;
-    let items = [];
+    let visibleItems = [];
+
+    // 1. Identify which items are currently visible
     if (currentView === 'all') {
         const folders = (library.folders || []).filter(f => (f.parentId || null) === activeFolder);
         const docs = (library.documents || []).filter(d => (d.parentId || null) === activeFolder);
-        items = [...folders, ...docs];
+        visibleItems = [...folders, ...docs];
     } else if (currentView === 'favorites') {
-        items = (library.documents || []).filter(d => d.favorite);
+        visibleItems = (library.documents || []).filter(d => d.favorite);
     } else if (currentView === 'shared') {
-        items = (library.documents || []).filter(d => d.shared);
+        visibleItems = (library.documents || []).filter(d => d.shared);
     }
-    items.forEach(item => selectedItems.add(item.id));
+
+    // 2. Check if all visible items are already in the selectedItems set
+    const allSelected = visibleItems.length > 0 && visibleItems.every(item => selectedItems.has(item.id));
+
+    if (allSelected) {
+        // If all are selected, the user wants to deselect them
+        visibleItems.forEach(item => selectedItems.delete(item.id));
+    } else {
+        // If some or none are selected, select them all
+        visibleItems.forEach(item => selectedItems.add(item.id));
+    }
+
     updateSelectionUI();
     renderLibrary();
 }
