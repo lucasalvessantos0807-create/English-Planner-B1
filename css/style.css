@@ -727,8 +727,8 @@ canvas {
 }
 
 /* Classe de contraste: Quando o papel é escuro, mudamos a variável da linha para branco */
-.dark-paper {
-  --p-line: rgba(255,255,255,0.25) !important;
+.dark-paper, canvas.dark-paper {
+  --p-line: rgba(255,255,255,0.3) !important;
 }
 
 /* Base das miniaturas: Sempre brancas com linhas escuras */
