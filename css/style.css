@@ -1751,16 +1751,21 @@ body.preview-open {
 @media (max-width: 1024px) {
   .canvas-container {
     padding: 10px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    display: block;
+    overflow: hidden; /* Prevent accidental scroll while drawing */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
   }
   
   canvas#note-canvas {
-    max-width: 100%;
+    max-width: 100vw;
+    max-height: calc(100vh - 120px); /* Adjust for header and footer */
     height: auto !important;
-    min-width: 850px; /* Maintains internal resolution for quality */
-    transform-origin: top left;
+    width: auto !important;
+    object-fit: contain;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   }
 }
 
