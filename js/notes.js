@@ -37,10 +37,7 @@ function isColorDark(color) {
         r = parseInt(parts[0]);
         g = parseInt(parts[1]);
         b = parseInt(parts[2]);
-    } else { 
-        return false; 
-    }
-    // Luminância padrão para contraste
+    } else { return false; }
     return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
 }
 
@@ -291,9 +288,11 @@ function renderPage() {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, baseW, baseH);
 
-        // CORREÇÃO: Aplica a classe de contraste no Canvas para as linhas aparecerem em fundos escuros
+        // CORREÇÃO: Aplica contraste dinâmico no Canvas para as linhas aparecerem
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
+        } else {
+            canvasEl.classList.remove('dark-paper');
         }
 
         if (currentPageIndex === 0) {
@@ -506,11 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (viewOptionsBtn && viewMenu) {
         viewOptionsBtn.onclick = (e) => {
             e.stopPropagation();
-            // Fecha o menu de "+ New" se estiver aberto
             if (newMenu) newMenu.style.display = 'none';
-            // Alterna a visibilidade do menu de opções de visualização (9 quadrados)
-            const isCurrentlyOpen = viewMenu.style.display === 'flex';
-            viewMenu.style.display = isCurrentlyOpen ? 'none' : 'flex';
+            const isViewMenuOpen = viewMenu.style.display === 'flex';
+            viewMenu.style.display = isViewMenuOpen ? 'none' : 'flex';
         };
     }
 
