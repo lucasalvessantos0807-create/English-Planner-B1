@@ -3,6 +3,7 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate, addOverviewBlock } from './planner.js';
 import { renderStructure, updateProgressBar } from './ui.js';
 import { renderLibrary } from './notes.js';
+
 // --- MOBILE MENU SYSTEM ---
 function toggleMobileMenu() {
     const sidebar = document.getElementById('notes-sidebar');
@@ -63,8 +64,10 @@ let currentUser = null;
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user.uid;
-        document.getElementById("login-screen").style.display = "none";
-        document.getElementById("planner").style.display = "flex";
+        const loginScreen = document.getElementById("login-screen");
+        if (loginScreen) loginScreen.style.display = "none";
+        const plannerEl = document.getElementById("planner");
+        if (plannerEl) plannerEl.style.display = "flex";
         
         const userData = await loadUserData(currentUser);
 
@@ -75,17 +78,22 @@ onAuthStateChanged(auth, async (user) => {
             userData.state.namePrompted = true;
             saveUserData(currentUser);
         }
-        document.getElementById("topbarName").textContent = userData.state.customName || user.email;
+        
+        const topbarNameEl = document.getElementById("topbarName");
+        if (topbarNameEl) topbarNameEl.textContent = userData.state.customName || user.email;
 
-        document.getElementById('changeNameBtn').onclick = () => {
-            const currentName = document.getElementById("topbarName").textContent;
-            const newName = prompt("Enter your new display name:", currentName);
-            if (newName && newName.trim() !== "") {
-                userData.state.customName = newName;
-                document.getElementById("topbarName").textContent = newName;
-                saveUserData(currentUser);
-            }
-        };
+        const changeNameBtn = document.getElementById('changeNameBtn');
+        if (changeNameBtn) {
+            changeNameBtn.onclick = () => {
+                const currentName = topbarNameEl ? topbarNameEl.textContent : (userData.state.customName || user.email);
+                const newName = prompt("Enter your new display name:", currentName);
+                if (newName && newName.trim() !== "") {
+                    userData.state.customName = newName;
+                    if (topbarNameEl) topbarNameEl.textContent = newName;
+                    saveUserData(currentUser);
+                }
+            };
+        }
 
         // --- ACCOUNT MANAGEMENT LOGIC ---
         const accountModal = document.getElementById('accountManagementModal');
@@ -93,7 +101,7 @@ onAuthStateChanged(auth, async (user) => {
         const closeAccountModal = document.getElementById('closeAccountModal');
         const deleteAccountBtn = document.getElementById('deleteAccountBtn');
 
-if (manageAccountBtn) {
+        if (manageAccountBtn) {
             manageAccountBtn.onclick = () => {
                 const settingsDrawer = document.getElementById('settingsDrawer');
                 if (settingsDrawer) settingsDrawer.classList.remove('open');
@@ -103,7 +111,7 @@ if (manageAccountBtn) {
 
         if (closeAccountModal) {
             closeAccountModal.onclick = () => {
-                accountModal.style.display = 'none';
+                if (accountModal) accountModal.style.display = 'none';
             };
         }
 
@@ -135,13 +143,17 @@ if (manageAccountBtn) {
         }
 
         // --- ACORDION DE IDIOMA ---
-        document.getElementById('langToggle').onclick = () => {
-            const wrapper = document.getElementById('langWrapper');
-            const arrow = document.getElementById('langArrow');
-            const isHidden = wrapper.style.display === 'none';
-            wrapper.style.display = isHidden ? 'block' : 'none';
-            arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-        };
+        const langToggle = document.getElementById('langToggle');
+        if (langToggle) {
+            langToggle.onclick = () => {
+                const wrapper = document.getElementById('langWrapper');
+                const arrow = document.getElementById('langArrow');
+                if (!wrapper || !arrow) return;
+                const isHidden = wrapper.style.display === 'none';
+                wrapper.style.display = isHidden ? 'block' : 'none';
+                arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+        }
 
         document.querySelectorAll('.lang-opt').forEach(btn => {
             btn.onclick = () => { console.log("Language selected:", btn.textContent); };
@@ -172,7 +184,8 @@ if (manageAccountBtn) {
         }
 
         // --- BOTÕES DA TOPBAR E FAB ITEMS ---
-       document.getElementById('editModeBtn').onclick = () => toggleEditMode(currentUser);
+        const editModeBtn = document.getElementById('editModeBtn');
+        if (editModeBtn) editModeBtn.onclick = () => toggleEditMode(currentUser);
 
         // --- NOTES SYSTEM UI LOGIC ---
         const notesArea = document.getElementById('notes-area');
@@ -181,8 +194,9 @@ if (manageAccountBtn) {
         const openNotesBtn = document.getElementById('openNotesBtn');
         const sidebarToggle = document.getElementById('sidebar-toggle-btn');
 
-       if (openNotesBtn) {
+        if (openNotesBtn) {
             openNotesBtn.onclick = () => {
+                if (!notesArea || !notesSidebar || !plannerContent) return;
                 const isNotesOpen = notesArea.style.display === 'flex';
                 const fabLabel = openNotesBtn.querySelector('.fab-label');
                 const fabIcon = openNotesBtn.querySelector('.fab-icon');
@@ -213,10 +227,12 @@ if (manageAccountBtn) {
         const closeNotesBtn = document.getElementById('close-notes-btn');
         if (closeNotesBtn) {
             closeNotesBtn.onclick = () => {
-                notesArea.style.display = 'none';
-                notesSidebar.style.display = 'none';
-                plannerContent.style.display = 'block';
-                plannerContent.scrollTop = 0; // Garante que volta pro topo do planner
+                if (notesArea) notesArea.style.display = 'none';
+                if (notesSidebar) notesSidebar.style.display = 'none';
+                if (plannerContent) {
+                    plannerContent.style.display = 'block';
+                    plannerContent.scrollTop = 0;
+                }
                 
                 if (openNotesBtn) {
                     const fabLabel = openNotesBtn.querySelector('.fab-label');
@@ -261,10 +277,17 @@ if (manageAccountBtn) {
         
         // --- END OF NOTES SYSTEM UI LOGIC ---
         
-        document.getElementById('saveChangesBtn').onclick = () => toggleEditMode(currentUser);
-        document.getElementById('cancelEditBtn').onclick = () => cancelEdit(currentUser);
-        document.getElementById('undoBtn').onclick = () => performUndo(currentUser);
-        document.getElementById('logoutBtn').onclick = () => signOut(auth);
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        if (saveChangesBtn) saveChangesBtn.onclick = () => toggleEditMode(currentUser);
+
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        if (cancelEditBtn) cancelEditBtn.onclick = () => cancelEdit(currentUser);
+
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) undoBtn.onclick = () => performUndo(currentUser);
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) logoutBtn.onclick = () => signOut(auth);
         
         const switchBtn = document.getElementById('switchAccountBtn');
         if (switchBtn) {
@@ -277,131 +300,152 @@ if (manageAccountBtn) {
         }
 
         // --- EXPORT / IMPORT SYSTEM ---
-        const cover = document.getElementById('page-cover');
         const importInput = document.getElementById('importFileInput');
-        
-        document.getElementById('exportDataBtn').onclick = () => exportData();
-        document.getElementById('importDataBtn').onclick = () => importInput.click();
+        const exportDataBtn = document.getElementById('exportDataBtn');
+        if (exportDataBtn) exportDataBtn.onclick = () => exportData();
+        const importDataBtn = document.getElementById('importDataBtn');
+        if (importDataBtn && importInput) importDataBtn.onclick = () => importInput.click();
 
-        importInput.onchange = async (e) => {
-            if (e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
-                if (confirmation) {
-                    try {
-                        const success = await importData(file, currentUser);
-                        if (success) {
-                            alert("Data imported successfully!");
-                            window.location.reload();
+        if (importInput) {
+            importInput.onchange = async (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    const confirmation = confirm("Importing will overwrite your current planner with data from '" + file.name + "'. A backup of your current progress will be saved in 'Import History'. Continue?");
+                    if (confirmation) {
+                        try {
+                            const success = await importData(file, currentUser);
+                            if (success) {
+                                alert("Data imported successfully!");
+                                window.location.reload();
+                            }
+                        } catch (err) { 
+                            console.error("Import failed:", err);
+                            alert("Import failed: " + err.message); 
+                            importInput.value = "";
                         }
-                    } catch (err) { 
-                        console.error("Import failed:", err);
-                        alert("Import failed: " + err.message); 
+                    } else {
                         importInput.value = "";
                     }
-                } else {
-                    importInput.value = "";
                 }
-            }
-        };
+            };
+        }
 
         // --- HISTÓRICO DE IMPORTAÇÕES & PREVIEW SANDBOX ---
         const historyModal = document.getElementById('importHistoryModal');
         const historyList = document.getElementById('importHistoryList');
 
-        document.getElementById('importHistoryBtn').onclick = () => {
-            renderImportHistory();
-            historyModal.style.display = 'flex';
-        };
+        const importHistoryBtn = document.getElementById('importHistoryBtn');
+        if (importHistoryBtn) {
+            importHistoryBtn.onclick = () => {
+                renderImportHistory();
+                if (historyModal) historyModal.style.display = 'flex';
+            };
+        }
 
-        document.getElementById('closeHistoryModal').onclick = () => {
-            historyModal.style.display = 'none';
-        };
+        const closeHistoryModal = document.getElementById('closeHistoryModal');
+        if (closeHistoryModal) {
+            closeHistoryModal.onclick = () => {
+                if (historyModal) historyModal.style.display = 'none';
+            };
+        }
         
-        document.getElementById('undoLastImportBtn').onclick = async () => {
-            if (importHistory.length > 0) {
-                const lastBackup = importHistory[0];
-                if (confirm(`Restore to ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
-                    await importData(lastBackup, currentUser, true);
-                    await deleteImportBackup(currentUser, lastBackup.id);
-                    window.location.reload();
-                }
-            }
-        };
-
-        function renderImportHistory() {
-            document.getElementById('undoLastImportBtn').style.display = importHistory.length > 0 ? 'block' : 'none';
-            historyList.innerHTML = importHistory.length === 0 ? 
-                '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
-            
-            importHistory.forEach(backup => {
-                const card = document.createElement('div');
-                card.className = 'import-backup-card';
-                card.innerHTML = `
-                    <div class="backup-info">
-                        <span class="backup-date">Backup: ${backup.filename}</span>
-                        <span class="backup-meta">${new Date(backup.timestamp).toLocaleString()}</span>
-                    </div>
-                    <div class="backup-actions">
-                        <button class="btn-undo-import">Restore</button>
-                        <button class="btn-preview">Preview Box</button>
-                        <button class="btn-delete-backup">✕</button>
-                    </div>
-                `;
-                
-                card.querySelector('.btn-undo-import').onclick = async () => {
-                    if (confirm("Restore this version?")) {
-                        await importData(backup, currentUser, true);
+        const undoLastImportBtn = document.getElementById('undoLastImportBtn');
+        if (undoLastImportBtn) {
+            undoLastImportBtn.onclick = async () => {
+                if (importHistory.length > 0) {
+                    const lastBackup = importHistory[0];
+                    if (confirm(`Restore to ${new Date(lastBackup.timestamp).toLocaleString()}?`)) {
+                        await importData(lastBackup, currentUser, true);
+                        await deleteImportBackup(currentUser, lastBackup.id);
                         window.location.reload();
                     }
-                };
+                }
+            };
+        }
 
-                card.querySelector('.btn-preview').onclick = () => {
-                    const sandbox = document.getElementById('previewSandbox');
-                    const backupContent = backup.pageContent || {};
-                    const backupState = backup.state || {};
+        function renderImportHistory() {
+            const undoLastBtn = document.getElementById('undoLastImportBtn');
+            if (undoLastBtn) undoLastBtn.style.display = importHistory.length > 0 ? 'block' : 'none';
+            if (historyList) {
+                historyList.innerHTML = importHistory.length === 0 ? 
+                    '<p style="text-align:center; padding:20px; color:var(--muted); font-size:0.8rem;">No backups found.</p>' : '';
+                
+                importHistory.forEach(backup => {
+                    const card = document.createElement('div');
+                    card.className = 'import-backup-card';
+                    card.innerHTML = `
+                        <div class="backup-info">
+                            <span class="backup-date">Backup: ${backup.filename}</span>
+                            <span class="backup-meta">${new Date(backup.timestamp).toLocaleString()}</span>
+                        </div>
+                        <div class="backup-actions">
+                            <button class="btn-undo-import">Restore</button>
+                            <button class="btn-preview">Preview Box</button>
+                            <button class="btn-delete-backup">✕</button>
+                        </div>
+                    `;
                     
-                    document.getElementById('sandboxTitle').textContent = `Preview: ${backup.filename}`;
-                    
-                    // CORREÇÃO: Limpar o DOM da Sandbox e injetar o Roadmap, Overview e Template do BACKUP
-                    refreshGlobalDOM(backupContent, "sb-");
-
-                    const sbCover = document.getElementById('sb-page-cover');
-                    if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
-
-                    updateProgressBar("sb-", backup.plannerConfig, backupState);
-
-                    renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
-                        import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
-                    }, true, "sb-");
-
-                    historyModal.style.display = 'none';
-                    sandbox.style.display = 'flex';
-                    document.body.classList.add('preview-open');
-
-                    document.getElementById('restoreSandboxBtn').onclick = async () => {
-                        if(confirm("Restore this version?")) {
+                    card.querySelector('.btn-undo-import').onclick = async () => {
+                        if (confirm("Restore this version?")) {
                             await importData(backup, currentUser, true);
                             window.location.reload();
                         }
                     };
-                };
 
-                card.querySelector('.btn-delete-backup').onclick = async () => {
-                    if(confirm("Delete backup?")) {
-                        await deleteImportBackup(currentUser, backup.id);
-                        renderImportHistory();
-                    }
-                };
-                historyList.appendChild(card);
-            });
+                    card.querySelector('.btn-preview').onclick = () => {
+                        const sandbox = document.getElementById('previewSandbox');
+                        const backupContent = backup.pageContent || {};
+                        const backupState = backup.state || {};
+                        
+                        const sandboxTitle = document.getElementById('sandboxTitle');
+                        if (sandboxTitle) sandboxTitle.textContent = `Preview: ${backup.filename}`;
+                        
+                        refreshGlobalDOM(backupContent, "sb-");
+
+                        const sbCover = document.getElementById('sb-page-cover');
+                        if (sbCover) sbCover.style.background = backupState.settings?.coverColor || "#f4f1ea";
+
+                        updateProgressBar("sb-", backup.plannerConfig, backupState);
+
+                        renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
+                            import('./planner.js').then(mod => mod.buildWeek(m, w, currentUser, [], true, prefix, backup.plannerConfig, backupState));
+                        }, true, "sb-");
+
+                        if (historyModal) historyModal.style.display = 'none';
+                        if (sandbox) sandbox.style.display = 'flex';
+                        document.body.classList.add('preview-open');
+
+                        const restoreSandboxBtn = document.getElementById('restoreSandboxBtn');
+                        if (restoreSandboxBtn) {
+                            restoreSandboxBtn.onclick = async () => {
+                                if(confirm("Restore this version?")) {
+                                    await importData(backup, currentUser, true);
+                                    window.location.reload();
+                                }
+                            };
+                        }
+                    };
+
+                    card.querySelector('.btn-delete-backup').onclick = async () => {
+                        if(confirm("Delete backup?")) {
+                            await deleteImportBackup(currentUser, backup.id);
+                            renderImportHistory();
+                        }
+                    };
+                    historyList.appendChild(card);
+                });
+            }
         }
 
-        document.getElementById('closeSandboxBtn').onclick = () => {
-            document.getElementById('previewSandbox').style.display = 'none';
-            document.body.classList.remove('preview-open');
-            document.getElementById('importHistoryModal').style.display = 'flex';
-        };
+        const closeSandboxBtn = document.getElementById('closeSandboxBtn');
+        if (closeSandboxBtn) {
+            closeSandboxBtn.onclick = () => {
+                const sandbox = document.getElementById('previewSandbox');
+                if (sandbox) sandbox.style.display = 'none';
+                document.body.classList.remove('preview-open');
+                if (historyModal) historyModal.style.display = 'flex';
+            };
+        }
 
         // --- LÓGICA DO COLOR PICKER ---
         const editCoverBtn = document.getElementById('editCoverBtn');
@@ -427,7 +471,8 @@ if (manageAccountBtn) {
         if (choiceSolid) {
             choiceSolid.onclick = () => {
                 pickingGradient = false; color1 = null;
-                document.getElementById('pickerActionTitle').textContent = "Select Color";
+                const pickerTitle = document.getElementById('pickerActionTitle');
+                if (pickerTitle) pickerTitle.textContent = "Select Color";
                 if (colorMenu) colorMenu.style.display = 'none'; 
                 openPicker();
             };
@@ -437,7 +482,8 @@ if (manageAccountBtn) {
         if (choiceGradient) {
             choiceGradient.onclick = () => {
                 pickingGradient = true; color1 = null;
-                document.getElementById('pickerActionTitle').textContent = "Select Color 1";
+                const pickerTitle = document.getElementById('pickerActionTitle');
+                if (pickerTitle) pickerTitle.textContent = "Select Color 1";
                 if (colorMenu) colorMenu.style.display = 'none'; 
                 openPicker();
             };
@@ -457,36 +503,47 @@ if (manageAccountBtn) {
         
         function openPicker() {
             renderHistoryUI();
-            document.getElementById('colorPickerContainer').classList.add('open');
-            document.getElementById('pickerOverlay').classList.add('open');
+            const pickerContainer = document.getElementById('colorPickerContainer');
+            const pickerOverlay = document.getElementById('pickerOverlay');
+            if (pickerContainer) pickerContainer.classList.add('open');
+            if (pickerOverlay) pickerOverlay.classList.add('open');
         }
 
         function closePicker() {
-            document.getElementById('colorPickerContainer').classList.remove('open');
-            document.getElementById('pickerOverlay').classList.remove('open');
+            const pickerContainer = document.getElementById('colorPickerContainer');
+            const pickerOverlay = document.getElementById('pickerOverlay');
+            if (pickerContainer) pickerContainer.classList.remove('open');
+            if (pickerOverlay) pickerOverlay.classList.remove('open');
         }
 
-        document.getElementById('btnCancelPicker').onclick = closePicker;
+        const btnCancelPicker = document.getElementById('btnCancelPicker');
+        if (btnCancelPicker) btnCancelPicker.onclick = closePicker;
 
-        document.getElementById('btnApplyPicker').onclick = () => {
-            const selectedColor = iroPicker.color.hexString;
-            if (!pickingGradient) {
-                applySolid(selectedColor);
-            } else {
-                if (color1 === null) {
-                    color1 = selectedColor;
-                    document.getElementById('pickerActionTitle').textContent = "Select Color 2";
-                    document.getElementById('page-cover').style.background = color1;
+        const btnApplyPicker = document.getElementById('btnApplyPicker');
+        if (btnApplyPicker) {
+            btnApplyPicker.onclick = () => {
+                const selectedColor = iroPicker.color.hexString;
+                if (!pickingGradient) {
+                    applySolid(selectedColor);
                 } else {
-                    applyGradient(color1, selectedColor);
+                    if (color1 === null) {
+                        color1 = selectedColor;
+                        const pickerTitle = document.getElementById('pickerActionTitle');
+                        if (pickerTitle) pickerTitle.textContent = "Select Color 2";
+                        const coverEl = document.getElementById('page-cover');
+                        if (coverEl) coverEl.style.background = color1;
+                    } else {
+                        applyGradient(color1, selectedColor);
+                    }
                 }
-            }
-        };
+            };
+        }
 
         function applySolid(color) {
-            document.getElementById('page-cover').style.background = color;
+            const coverEl = document.getElementById('page-cover');
+            if (coverEl) coverEl.style.background = color;
             if (!colorHistory.solids.includes(color)) {
-                colorHistory. solids.unshift(color);
+                colorHistory.solids.unshift(color);
                 if (colorHistory.solids.length > 3) colorHistory.solids.pop();
             }
             saveAllColorData(color);
@@ -495,7 +552,8 @@ if (manageAccountBtn) {
 
         function applyGradient(c1, c2) {
             const grad = `linear-gradient(135deg, ${c1}, ${c2})`;
-            document.getElementById('page-cover').style.background = grad;
+            const coverEl = document.getElementById('page-cover');
+            if (coverEl) coverEl.style.background = grad;
             const exists = colorHistory.gradients.some(g => g.c1 === c1 && g.c2 === c2);
             if (!exists) {
                 colorHistory.gradients.unshift({ c1, c2 });
@@ -516,41 +574,49 @@ if (manageAccountBtn) {
             const solidContainer = document.getElementById('historySolids');
             const gradContainer = document.getElementById('historyGradients');
             const pinnedContainer = document.getElementById('pinnedGradients');
-            solidContainer.innerHTML = '';
-            colorHistory.solids.forEach(color => {
-                const div = document.createElement('div');
-                div.style.cssText = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee;`;
-                div.onclick = () => applySolid(color);
-                solidContainer.appendChild(div);
-            });
-            gradContainer.innerHTML = '';
-            colorHistory.gradients.forEach((g) => {
-                const row = document.createElement('div');
-                row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
-                row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
-                row.querySelector('span').onclick = () => {
-                    if (colorHistory.pinned.length < 2) {
-                        colorHistory.pinned.push(g);
-                        saveAllColorData(document.getElementById('page-cover').style.background);
+            if (solidContainer) {
+                solidContainer.innerHTML = '';
+                colorHistory.solids.forEach(color => {
+                    const div = document.createElement('div');
+                    div.style.cssText = `width:22px; height:22px; border-radius:50%; background:${color}; cursor:pointer; border:1.5px solid #eee;`;
+                    div.onclick = () => applySolid(color);
+                    solidContainer.appendChild(div);
+                });
+            }
+            if (gradContainer) {
+                gradContainer.innerHTML = '';
+                colorHistory.gradients.forEach((g) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                    row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid #ddd;"></div><span title="Pin" style="cursor:pointer; font-size:12px;">📌</span>`;
+                    row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
+                    row.querySelector('span').onclick = () => {
+                        if (colorHistory.pinned.length < 2) {
+                            colorHistory.pinned.push(g);
+                            const currentCoverBg = document.getElementById('page-cover')?.style.background;
+                            saveAllColorData(currentCoverBg);
+                            renderHistoryUI();
+                        }
+                    };
+                    gradContainer.appendChild(row);
+                });
+            }
+            if (pinnedContainer) {
+                pinnedContainer.innerHTML = '';
+                colorHistory.pinned.forEach((g, idx) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
+                    row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
+                    row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
+                    row.querySelector('span').onclick = () => {
+                        colorHistory.pinned.splice(idx, 1);
+                        const currentCoverBg = document.getElementById('page-cover')?.style.background;
+                        saveAllColorData(currentCoverBg);
                         renderHistoryUI();
-                    }
-                };
-                gradContainer.appendChild(row);
-            });
-            pinnedContainer.innerHTML = '';
-            colorHistory.pinned.forEach((g, idx) => {
-                const row = document.createElement('div');
-                row.style.cssText = "display:flex; align-items:center; gap:8px; margin-bottom:4px;";
-                row.innerHTML = `<div style="flex:1; height:18px; border-radius:4px; background:linear-gradient(90deg, ${g.c1}, ${g.c2}); cursor:pointer; border:1px solid var(--accent);"></div><span title="Unpin" style="cursor:pointer; font-size:12px; color:#cc0000;">✕</span>`;
-                row.querySelector('div').onclick = () => applyGradient(g.c1, g.c2);
-                row.querySelector('span').onclick = () => {
-                    colorHistory.pinned.splice(idx, 1);
-                    saveAllColorData(document.getElementById('page-cover').style.background);
-                    renderHistoryUI();
-                };
-                pinnedContainer.appendChild(row);
-            });
+                    };
+                    pinnedContainer.appendChild(row);
+                });
+            }
         }
 
         const coverEl = document.getElementById('page-cover');
@@ -569,32 +635,32 @@ if (manageAccountBtn) {
         if (personalizeBtn) {
             personalizeBtn.onclick = () => {
                 if (!document.body.classList.contains('preview-mode')) {
-                    settingsDrawer.classList.remove('open');
-                    customDrawer.classList.add('open');
-                    fabWrapper.classList.add('fab-hidden');
+                    if (settingsDrawer) settingsDrawer.classList.remove('open');
+                    if (customDrawer) customDrawer.classList.add('open');
+                    if (fabWrapper) fabWrapper.classList.add('fab-hidden');
                 }
             };
         }
         if (settingsBtn) {
             settingsBtn.onclick = () => {
                 if (!document.body.classList.contains('preview-mode')) {
-                    customDrawer.classList.remove('open');
-                    settingsDrawer.classList.add('open');
-                    fabWrapper.classList.add('fab-hidden');
+                    if (customDrawer) customDrawer.classList.remove('open');
+                    if (settingsDrawer) settingsDrawer.classList.add('open');
+                    if (fabWrapper) fabWrapper.classList.add('fab-hidden');
                     renderHistory();
                 }
             };
         }
         if (closeDrawer) {
             closeDrawer.onclick = () => {
-                customDrawer.classList.remove('open');
-                fabWrapper.classList.remove('fab-hidden');
+                if (customDrawer) customDrawer.classList.remove('open');
+                if (fabWrapper) fabWrapper.classList.remove('fab-hidden');
             };
         }
         if (closeSettings) {
             closeSettings.onclick = () => {
-                settingsDrawer.classList.remove('open');
-                fabWrapper.classList.remove('fab-hidden');
+                if (settingsDrawer) settingsDrawer.classList.remove('open');
+                if (fabWrapper) fabWrapper.classList.remove('fab-hidden');
             };
         }
 
@@ -641,11 +707,12 @@ if (manageAccountBtn) {
         }
         if (fontSizeSlider) {
             fontSizeSlider.value = userData.state.settings?.fontSize || "15";
-            document.getElementById('fontSizeVal').textContent = fontSizeSlider.value + "px";
+            const fontSizeVal = document.getElementById('fontSizeVal');
+            if (fontSizeVal) fontSizeVal.textContent = fontSizeSlider.value + "px";
             document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
 
             fontSizeSlider.oninput = (e) => {
-                document.getElementById('fontSizeVal').textContent = e.target.value + "px";
+                if (fontSizeVal) fontSizeVal.textContent = e.target.value + "px";
                 document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
             };
             fontSizeSlider.onchange = (e) => {
@@ -655,16 +722,21 @@ if (manageAccountBtn) {
             };
         }
 
-        document.getElementById('fontStyleToggle').onclick = () => {
-            const wrapper = document.getElementById('fontPickerWrapper');
-            const arrow = document.getElementById('fontArrow');
-            const isHidden = wrapper.style.display === 'none';
-            wrapper.style.display = isHidden ? 'block' : 'none';
-            arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-        };
+        const fontStyleToggle = document.getElementById('fontStyleToggle');
+        if (fontStyleToggle) {
+            fontStyleToggle.onclick = () => {
+                const wrapper = document.getElementById('fontPickerWrapper');
+                const arrow = document.getElementById('fontArrow');
+                if (!wrapper || !arrow) return;
+                const isHidden = wrapper.style.display === 'none';
+                wrapper.style.display = isHidden ? 'block' : 'none';
+                arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+        }
 
         function renderHistory() {
             const container = document.getElementById('historyList');
+            if (!container) return;
             import('./storage.js').then(store => {
                 container.innerHTML = store.history.length === 0 ? '<p style="font-size:0.7rem; color:var(--muted); padding:10px;">No history.</p>' : '';
                 store.history.forEach(item => {
@@ -684,20 +756,23 @@ if (manageAccountBtn) {
             });
         }
 
-        if (document.getElementById('addMonthBtn')) {
-            document.getElementById('addMonthBtn').onclick = (e) => {
+        const addMonthBtn = document.getElementById('addMonthBtn');
+        if (addMonthBtn) {
+            addMonthBtn.onclick = (e) => {
                 e.preventDefault(); addNewMonth(currentUser);
             };
         }
 
-        if (document.getElementById('addOverviewBlockBtn')) {
-            document.getElementById('addOverviewBlockBtn').onclick = (e) => {
+        const addOverviewBlockBtn = document.getElementById('addOverviewBlockBtn');
+        if (addOverviewBlockBtn) {
+            addOverviewBlockBtn.onclick = (e) => {
                 e.preventDefault(); addOverviewBlock(currentUser);
             };
         }
 
-        if (document.getElementById('clearHistoryBtn')) {
-            document.getElementById('clearHistoryBtn').onclick = async () => {
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        if (clearHistoryBtn) {
+            clearHistoryBtn.onclick = async () => {
                 if(confirm("Permanently delete ALL history?")) {
                     await clearAllHistory(currentUser);
                     renderHistory();
@@ -709,10 +784,6 @@ if (manageAccountBtn) {
 
         // --- NOTES SELECTION EVENT LISTENERS ---
         const btnSelectItems = document.getElementById('btn-select-items');
-        const btnSelectionDone = document.getElementById('btn-selection-done');
-        const btnSelectAll = document.getElementById('btn-select-all');
-        const btnTrashSelected = document.getElementById('st-trash');
-
         if (btnSelectItems) {
             btnSelectItems.onclick = () => {
                 import('./notes.js').then(mod => mod.toggleSelectionMode(true));
@@ -721,18 +792,21 @@ if (manageAccountBtn) {
             };
         }
 
+        const btnSelectionDone = document.getElementById('btn-selection-done');
         if (btnSelectionDone) {
             btnSelectionDone.onclick = () => {
                 import('./notes.js').then(mod => mod.toggleSelectionMode(false));
             };
         }
 
+        const btnSelectAll = document.getElementById('btn-select-all');
         if (btnSelectAll) {
             btnSelectAll.onclick = () => {
                 import('./notes.js').then(mod => mod.selectAllItems());
             };
         }
 
+        const btnTrashSelected = document.getElementById('st-trash');
         if (btnTrashSelected) {
             btnTrashSelected.onclick = () => {
                 import('./notes.js').then(mod => mod.deleteSelectedItems());
@@ -745,8 +819,14 @@ if (manageAccountBtn) {
         const sortSelect = document.getElementById('sort-docs-select');
 
         const updateViewCheckmarks = (mode) => {
-            if (btnViewGrid) btnViewGrid.querySelector('.vlist-check').style.visibility = mode === 'grid' ? 'visible' : 'hidden';
-            if (btnViewList) btnViewList.querySelector('.vlist-check').style.visibility = mode === 'list' ? 'visible' : 'hidden';
+            if (btnViewGrid) {
+                const check = btnViewGrid.querySelector('.vlist-check');
+                if (check) check.style.visibility = mode === 'grid' ? 'visible' : 'hidden';
+            }
+            if (btnViewList) {
+                const check = btnViewList.querySelector('.vlist-check');
+                if (check) check.style.visibility = mode === 'list' ? 'visible' : 'hidden';
+            }
         };
 
         if (btnViewGrid) {
@@ -774,7 +854,8 @@ if (manageAccountBtn) {
                 const sortVal = opt.dataset.sort;
                 import('./notes.js').then(mod => mod.setLibrarySort(sortVal));
                 document.querySelectorAll('.sort-opt .vlist-check').forEach(c => c.style.visibility = 'hidden');
-                opt.querySelector('.vlist-check').style.visibility = 'visible';
+                const currentCheck = opt.querySelector('.vlist-check');
+                if (currentCheck) currentCheck.style.visibility = 'visible';
             };
         });
 
@@ -798,21 +879,20 @@ if (manageAccountBtn) {
 
        // --- REAL IMPLEMENTATION OF SELECTION ACTIONS ---
         const btnExportSelected = document.getElementById('st-export');
-        const btnMoveSelected = document.getElementById('st-move');
-        const btnDuplicateSelected = document.getElementById('st-duplicate');
-
         if (btnExportSelected) {
             btnExportSelected.onclick = () => {
                 import('./notes.js').then(mod => mod.exportSelectedItems());
             };
         }
 
+        const btnMoveSelected = document.getElementById('st-move');
         if (btnMoveSelected) {
             btnMoveSelected.onclick = () => {
                 import('./notes.js').then(mod => mod.moveSelectedItems());
             };
         }
 
+        const btnDuplicateSelected = document.getElementById('st-duplicate');
         if (btnDuplicateSelected) {
             btnDuplicateSelected.onclick = () => {
                 import('./notes.js').then(mod => mod.duplicateSelectedItems());
@@ -823,13 +903,15 @@ if (manageAccountBtn) {
         
     } else {
         if (currentUser) window.location.reload();
-        document.getElementById("planner").style.display = "none";
-        document.getElementById("login-screen").style.display = "flex";
+        const plannerEl = document.getElementById("planner");
+        if (plannerEl) plannerEl.style.display = "none";
+        const loginScreen = document.getElementById("login-screen");
+        if (loginScreen) loginScreen.style.display = "flex";
         currentUser = null;
     }
 });
 
 const googleLoginBtn = document.getElementById('googleLoginBtn');
-        if (googleLoginBtn) {
-            googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
-        }
+if (googleLoginBtn) {
+    googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
+}
