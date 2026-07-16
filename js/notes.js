@@ -762,6 +762,28 @@ export function exportSelectedItems() {
     toggleSelectionMode(false);
 }
 
+export async function renameSelectedItems() {
+    if (selectedItems.size === 0) return;
+    
+    // Process each selected item for renaming
+    for (const id of selectedItems) {
+        const doc = library.documents.find(d => d.id === id);
+        const folder = library.folders.find(f => f.id === id);
+        const item = doc || folder;
+
+        if (item) {
+            const newName = prompt(`Enter new name for "${item.name}":`, item.name);
+            if (newName !== null && newName.trim() !== "") {
+                item.name = newName.trim();
+                item.updatedAt = Date.now();
+            }
+        }
+    }
+    
+    await saveLibrary();
+    toggleSelectionMode(false);
+}
+
 export async function moveSelectedItems() {
     if (selectedItems.size === 0) return;
     const targetName = prompt("Move to which folder? (Type 'Root' for main directory or the Folder Name):", "Root");
