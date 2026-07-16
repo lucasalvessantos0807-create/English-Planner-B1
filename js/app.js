@@ -89,9 +89,7 @@ function closeMobileMenu() {
 function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const data = content || {};
     const t = translations[langCode] || translations.en;
-    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
-    if (!parent) return;
-
+    
     const mapping = {
         "global-cover-eye": t.personalPlanner,
         "global-cover-title": t.roadmap,
@@ -105,9 +103,13 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "global-sec-monthly": t.monthlyPlans
     };
 
-    parent.querySelectorAll(".editable-global").forEach(el => {
+    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
+    if (!parent) return;
+
+    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
         const cleanId = el.id.replace(targetPrefix, '');
         const val = data[cleanId];
+        
         if (mapping[cleanId] && isNativeText(val)) {
             el.innerHTML = mapping[cleanId];
         } else if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
@@ -122,26 +124,13 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     renderDailyTemplate(uid, targetPrefix, data);
 }
 
-    // No modo Sandbox ou Normal, procuramos os elementos alvo
-    const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
-    
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
-        const cleanId = el.id.replace(targetPrefix, '');
-        const val = data[cleanId];
-        if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
-            el.innerHTML = val;
-        } else if (defaults[cleanId]) {
-            el.innerHTML = defaults[cleanId];
-        }
-    });
-
-    // CORREÇÃO DA PREVIEW SANDBOX: Passar explicitamente o objeto 'data' (do backup) para renderizar os blocos dinâmicos
-    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
-    renderDynamicOverviewBlocks(uid, targetPrefix, data);
-    renderDailyTemplate(uid, targetPrefix, data);
+async function applyLanguage(langCode, uid, userData) {
+    const dict = translations[langCode];
+    if (!dict) return;
+    userData.state.language = langCode;
+    await saveUserData(uid);
+    window.location.reload(); 
 }
-
-let currentUser = null;
 
 onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -246,7 +235,7 @@ onAuthStateChanged(auth, async (user) => {
             langOptions.forEach(btn => {
                 btn.onclick = async () => {
                     const lang = btn.dataset.lang;
-                    if (confirm(translations[lang].confirmMsg)) {
+                    if (confirm(translations[langCode ? langCode : lang].confirmMsg)) {
                         await applyLanguage(lang, currentUser, userData);
                     }
                 };
