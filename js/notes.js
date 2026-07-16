@@ -10,6 +10,8 @@ let currentTool = 'pen';
 let canvas, ctx;
 let lastX = 0;
 let lastY = 0;
+let touchStartX = 0;
+let touchEndX = 0;
 let currentDoc = null;
 let currentPageIndex = 0; 
 export let currentView = 'all'; 
@@ -350,14 +352,42 @@ export function prevPage() {
 
 function initCanvas() {
     canvas = document.getElementById('note-canvas');
+    const container = document.getElementById('canvas-scroll-container');
+    
     if (!canvas) return;
     ctx = canvas.getContext('2d');
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    
+    // Drawing Listeners
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
     canvas.addEventListener('pointercancel', stopDrawing);
+
+    // Gesture Listeners for Page Navigation
+    if (container) {
+        container.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        container.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, { passive: true });
+    }
+}
+
+function handleGesture() {
+    const swipeThreshold = 50; // Minimum distance to trigger swipe
+    if (touchEndX < touchStartX - swipeThreshold) {
+        // Swiped Left -> Next Page
+        nextPage();
+    }
+    if (touchEndX > touchStartX + swipeThreshold) {
+        // Swiped Right -> Previous Page
+        prevPage();
+    }
 }
 
 function startDrawing(e) {
