@@ -9,7 +9,7 @@ export let importHistory = [];
 export const library = { folders: [], documents: [] };
 
 export function resetLocalData() {
-    state = {};
+    state = { language: 'en' };
     const starterConfig = {};
     
     // Gerar 3 meses automáticos no primeiro acesso (30 dias cada)
