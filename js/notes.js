@@ -136,14 +136,7 @@ export function renderLibrary() {
                 else selectedItems.delete(data.id);
                 updateSelectionUI();
             };
-            item.appendChild(chk);
-        }
-
-        item.innerHTML += `
-            ${iconHtml}
-            <div class="note-name">${data.name}</div>
-            <div class="note-meta" style="font-size:10px; color:var(--muted);">${meta}</div>
-        `;
+           item.appendChild(chk);
 
         item.onclick = () => {
             if (isSelectionMode) {
