@@ -282,8 +282,12 @@ function renderPage() {
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
         }
 
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, baseW, baseH);
+        canvasEl.style.backgroundColor = bgColor;
+
+        if (currentPageIndex === 0) {
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, baseW, baseH);
+        }
 
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
