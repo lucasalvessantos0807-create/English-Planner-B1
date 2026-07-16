@@ -278,9 +278,19 @@ function renderPage() {
             canvasEl.classList.add('dark-paper');
         }
 
+       // Apply background color to the element style so CSS background-patterns are visible
+        canvasEl.style.backgroundColor = bgColor;
+
+        if (isColorDark(bgColor)) {
+            canvasEl.classList.add('dark-paper');
+        } else {
+            canvasEl.classList.remove('dark-paper');
+        }
+
         if (currentPageIndex === 0) {
-            // COVER PAGE: We fill the canvas bitmap to look like a solid book cover
+            // For the cover, we fill the canvas bitmap so it's solid
             ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, baseW, baseH);
             ctx.fillRect(0, 0, baseW, baseH);
 
             ctx.fillStyle = "#ffffff";
