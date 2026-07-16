@@ -72,6 +72,10 @@ onAuthStateChanged(auth, async (user) => {
         const userData = await loadUserData(currentUser);
 
         // --- LÓGICA DE USERNAME ---
+        const savedLang = userData.state.language || 'en';
+        // We don't call applyLanguage here to avoid loop, 
+        // static UI elements will be handled by the initial renderStructure if needed,
+        // but since applyLanguage reloads the page, the HTML will be translated once.
         if (!userData.state.customName && !userData.state.namePrompted) {
             const nameInput = prompt("How would you like to be called?");
             userData.state.customName = (nameInput && nameInput.trim() !== "") ? nameInput : user.email;
@@ -155,9 +159,17 @@ onAuthStateChanged(auth, async (user) => {
             };
         }
 
-        document.querySelectorAll('.lang-opt').forEach(btn => {
-            btn.onclick = () => { console.log("Language selected:", btn.textContent); };
-        });
+        const langOptions = document.querySelectorAll('.lang-opt');
+        if (langOptions.length > 0) {
+            langOptions.forEach(btn => {
+                btn.onclick = async () => {
+                    const lang = btn.dataset.lang;
+                    if (confirm(translations[lang].confirmMsg)) {
+                        await applyLanguage(lang, currentUser, userData);
+                    }
+                };
+            });
+        }
 
         // --- RENDERIZAÇÃO INICIAL ---
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser));
@@ -921,4 +933,189 @@ onAuthStateChanged(auth, async (user) => {
 const googleLoginBtn = document.getElementById('googleLoginBtn');
 if (googleLoginBtn) {
     googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
+}
+
+// --- LANGUAGE SYSTEM DICTIONARY ---
+const translations = {
+    en: {
+        confirmMsg: "Change system language to English? Custom texts will be preserved.",
+        static: {
+            "nav-all-docs": "All Documents", "nav-shared": "Shared Documents", "nav-favorites": "Favorites",
+            "sidebar-toggle-btn": "◀", "sort-docs-select": ["Sort by Name", "Sort by Last Modified", "Sort by Size"],
+            "main-new-btn": "+ New", "btn-select-items": "Select Items", "btn-view-grid": "Grid",
+            "btn-view-list": "List", "st-selection-title": "Select Items", "btn-select-all": "Select All",
+            "btn-selection-done": "Done", "st-export": "Export", "st-duplicate": "Duplicate",
+            "st-move": "Move", "st-trash": "Trash", "st-rename": "Rename", "saveChangesBtn": "✅ Save Changes",
+            "cancelEditBtn": "✕ Cancel", "undoBtn": "↶ Undo", "editCoverBtn": "Change Color",
+            "global-cover-eye": "Personal Study Planner", "global-cover-title": "Your Roadmap",
+            "global-cover-sub": "Custom Duration · Daily Goals · Your Focus", "global-goal-strong": "🎯 Your Goal",
+            "global-goal-text": "Enter your main goal here — describe what you want to achieve.",
+            "global-sec-overview": "3-Month Overview", "global-sec-template": "Daily Template (1.5–2 hours)",
+            "global-sec-progress": "Your Progress", "global-prog-lbl": "Days completed",
+            "global-mstat": "Learning Progress", "global-sec-monthly": "Monthly Plans", "addMonthBtn": "+ Add Month",
+            "addOverviewBlockBtn": "+ Add Overview Block", "addTemplateRowBtn": "+ Add Task",
+            "langToggle": "Language Settings", "clearHistoryBtn": "Clear All", "changeNameBtn": "Change Username",
+            "manageAccountBtn": "Manage Account", "exportDataBtn": "Export", "importDataBtn": "Import",
+            "importHistoryBtn": "Import History"
+        },
+        dynamic: {
+            month: "Month", week: "Week", phase: "Phase", editFocus: "Edit focus...", 
+            editTask: "Edit task description...", activity: "Activity", dailyAct: "Daily Activity",
+            task: "Task", updated: "Updated", studyTopic: "Study Topic", editDetails: "Edit details"
+        }
+    },
+    pt: {
+        confirmMsg: "Alterar o idioma do sistema para Português? Textos personalizados serão preservados.",
+        static: {
+            "nav-all-docs": "Todos os Documentos", "nav-shared": "Documentos Compartilhados", "nav-favorites": "Favoritos",
+            "sidebar-toggle-btn": "◀", "sort-docs-select": ["Ordenar por Nome", "Ordenar por Modificação", "Ordenar por Tamanho"],
+            "main-new-btn": "+ Novo", "btn-select-items": "Selecionar Itens", "btn-view-grid": "Grade",
+            "btn-view-list": "Lista", "st-selection-title": "Selecionar Itens", "btn-select-all": "Selecionar Tudo",
+            "btn-selection-done": "Concluir", "st-export": "Exportar", "st-duplicate": "Duplicar",
+            "st-move": "Mover", "st-trash": "Lixo", "st-rename": "Renomear", "saveChangesBtn": "✅ Salvar Alterações",
+            "cancelEditBtn": "✕ Cancelar", "undoBtn": "↶ Desfazer", "editCoverBtn": "Mudar Cor",
+            "global-cover-eye": "Planejador de Estudos Pessoal", "global-cover-title": "Seu Roteiro",
+            "global-cover-sub": "Duração Personalizada · Metas Diárias · Seu Foco", "global-goal-strong": "🎯 Sua Meta",
+            "global-goal-text": "Insira sua meta principal aqui — descreva o que deseja alcançar.",
+            "global-sec-overview": "Visão Geral de 3 Meses", "global-sec-template": "Modelo Diário (1.5–2 horas)",
+            "global-sec-progress": "Seu Progresso", "global-prog-lbl": "Dias concluídos",
+            "global-mstat": "Progresso de Aprendizado", "global-sec-monthly": "Planos Mensais", "addMonthBtn": "+ Add Mês",
+            "addOverviewBlockBtn": "+ Add Bloco de Visão Geral", "addTemplateRowBtn": "+ Add Tarefa",
+            "langToggle": "Configurações de Idioma", "clearHistoryBtn": "Limpar Tudo", "changeNameBtn": "Mudar Usuário",
+            "manageAccountBtn": "Gerenciar Conta", "exportDataBtn": "Exportar", "importDataBtn": "Importar",
+            "importHistoryBtn": "Histórico de Importação"
+        },
+        dynamic: {
+            month: "Mês", week: "Semana", phase: "Fase", editFocus: "Editar foco...", 
+            editTask: "Editar descrição da tarefa...", activity: "Atividade", dailyAct: "Atividade Diária",
+            task: "Tarefa", updated: "Atualizado", studyTopic: "Tópico de Estudo", editDetails: "Editar detalhes"
+        }
+    },
+    es: {
+        confirmMsg: "¿Cambiar o idioma del sistema a Español? Los textos personalizados se preservarán.",
+        static: {
+            "nav-all-docs": "Todos los Documentos", "nav-shared": "Documentos Compartidos", "nav-favorites": "Favoritos",
+            "sidebar-toggle-btn": "◀", "sort-docs-select": ["Ordenar por Nombre", "Ordenar por Modificación", "Ordenar por Tamaño"],
+            "main-new-btn": "+ Nuevo", "btn-select-items": "Seleccionar ítems", "btn-view-grid": "Cuadrícula",
+            "btn-view-list": "Lista", "st-selection-title": "Seleccionar ítems", "btn-select-all": "Seleccionar todo",
+            "btn-selection-done": "Hecho", "st-export": "Exportar", "st-duplicate": "Duplicar",
+            "st-move": "Mover", "st-trash": "Basura", "st-rename": "Renombrar", "saveChangesBtn": "✅ Guardar Cambios",
+            "cancelEditBtn": "✕ Cancelar", "undoBtn": "↶ Deshacer", "editCoverBtn": "Cambiar Color",
+            "global-cover-eye": "Planificador de Estudios Personal", "global-cover-title": "Tu Hoja de Ruta",
+            "global-cover-sub": "Duración Personalizada · Metas Diarias · Tu Enfoque", "global-goal-strong": "🎯 Tu Meta",
+            "global-goal-text": "Ingresa tu meta principal aquí — describe lo que quieres lograr.",
+            "global-sec-overview": "Resumen de 3 Meses", "global-sec-template": "Plantilla Diaria (1.5–2 horas)",
+            "global-sec-progress": "Tu Progreso", "global-prog-lbl": "Días completados",
+            "global-mstat": "Progreso de Aprendizaje", "global-sec-monthly": "Planes Mensuales", "addMonthBtn": "+ Añadir Mes",
+            "addOverviewBlockBtn": "+ Añadir Bloque de Resumen", "addTemplateRowBtn": "+ Añadir Tarea",
+            "langToggle": "Ajustes de Idioma", "clearHistoryBtn": "Limpiar Todo", "changeNameBtn": "Cambiar Usuario",
+            "manageAccountBtn": "Gestionar Cuenta", "exportDataBtn": "Exportar", "importDataBtn": "Importar",
+            "importHistoryBtn": "Historial de Importación"
+        },
+        dynamic: {
+            month: "Mes", week: "Semana", phase: "Fase", editFocus: "Editar enfoque...", 
+            editTask: "Editar descripción de tarea...", activity: "Actividad", dailyAct: "Actividad Diaria",
+            task: "Tarea", updated: "Actualizado", studyTopic: "Tema de Estudio", editDetails: "Editar detalles"
+        }
+    },
+    fr: {
+        confirmMsg: "Changer la langue du système en Français ? Les textes personnalisés seront préservés.",
+        static: {
+            "nav-all-docs": "Tous les Documents", "nav-shared": "Documents Partagés", "nav-favorites": "Favoris",
+            "sidebar-toggle-btn": "◀", "sort-docs-select": ["Trier par Nom", "Trier par Modification", "Trier par Taille"],
+            "main-new-btn": "+ Nouveau", "btn-select-items": "Sélect. Éléments", "btn-view-grid": "Grille",
+            "btn-view-list": "Liste", "st-selection-title": "Sélect. Éléments", "btn-select-all": "Tout Sélectionner",
+            "btn-selection-done": "Terminé", "st-export": "Exporter", "st-duplicate": "Dupliquer",
+            "st-move": "Déplacer", "st-trash": "Corbeille", "st-rename": "Renommer", "saveChangesBtn": "✅ Enregistrer",
+            "cancelEditBtn": "✕ Annuler", "undoBtn": "↶ Annuler action", "editCoverBtn": "Changer Couleur",
+            "global-cover-eye": "Planificateur d'Études Personnel", "global-cover-title": "Votre Feuille de Route",
+            "global-cover-sub": "Durée Personnalisée · Objectifs Quotidiens · Votre Focus", "global-goal-strong": "🎯 Votre Objectif",
+            "global-goal-text": "Entrez votre objectif principal ici — décrivez ce que vous voulez accomplir.",
+            "global-sec-overview": "Aperçu de 3 Mois", "global-sec-template": "Modèle Quotidien (1.5–2 heures)",
+            "global-sec-progress": "Votre Progrès", "global-prog-lbl": "Jours complétés",
+            "global-mstat": "Progrès d'Apprentissage", "global-sec-monthly": "Plans Mensuels", "addMonthBtn": "+ Ajouter Mois",
+            "addOverviewBlockBtn": "+ Ajouter Bloc d'Aperçu", "addTemplateRowBtn": "+ Ajouter Tâche",
+            "langToggle": "Paramètres de Langue", "clearHistoryBtn": "Tout Effacer", "changeNameBtn": "Changer Nom",
+            "manageAccountBtn": "Gérer le Compte", "exportDataBtn": "Exporter", "importDataBtn": "Importer",
+            "importHistoryBtn": "Historique d'Importation"
+        },
+        dynamic: {
+            month: "Mois", week: "Semaine", phase: "Phase", editFocus: "Modifier focus...", 
+            editTask: "Modifier description tâche...", activity: "Activité", dailyAct: "Activité Quotidienne",
+            task: "Tâche", updated: "Mis à jour", studyTopic: "Sujet d'Étude", editDetails: "Modifier détails"
+        }
+    }
+};
+
+async function applyLanguage(langCode, uid, userData) {
+    const dict = translations[langCode];
+    if (!dict) return;
+
+    // 1. Static UI (Buttons, Labels, etc)
+    Object.keys(dict.static).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'SELECT') {
+                Array.from(el.options).forEach((opt, i) => { if(dict.static[id][i]) opt.text = dict.static[id][i]; });
+            } else if (el.querySelector('.sidebar-text')) {
+                el.querySelector('.sidebar-text').innerText = dict.static[id];
+            } else if (el.querySelector('.fab-label')) {
+                el.querySelector('.fab-label').innerText = dict.static[id];
+            } else if (el.querySelector('.st-label')) {
+                el.querySelector('.st-label').innerText = dict.static[id];
+            } else {
+                el.innerText = dict.static[id];
+            }
+        }
+    });
+
+    // 2. Page Content (Roadmap, Goals, Blocks)
+    // Helper to check if a text is native (matches ANY language default)
+    const isNative = (text, key) => {
+        return Object.values(translations).some(lang => lang.static[key] === text || lang.dynamic[key] === text);
+    };
+
+    Object.keys(userData.pageContent).forEach(id => {
+        const currentText = userData.pageContent[id];
+        // Translate if it's one of the cover/goal IDs and it's native
+        if (dict.static[id] && isNative(currentText, id)) {
+            userData.pageContent[id] = dict.static[id];
+        }
+        // Translate dynamic blocks if title/body are still default
+        if (id.includes('-title') && isNative(currentText, 'phase')) userData.pageContent[id] = dict.dynamic.phase;
+        if (id.includes('-body') && isNative(currentText, 'editFocus')) userData.pageContent[id] = dict.dynamic.editFocus;
+        if (id.endsWith('-t') && currentText === "00:00") { /* keep time */ }
+        if (id.endsWith('-a') && isNative(currentText, 'editTask')) userData.pageContent[id] = dict.dynamic.editTask;
+    });
+
+    // 3. Planner Config (Months, Weeks, Days, Activities)
+    Object.keys(userData.plannerConfig).forEach(wkKey => {
+        const week = userData.plannerConfig[wkKey];
+        // Translate Week label (Week 1, Week 2...)
+        if (week.label.toLowerCase().includes('week') || week.label.toLowerCase().includes('semana') || week.label.toLowerCase().includes('semaine')) {
+            const num = week.label.match(/\d+/);
+            week.label = `${dict.dynamic.week} ${num ? num[0] : ''}`;
+        }
+        if (isNative(week.theme, 'monthPlans') || week.theme === "Month Plans" || week.theme === "New Month Plans" || week.theme === "Updated") {
+            week.theme = dict.dynamic.updated;
+        }
+
+        week.days.forEach(day => {
+            if (isNative(day.tag, 'activity') || isNative(day.tag, 'dailyAct')) {
+                day.tag = dict.dynamic.dailyAct;
+            }
+            day.activities.forEach(act => {
+                if (isNative(act.title, 'studyTopic') || act.title === "Study Topic" || act.title === "Task") {
+                    act.title = dict.dynamic.studyTopic;
+                }
+                if (isNative(act.desc, 'editDetails') || act.desc === "Edit details" || act.desc === "Edit") {
+                    act.desc = dict.dynamic.editDetails;
+                }
+            });
+        });
+    });
+
+    userData.state.language = langCode;
+    await saveUserData(uid);
+    window.location.reload(); // Reload to refresh all structural UI correctly
 }
