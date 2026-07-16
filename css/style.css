@@ -216,14 +216,22 @@ button, input, select, textarea {
 /* Library Grid */
 .notes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 20px;
-  padding: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 15px;
+  padding: 15px;
   flex: 1;
   overflow-y: auto;
   align-content: start;
   background: var(--bg);
-  transition: all 0.3s ease;
+}
+
+/* Adaptive grid for smaller mobile devices */
+@media (max-width: 480px) {
+  .notes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    padding: 10px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1545,7 +1553,25 @@ body.preview-open {
 .st-actions {
   display: flex;
   justify-content: center;
-  gap: 60px;
+  gap: 10%; /* Using percentage for better distribution on different widths */
+  padding: 0 10px;
+}
+
+@media (max-width: 600px) {
+  .st-actions {
+    gap: 15px;
+    justify-content: space-around;
+  }
+  
+  .st-action-btn .st-label {
+    font-size: 0.65rem;
+  }
+  
+  .selection-toolbar {
+    padding: 10px 15px;
+    height: auto;
+    min-height: 100px;
+  }
 }
 .st-action-btn {
   background: none;
@@ -1564,19 +1590,21 @@ body.preview-open {
 /* --- SELECTION SYSTEM CORRECTION --- */
 .note-checkbox {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  width: 20px;
-  height: 20px;
-  z-index: 100;
+  top: 8px;
+  left: 8px;
+  width: 24px;
+  height: 24px;
+  z-index: 101;
   cursor: pointer;
   accent-color: var(--accent);
-  background: white;
-  border: 2px solid var(--border);
+  /* Custom border and background for better visibility */
+  border: 2px solid var(--accent);
   border-radius: 4px;
-  appearance: auto; /* Garante que o check apareça no navegador */
+  appearance: auto;
   display: block !important;
   opacity: 1 !important;
+  /* Larger touch target for mobile */
+  transform: scale(1.1);
 }
 
 /* --- EDITOR & CANVAS CORRECTION --- */
