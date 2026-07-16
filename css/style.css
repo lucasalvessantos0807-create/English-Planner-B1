@@ -1766,12 +1766,37 @@ body.preview-open {
 
 @media (max-width: 768px) {
   .header-center {
-    display: none; /* Hide complex tools on very small screens or move them */
+    display: none; 
   }
   
   .editor-header {
     height: auto;
     padding: 10px;
     flex-wrap: wrap;
+  }
+
+  /* Mobile Menu Buttons Visibility */
+  #mobile-lib-menu-btn, #mobile-planner-menu-btn {
+    display: block !important;
+  }
+
+  /* Topbar Adjustments */
+  .topbar {
+    padding: 10px 15px;
+  }
+
+  .topbar-name {
+    font-size: 0.75rem;
+  }
+
+  /* Floating Action Button Adjustment */
+  .fab-wrapper {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  /* Sidebar Mobile Overlay */
+  #sidebar-mobile-overlay.active {
+    display: block !important;
   }
 }
