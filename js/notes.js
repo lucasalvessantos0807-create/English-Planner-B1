@@ -269,17 +269,21 @@ function renderPage() {
     ctx.clearRect(0, 0, baseW, baseH);
     
     const canvasEl = document.getElementById('note-canvas');
-   if (canvasEl) {
+    if (canvasEl) {
         canvasEl.className = ""; 
-        // Apply the background color to the element style so CSS background-patterns are visible
-        canvasEl.style.backgroundColor = bgColor;
+        canvasEl.classList.remove('dark-paper'); 
 
-        if (isColorDark(bgColor)) {
-            canvasEl.classList.add('dark-paper');
+        let bgColor = "#ffffff";
+        if (currentPageIndex === 0) {
+            bgColor = "#2a4f8a"; 
+        } else {
+            if (currentDoc.paperColor === 'yellow') bgColor = "#fdf5e0";
+            else if (currentDoc.paperColor === 'dark') bgColor = "#1a1814";
+            else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
         }
 
-       // Apply background color to the element style so CSS background-patterns are visible
-        canvasEl.style.backgroundColor = bgColor;
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, baseW, baseH);
 
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
@@ -288,11 +292,6 @@ function renderPage() {
         }
 
         if (currentPageIndex === 0) {
-            // For the cover, we fill the canvas bitmap so it's solid
-            ctx.fillStyle = bgColor;
-            ctx.fillRect(0, 0, baseW, baseH);
-            ctx.fillRect(0, 0, baseW, baseH);
-
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.font = "bold 45px Georgia";
@@ -301,8 +300,6 @@ function renderPage() {
             ctx.fillStyle = "rgba(255,255,255,0.7)";
             ctx.fillText("Notebook Collection", baseW / 2, baseH / 2);
         } else {
-            // INTERNAL PAGES: We do not fill the bitmap with solid color.
-            // This keeps the canvas transparent so the CSS background-image (patterns) shows through.
             const paperClass = "paper-" + (currentDoc.paperType || "Blank").toLowerCase().replace(/ /g, '-');
             canvasEl.classList.add(paperClass);
 
