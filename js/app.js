@@ -892,10 +892,17 @@ onAuthStateChanged(auth, async (user) => {
             };
         }
 
-        const btnDuplicateSelected = document.getElementById('st-duplicate');
+       const btnDuplicateSelected = document.getElementById('st-duplicate');
         if (btnDuplicateSelected) {
             btnDuplicateSelected.onclick = () => {
                 import('./notes.js').then(mod => mod.duplicateSelectedItems());
+            };
+        }
+
+        const btnRenameSelected = document.getElementById('st-rename');
+        if (btnRenameSelected) {
+            btnRenameSelected.onclick = () => {
+                import('./notes.js').then(mod => mod.renameSelectedItems());
             };
         }
 
