@@ -21,18 +21,26 @@ export let selectedItems = new Set();
 // Helper para detectar se uma cor é escura
 function isColorDark(color) {
     if (!color) return false;
-    if (color === 'dark') return true;
-    if (color === 'white' || color === 'yellow') return false;
-    if (color.startsWith('#')) {
-        const hex = color.replace('#', '');
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        // Fórmula de Luminância
-        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        return luma < 100; 
+    const c = color.toLowerCase();
+    if (c === 'dark') return true;
+    if (c === 'white' || c === 'yellow' || c === 'transparent') return false;
+    
+    let r, g, b;
+    if (c.startsWith('#')) {
+        const hex = c.replace('#', '');
+        r = parseInt(hex.substr(0, 2), 16);
+        g = parseInt(hex.substr(2, 2), 16);
+        b = parseInt(hex.substr(4, 2), 16);
+    } else if (c.startsWith('rgb')) {
+        const parts = c.match(/\d+/g);
+        r = parseInt(parts[0]);
+        g = parseInt(parts[1]);
+        b = parseInt(parts[2]);
+    } else {
+        return false;
     }
-    return false;
+    // Cálculo de luminância padrão
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 100;
 }
 
 // --- 1. LIBRARY MANAGEMENT ---
