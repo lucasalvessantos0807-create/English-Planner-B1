@@ -282,8 +282,8 @@ function renderPage() {
             else if (currentDoc.paperColor && currentDoc.paperColor.startsWith('#')) bgColor = currentDoc.paperColor;
         }
 
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, baseW, baseH);
+        // Apply background color to the element style so CSS background-patterns are visible
+        canvasEl.style.backgroundColor = bgColor;
 
         if (isColorDark(bgColor)) {
             canvasEl.classList.add('dark-paper');
@@ -292,6 +292,9 @@ function renderPage() {
         }
 
         if (currentPageIndex === 0) {
+            // For the cover, we fill the canvas bitmap so it's solid
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(0, 0, baseW, baseH);
             ctx.fillStyle = "#ffffff";
             ctx.textAlign = "center";
             ctx.font = "bold 45px Georgia";
