@@ -261,9 +261,6 @@ onAuthStateChanged(auth, async (user) => {
         const fabMain = document.getElementById('fabMain');
         if (fabMain && fabWrapper) {
             fabMain.onclick = (e) => {
-                e.stopPropagation();
-                fabWrapper.classList.toggle('open');
-            };
             document.addEventListener('click', (e) => {
                 if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
                     fabWrapper.classList.remove('open');
@@ -587,11 +584,13 @@ onAuthStateChanged(auth, async (user) => {
         }
         
         document.addEventListener('click', (e) => {
-            if (colorMenu && !colorMenu.contains(e.target) && e.target !== editCoverBtn) colorMenu.style.display = 'none';
-            if (!e.target.closest('.aico-wrapper')) {
-                document.querySelectorAll('.aico-wrapper.show-suggestions').forEach(w => w.classList.remove('show-suggestions'));
-            }
-        });
+                // Se o botão de salvar estiver visível, não permitimos fechar o menu ao clicar fora.
+                if (document.getElementById('saveChangesBtn')?.style.display === 'flex') return;
+
+                if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
+                    fabWrapper.classList.remove('open');
+                }
+            });
         
         function openPicker() {
             renderHistoryUI();
