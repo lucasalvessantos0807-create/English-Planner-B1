@@ -108,12 +108,12 @@ function updateUIEditMode() {
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        // Exibe controles de edição
+        // Show edit controls
         if (saveBtn) saveBtn.style.display = "flex";
         if (cancelBtn) cancelBtn.style.display = "flex";
         if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "flex" : "none";
         
-        // Oculta botões padrão
+        // Hide regular buttons
         if (editBtn) editBtn.style.display = "none";
         if (personalizeBtn) personalizeBtn.style.display = "none";
         if (openNotesBtn) openNotesBtn.style.display = "none";
@@ -121,17 +121,17 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "none";
 
-        // Força o FAB a abrir e permanecer aberto
+        // Force FAB to stay open
         if (fab) {
             fab.classList.add('open');
         }
     } else {
-        // Oculta controles de edição
+        // Hide edit controls
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
         if (undoBtn) undoBtn.style.display = "none";
         
-        // Restaura botões originais
+        // Restore original buttons
         if (editBtn) editBtn.style.display = "flex";
         if (personalizeBtn) personalizeBtn.style.display = "flex";
         if (openNotesBtn) openNotesBtn.style.display = "flex";
@@ -139,11 +139,65 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "flex";
         if (logoutBtn) logoutBtn.style.display = "flex";
 
-        // Fecha o FAB ao sair do modo de edição
+        // Close FAB when exiting edit mode
         if (fab) {
             fab.classList.remove('open');
         }
     }
+}
+
+export function toggleEditMode(uid) {
+    if (!isEditMode) {
+        sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
+        sessionInitialContent = JSON.parse(JSON.stringify(window.pageContent || {}));
+        sessionInitialDOMSnapshot = {};
+        document.querySelectorAll('.editable-global').forEach(el => {
+            sessionInitialDOMSnapshot[el.id] = el.innerHTML;
+        });
+        undoStack = [];
+        isEditMode = true;
+        document.getElementById('dynamic-ov-grid').classList.add('edit-active');
+        document.getElementById('addOverviewBlockBtn').style.display = 'block';
+        
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.add('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'block';
+        
+    } else {
+        const currentConfigStr = JSON.stringify(window.plannerConfig);
+        const initialConfigStr = JSON.stringify(sessionInitialConfig);
+        const currentContentStr = JSON.stringify(window.pageContent);
+        const initialContentStr = JSON.stringify(sessionInitialContent);
+
+        if (currentConfigStr !== initialConfigStr || currentContentStr !== initialContentStr) {
+            addHistoryEntry("Before Edit Session", sessionInitialConfig, sessionInitialContent);
+            saveUserData(uid);
+        }
+        isEditMode = false;
+        document.getElementById('dynamic-ov-grid').classList.remove('edit-active');
+        document.getElementById('addOverviewBlockBtn').style.display = 'none';
+        
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (tplList) tplList.classList.remove('edit-active');
+        const addTplBtn = document.getElementById('addTemplateRowBtn');
+        if (addTplBtn) addTplBtn.style.display = 'none';
+    }
+    updateUIEditMode();
+    document.querySelectorAll('.editable-global').forEach(el => {
+        el.contentEditable = isEditMode;
+        if (isEditMode) {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => {
+                if (!window.pageContent) window.pageContent = {};
+                window.pageContent[el.id] = el.innerHTML;
+                saveUserData(uid);
+            };
+        }
+    });
+    refreshCurrentWeek(uid);
+    renderDynamicOverviewBlocks(uid);
+    renderDailyTemplate(uid);
 }
 
 // --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
