@@ -90,7 +90,7 @@ export function renderGlobalSections(config, content, targetPrefix = "", isEditM
  */
 export function renderOverviewAndTemplate(config) {
     // Função desativada para priorizar o refreshGlobalDOM do app.js
-    // Isso garante que o backup dinâmico seja a única fonte de dados.
+    // Isso evita que o texto padrão do HTML sobrescreva o backup dinâmico.
 }
 
 export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "", lang = 'en') {
