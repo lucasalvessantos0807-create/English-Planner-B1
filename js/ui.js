@@ -33,57 +33,76 @@ export function updateProgressBar() {
 /**
  * Renderiza Capa, Metas, Overview e Template a partir do Firebase
  */
-export function renderGlobalSections(config) {
-    // 1. Campos de texto direto (Globals: Capa, Goals, Progress Titles)
-    const globals = config.globals || {};
+export function renderGlobalSections(config, content, targetPrefix = "", isEditMode = false) {
+    const data = content || {};
+    
+    // 1. Campos de texto direto (Capa, Goals, Títulos)
     const fieldIds = [
         'global-cover-eye', 'global-cover-title', 'global-cover-sub', 
         'global-goal-strong', 'global-goal-text', 'global-sec-overview',
-        'global-sec-template', 'global-prog-lbl', 'global-mstat'
+        'global-sec-template', 'global-prog-lbl', 'global-mstat', 'global-sec-monthly'
     ];
+    
     fieldIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && globals[id]) el.innerText = globals[id];
+        const el = document.getElementById(targetPrefix + id);
+        if (el && data[id]) el.innerText = data[id];
     });
 
-    // 2. Renderizar Overview (Cards de Fase)
-    const ovGrid = document.getElementById('dynamic-ov-grid');
+    // 2. Renderizar Overview (Cards de Fase) - Sincronizado com planner.js
+    const ovGrid = document.getElementById(targetPrefix + 'dynamic-ov-grid');
     if (ovGrid) {
-        const overviewData = config.overview || [
-            {title: "PHASE 1", body: "Description of your first phase."},
-            {title: "PHASE 2", body: "Description of your second phase."},
-            {title: "PHASE 3", body: "Description of your third phase."}
-        ];
-        ovGrid.innerHTML = overviewData.map((item, idx) => `
-            <div class="ov-card c${idx % 3 === 0 ? 'a' : (idx % 3 === 1 ? 'b' : 'g')}">
-                <div class="ov-label" id="ov-t-${idx}">${item.title}</div>
-                <div class="ov-body" id="ov-b-${idx}">${item.body}</div>
-            </div>
-        `).join('');
+        ovGrid.innerHTML = '';
+        const blocks = data.dynamicBlocks || [];
+        blocks.forEach(blockId => {
+            const card = document.createElement('div');
+            card.className = 'ov-card cg';
+            card.id = `${targetPrefix}container-${blockId}`;
+            card.innerHTML = `
+                ${(isEditMode && !targetPrefix) ? `<button class="del-ov-btn" data-id="${blockId}" style="display:flex;">✕</button>` : ''}
+                <div class="ov-label" id="${targetPrefix}${blockId}-title" contenteditable="${isEditMode && !targetPrefix}">${data[blockId + '-title'] || 'Phase'}</div>
+                <div class="ov-body" id="${targetPrefix}${blockId}-body" contenteditable="${isEditMode && !targetPrefix}">${data[blockId + '-body'] || 'Edit details...'}</div>
+            `;
+            ovGrid.appendChild(card);
+        });
     }
 
-    // 3. Renderizar Daily Template (Lista de tarefas)
-    const tplList = document.getElementById('dynamic-tpl-list');
+    // 3. Renderizar Daily Template - Sincronizado com planner.js
+    const tplList = document.getElementById(targetPrefix + 'dynamic-tpl-list');
     if (tplList) {
-        const templateData = config.dailyTemplate || [
-            {time: "Step/Time", act: "Task description"}
-        ];
-        tplList.innerHTML = templateData.map((item, idx) => `
-            <div class="tpl-row">
-                <div class="tpl-time" id="tpl-t-${idx}">${item.time}</div>
-                <div class="tpl-act" id="tpl-a-${idx}">${item.act}</div>
-            </div>
-        `).join('');
+        tplList.innerHTML = '';
+        const rows = data.templateRows || [];
+        rows.forEach(rowId => {
+            const row = document.createElement('div');
+            row.className = 'tpl-row';
+            row.id = `${targetPrefix}row-container-${rowId}`;
+            row.innerHTML = `
+                ${(isEditMode && !targetPrefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+                <div class="tpl-time" id="${targetPrefix}${rowId}-t" contenteditable="${isEditMode && !targetPrefix}">${data[rowId + '-t'] || '00:00'}</div>
+                <div class="tpl-act" id="${targetPrefix}${rowId}-a" contenteditable="${isEditMode && !targetPrefix}">${data[rowId + '-a'] || 'Task description'}</div>
+            `;
+            tplList.appendChild(row);
+        });
     }
 }
 
-export function renderStructure(plannerConfig, onWeekChange) {
-    const monthNav = document.getElementById('monthNav');
-    const monthPanels = document.getElementById('monthPanels');
-    const addBtn = document.getElementById('addMonthBtn');
+/**
+ * Função placeholder para manter compatibilidade com chamadas antigas no app.js
+ */
+export function renderOverviewAndTemplate(config) {
+    // Esta função foi integrada ao renderGlobalSections para evitar conflitos de backup
+    const content = window.pageContent || {};
+    renderGlobalSections(config, content, "", false);
+}
 
-    monthNav.querySelectorAll('.mbtn:not(#addMonthBtn)').forEach(n => n.remove());
-    monthPanels.innerHTML = '';
+export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "", lang = 'en') {
+    const monthNav = document.getElementById(prefix + 'monthNav');
+    const monthPanels = document.getElementById(prefix + 'monthPanels');
+    const addBtn = document.getElementById(prefix + 'addMonthBtn');
+
+    if (monthNav) {
+        monthNav.querySelectorAll('.mbtn:not(#' + prefix + 'addMonthBtn)').forEach(n => n.remove());
+    }
+    if (monthPanels) monthPanels.innerHTML = '';
 
     const months = [...new Set(Object.keys(plannerConfig)
                    .filter(k => k.includes('-'))
@@ -95,31 +114,32 @@ export function renderStructure(plannerConfig, onWeekChange) {
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.dataset.month = m;
         mBtn.textContent = `Month ${m}`;
-        monthNav.insertBefore(mBtn, addBtn);
+        if (monthNav && addBtn) monthNav.insertBefore(mBtn, addBtn);
 
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
-        mPanel.id = `mp${m}`;
+        mPanel.id = `${prefix}mp${m}`;
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>Month ${m}</h2>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
-                    <button class="edit-m-btn" data-month="${m}">⚙️ Restructure</button>
-                    <button class="del-m-btn" data-month="${m}">🗑️ Delete</button>
+                    ${!isPreview ? `
+                        <button class="edit-m-btn" data-month="${m}">⚙️ Restructure</button>
+                        <button class="del-m-btn" data-month="${m}" style="color:red; border-color:#ffcccc;">🗑️ Delete</button>
+                    ` : ''}
                 </div>
             </div>
-            <div class="week-nav"></div>
+            <div class="week-nav" data-month="${m}"></div>
         `;
         
-        const user = window.auth ? window.auth.currentUser : null;
-        mPanel.querySelector('.edit-m-btn').onclick = () => {
-            if (!user) return;
-            import('./planner.js').then(mModule => mModule.editMonthStructure(m, user.uid));
-        };
-        mPanel.querySelector('.del-m-btn').onclick = () => {
-            if (!user) return;
-            import('./planner.js').then(mModule => mModule.deleteMonth(m, user.uid));
-        };
+        if (!isPreview) {
+            mPanel.querySelector('.edit-m-btn').onclick = () => {
+                import('./planner.js').then(mod => mod.editMonthStructure(m, window.auth.currentUser.uid));
+            };
+            mPanel.querySelector('.del-m-btn').onclick = () => {
+                import('./planner.js').then(mod => mod.deleteMonth(m, window.auth.currentUser.uid));
+            };
+        }
         
         const wNav = mPanel.querySelector('.week-nav');
         const weeks = Object.keys(plannerConfig)
@@ -130,19 +150,35 @@ export function renderStructure(plannerConfig, onWeekChange) {
             const weekNum = wkKey.split('-')[1];
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
+            wBtn.dataset.week = weekNum;
             wBtn.textContent = plannerConfig[wkKey].label;
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
-            wPanel.id = `wp${m}-${weekNum}`;
+            wPanel.id = `${prefix}wp${m}-${weekNum}`;
+            
             wBtn.onclick = () => {
                 mPanel.querySelectorAll('.wbtn, .wpanel').forEach(el => el.classList.remove('on'));
                 wBtn.classList.add('on');
                 wPanel.classList.add('on');
-                onWeekChange(m, weekNum);
+                onWeekChange(m, weekNum, isPreview, prefix);
             };
             wNav.appendChild(wBtn);
             mPanel.appendChild(wPanel);
         });
-        monthPanels.appendChild(mPanel);
+
+        if (monthPanels) monthPanels.appendChild(mPanel);
+
+        mBtn.onclick = () => {
+            const allBtn = prefix ? document.querySelectorAll(`#${prefix}sandbox-content .mbtn`) : document.querySelectorAll('.month-nav .mbtn');
+            const allPanels = prefix ? document.querySelectorAll(`#${prefix}sandbox-content .mpanel`) : document.querySelectorAll('#monthPanels .mpanel');
+            
+            allBtn.forEach(el => el.classList.remove('on'));
+            allPanels.forEach(el => el.classList.remove('on'));
+            
+            mBtn.classList.add('on');
+            mPanel.classList.add('on');
+            const firstW = mPanel.querySelector('.wbtn');
+            if(firstW) firstW.click();
+        };
     });
 }
