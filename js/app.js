@@ -500,9 +500,8 @@ onAuthStateChanged(auth, async (user) => {
                         updateProgressBar("sb-", backup.plannerConfig, backupState);
 
                         renderStructure(backup.plannerConfig, false, (m, w, isPrev, prefix) => {
-                       import('./planner.js').then(mod => mod.buildWeek(m, w, auth.currentUser.uid, [], true, prefix, backup.plannerConfig, backupState));
-                        }, true, "sb-");
-
+    import('./planner.js').then(mod => mod.buildWeek(m, w, auth.currentUser.uid, [], true, prefix, backup.plannerConfig, backupState));
+}, true, "sb-");
                         if (historyModal) historyModal.style.display = 'none';
                         if (sandbox) sandbox.style.display = 'flex';
                         document.body.classList.add('preview-open');
