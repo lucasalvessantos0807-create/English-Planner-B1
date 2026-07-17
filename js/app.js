@@ -243,9 +243,16 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // --- RENDERIZAÇÃO INICIAL ---
-       const currentLang = userData.state.language || 'en';
+        const currentLang = userData.state.language || 'en';
+        
+        // 1. Limpa os containers para evitar sobreposição com o HTML estático
+        const ovGrid = document.getElementById('dynamic-ov-grid');
+        const tplList = document.getElementById('dynamic-tpl-list');
+        if (ovGrid) ovGrid.innerHTML = '';
+        if (tplList) tplList.innerHTML = '';
+
+        // 2. Renderiza a estrutura e os textos do backup
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser), false, "", currentLang);
-        renderOverviewAndTemplate(userData.plannerConfig);
         refreshGlobalDOM(userData.pageContent, "", currentLang);
         
         // --- FLOATING ACTION BUTTON LOGIC ---
