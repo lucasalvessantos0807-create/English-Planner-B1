@@ -262,7 +262,7 @@ onAuthStateChanged(auth, async (user) => {
         if (fabMain && fabWrapper) {
             fabMain.onclick = (e) => {
                 e.stopPropagation();
-                // Se o modo edição estiver ativo (botão salvar visível), não permitimos fechar.
+                // If edit mode is active, prevent closing
                 if (document.getElementById('saveChangesBtn')?.style.display === 'flex') {
                     fabWrapper.classList.add('open');
                     return;
@@ -271,7 +271,7 @@ onAuthStateChanged(auth, async (user) => {
             };
 
             document.addEventListener('click', (e) => {
-                // Se estivermos editando, ignoramos o clique fora para não fechar o FAB.
+                // If editing, ignore outside clicks to keep FAB open
                 if (document.getElementById('saveChangesBtn')?.style.display === 'flex') return;
 
                 if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
@@ -281,7 +281,7 @@ onAuthStateChanged(auth, async (user) => {
 
             document.querySelectorAll('.fab-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    // Ao clicar em um item, o menu só fecha se NÃO estivermos em modo edição.
+                    // Only close on click if NOT in edit mode
                     if (document.getElementById('saveChangesBtn')?.style.display !== 'flex') {
                         fabWrapper.classList.remove('open');
                     }
