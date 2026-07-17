@@ -439,7 +439,10 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     if (!prefix && isEditMode) {
         grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
-            el.onblur = () => { window.pageContent[el.id] = el.innerHTML; };
+            el.onblur = () => { 
+                window.pageContent[el.id] = el.innerHTML; 
+                saveUserData(uid); // <--- Adicionado para garantir o backup
+            };
         });
         grid.querySelectorAll('.del-ov-btn').forEach(btn => {
             btn.onclick = (e) => {
@@ -481,8 +484,13 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
     if (!prefix && isEditMode) {
         list.querySelectorAll('[contenteditable="true"]').forEach(el => {
             el.onfocus = () => pushToUndo();
-            el.onblur = () => { if (!window.pageContent) window.pageContent = {}; window.pageContent[el.id] = el.innerHTML; };
+            el.onblur = () => { 
+                if (!window.pageContent) window.pageContent = {}; 
+                window.pageContent[el.id] = el.innerHTML; 
+                saveUserData(uid); // <--- Adicionado para garantir o backup
+            };
         });
+        
         list.querySelectorAll('.del-tpl-btn').forEach(btn => {
             btn.onclick = () => {
                 const rId = btn.dataset.id;
