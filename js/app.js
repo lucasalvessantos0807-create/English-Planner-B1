@@ -261,18 +261,33 @@ onAuthStateChanged(auth, async (user) => {
         const fabMain = document.getElementById('fabMain');
         if (fabMain && fabWrapper) {
             fabMain.onclick = (e) => {
+                e.stopPropagation();
+                // Se o modo edição estiver ativo (botão salvar visível), não permitimos fechar.
+                if (document.getElementById('saveChangesBtn')?.style.display === 'flex') {
+                    fabWrapper.classList.add('open');
+                    return;
+                }
+                fabWrapper.classList.toggle('open');
+            };
+
             document.addEventListener('click', (e) => {
+                // Se estivermos editando, ignoramos o clique fora para não fechar o FAB.
+                if (document.getElementById('saveChangesBtn')?.style.display === 'flex') return;
+
                 if (fabWrapper.classList.contains('open') && !fabWrapper.contains(e.target)) {
                     fabWrapper.classList.remove('open');
                 }
             });
+
             document.querySelectorAll('.fab-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    fabWrapper.classList.remove('open');
+                    // Ao clicar em um item, o menu só fecha se NÃO estivermos em modo edição.
+                    if (document.getElementById('saveChangesBtn')?.style.display !== 'flex') {
+                        fabWrapper.classList.remove('open');
+                    }
                 });
             });
         }
-
         // --- BOTÕES DA TOPBAR E FAB ITEMS ---
         const editModeBtn = document.getElementById('editModeBtn');
         if (editModeBtn) editModeBtn.onclick = () => toggleEditMode(currentUser);
