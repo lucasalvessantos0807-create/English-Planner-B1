@@ -1000,7 +1000,7 @@ onAuthStateChanged(auth, async (user) => {
         updateProgressBar();
         
     } else {
-        if (currentUser) window.location.reload();
+        if (auth.currentUser) window.location.reload();
         const plannerEl = document.getElementById("planner");
         if (plannerEl) plannerEl.style.display = "none";
         const loginScreen = document.getElementById("login-screen");
