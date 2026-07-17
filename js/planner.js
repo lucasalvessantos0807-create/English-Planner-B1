@@ -94,8 +94,7 @@ export function cancelEdit(uid) {
     refreshUI(uid);
 }
 
-function updateUIEditMode() {
-    const saveBtn = document.getElementById('saveChangesBtn');
+const saveBtn = document.getElementById('saveChangesBtn');
     const cancelBtn = document.getElementById('cancelEditBtn');
     const undoBtn = document.getElementById('undoBtn');
     const editBtn = document.getElementById('editModeBtn');
@@ -107,12 +106,12 @@ function updateUIEditMode() {
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        // Show edit controls
+        // Exibe controles de edição
         if (saveBtn) saveBtn.style.display = "flex";
         if (cancelBtn) cancelBtn.style.display = "flex";
         if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "flex" : "none";
         
-        // Hide regular controls to focus on editing
+        // Oculta botões padrão
         if (editBtn) editBtn.style.display = "none";
         if (personalizeBtn) personalizeBtn.style.display = "none";
         if (openNotesBtn) openNotesBtn.style.display = "none";
@@ -120,18 +119,17 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "none";
 
-        // Keep FAB visible and open to show the new options
+        // Força o FAB a abrir e permanecer aberto
         if (fab) {
-            fab.classList.remove('fab-hidden');
             fab.classList.add('open');
         }
     } else {
-        // Hide edit controls
+        // Oculta controles de edição
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
         if (undoBtn) undoBtn.style.display = "none";
         
-        // Restore all original functions
+        // Restaura botões originais
         if (editBtn) editBtn.style.display = "flex";
         if (personalizeBtn) personalizeBtn.style.display = "flex";
         if (openNotesBtn) openNotesBtn.style.display = "flex";
@@ -139,13 +137,11 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "flex";
         if (logoutBtn) logoutBtn.style.display = "flex";
 
-        // Restore normal FAB behavior
+        // Fecha o FAB ao sair do modo de edição
         if (fab) {
-            fab.classList.remove('fab-hidden');
             fab.classList.remove('open');
         }
     }
-}
 export function toggleEditMode(uid) {
     if (!isEditMode) {
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
