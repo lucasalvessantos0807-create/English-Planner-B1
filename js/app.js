@@ -3,6 +3,7 @@ import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importDa
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate, addOverviewBlock } from './planner.js';
 import { renderStructure, updateProgressBar, renderOverviewAndTemplate } from './ui.js';
 import { renderLibrary } from './notes.js';
+let currentUser = null;
 
 // --- LANGUAGE DICTIONARY SYSTEM ---
 const translations = {
@@ -1005,7 +1006,7 @@ onAuthStateChanged(auth, async (user) => {
         if (plannerEl) plannerEl.style.display = "none";
         const loginScreen = document.getElementById("login-screen");
         if (loginScreen) loginScreen.style.display = "flex";
-        currentUser = null;
+        if (typeof currentUser !== 'undefined') currentUser = null;
     }
 });
 
