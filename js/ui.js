@@ -89,8 +89,8 @@ export function renderGlobalSections(config, content, targetPrefix = "", isEditM
  * Função placeholder para manter compatibilidade com chamadas antigas no app.js
  */
 export function renderOverviewAndTemplate(config) {
-    // Função desativada para priorizar o refreshGlobalDOM do app.js
-    // Isso evita que o texto padrão do HTML sobrescreva o backup dinâmico.
+    // Função desativada para dar prioridade total ao refreshGlobalDOM do app.js
+    // Isso garante que apenas os dados dinâmicos do backup apareçam na tela.
 }
 
 export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPreview = false, prefix = "", lang = 'en') {
