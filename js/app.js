@@ -1,7 +1,7 @@
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged, deleteDoc, doc, db, deleteUser } from './firebase.js';
 import { loadUserData, deleteHistoryEntry, clearAllHistory, exportData, importData, importHistory, deleteImportBackup, applySnapshot, saveUserData } from './storage.js';
 import { buildWeek, toggleEditMode, addNewMonth, performUndo, cancelEdit, renderDynamicOverviewBlocks, renderDailyTemplate, addOverviewBlock } from './planner.js';
-import { renderStructure, updateProgressBar } from './ui.js';
+import { renderStructure, updateProgressBar, renderOverviewAndTemplate } from './ui.js';
 import { renderLibrary } from './notes.js';
 
 // --- LANGUAGE DICTIONARY SYSTEM ---
@@ -245,6 +245,7 @@ onAuthStateChanged(auth, async (user) => {
         // --- RENDERIZAÇÃO INICIAL ---
        const currentLang = userData.state.language || 'en';
         renderStructure(userData.plannerConfig, false, (m, w) => buildWeek(m, w, currentUser), false, "", currentLang);
+        renderOverviewAndTemplate(userData.plannerConfig);
         refreshGlobalDOM(userData.pageContent, "", currentLang);
         
         // --- FLOATING ACTION BUTTON LOGIC ---
