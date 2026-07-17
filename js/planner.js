@@ -158,6 +158,7 @@ export function toggleEditMode(uid) {
             el.onblur = () => {
                 if (!window.pageContent) window.pageContent = {};
                 window.pageContent[el.id] = el.innerHTML;
+                saveUserData(uid); // Salva Capa e Meta no backup ao editar
             };
         }
     });
@@ -441,7 +442,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             el.onfocus = () => pushToUndo();
             el.onblur = () => { 
                 window.pageContent[el.id] = el.innerHTML; 
-                saveUserData(uid); // <--- Adicionado para garantir o backup
+                saveUserData(uid); // Envia para o Firebase ao terminar de editar
             };
         });
         grid.querySelectorAll('.del-ov-btn').forEach(btn => {
@@ -487,7 +488,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
             el.onblur = () => { 
                 if (!window.pageContent) window.pageContent = {}; 
                 window.pageContent[el.id] = el.innerHTML; 
-                saveUserData(uid); // <--- Adicionado para garantir o backup
+                saveUserData(uid); // Envia para o Firebase ao terminar de editar
             };
         });
         
