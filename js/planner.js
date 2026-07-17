@@ -98,21 +98,48 @@ function updateUIEditMode() {
     const saveBtn = document.getElementById('saveChangesBtn');
     const cancelBtn = document.getElementById('cancelEditBtn');
     const undoBtn = document.getElementById('undoBtn');
+    const editBtn = document.getElementById('editModeBtn');
+    const personalizeBtn = document.getElementById('personalizeBtn');
+    const openNotesBtn = document.getElementById('openNotesBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const switchBtn = document.getElementById('switchAccountBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        if (fab) fab.classList.add('fab-hidden');
-        if (saveBtn) saveBtn.style.display = "block";
-        if (cancelBtn) cancelBtn.style.display = "block";
-        if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "block" : "none";
+        // Mostra controles de edição
+        if (saveBtn) saveBtn.style.display = "flex";
+        if (cancelBtn) cancelBtn.style.display = "flex";
+        if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "flex" : "none";
+        
+        // Esconde botões normais para não poluir o menu
+        if (editBtn) editBtn.style.display = "none";
+        if (personalizeBtn) personalizeBtn.style.display = "none";
+        if (openNotesBtn) openNotesBtn.style.display = "none";
+        if (settingsBtn) settingsBtn.style.display = "none";
+        if (switchBtn) switchBtn.style.display = "none";
+        if (logoutBtn) logoutBtn.style.display = "none";
+
+        // Abre o menu FAB automaticamente para mostrar as opções de salvar/cancelar
+        if (fab) fab.classList.add('open');
     } else {
-        if (fab) fab.classList.remove('fab-hidden');
+        // Esconde controles de edição
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
         if (undoBtn) undoBtn.style.display = "none";
+        
+        // Mostra botões normais de volta
+        if (editBtn) editBtn.style.display = "flex";
+        if (personalizeBtn) personalizeBtn.style.display = "flex";
+        if (openNotesBtn) openNotesBtn.style.display = "flex";
+        if (settingsBtn) settingsBtn.style.display = "flex";
+        if (switchBtn) switchBtn.style.display = "flex";
+        if (logoutBtn) logoutBtn.style.display = "flex";
+
+        // Fecha o menu FAB ao sair do modo de edição
+        if (fab) fab.classList.remove('open');
     }
 }
-
 export function toggleEditMode(uid) {
     if (!isEditMode) {
         sessionInitialConfig = JSON.parse(JSON.stringify(window.plannerConfig));
