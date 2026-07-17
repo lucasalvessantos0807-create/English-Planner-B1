@@ -107,12 +107,12 @@ function updateUIEditMode() {
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        // Mostra controles de edição
+        // Show edit controls
         if (saveBtn) saveBtn.style.display = "flex";
         if (cancelBtn) cancelBtn.style.display = "flex";
         if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "flex" : "none";
         
-        // Esconde botões normais para não poluir o menu
+        // Hide regular controls to focus on editing
         if (editBtn) editBtn.style.display = "none";
         if (personalizeBtn) personalizeBtn.style.display = "none";
         if (openNotesBtn) openNotesBtn.style.display = "none";
@@ -120,15 +120,18 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "none";
 
-        // Abre o menu FAB automaticamente para mostrar as opções de salvar/cancelar
-        if (fab) fab.classList.add('open');
+        // Keep FAB visible and open to show the new options
+        if (fab) {
+            fab.classList.remove('fab-hidden');
+            fab.classList.add('open');
+        }
     } else {
-        // Esconde controles de edição
+        // Hide edit controls
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
         if (undoBtn) undoBtn.style.display = "none";
         
-        // Mostra botões normais de volta
+        // Restore all original functions
         if (editBtn) editBtn.style.display = "flex";
         if (personalizeBtn) personalizeBtn.style.display = "flex";
         if (openNotesBtn) openNotesBtn.style.display = "flex";
@@ -136,8 +139,11 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "flex";
         if (logoutBtn) logoutBtn.style.display = "flex";
 
-        // Fecha o menu FAB ao sair do modo de edição
-        if (fab) fab.classList.remove('open');
+        // Restore normal FAB behavior
+        if (fab) {
+            fab.classList.remove('fab-hidden');
+            fab.classList.remove('open');
+        }
     }
 }
 export function toggleEditMode(uid) {
