@@ -97,6 +97,9 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthNav = document.getElementById(prefix + 'monthNav');
     const monthPanels = document.getElementById(prefix + 'monthPanels');
     const addBtn = document.getElementById(prefix + 'addMonthBtn');
+    
+    // Pega as traduções globais
+    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
 
     if (monthNav) {
         monthNav.querySelectorAll('.mbtn:not(#' + prefix + 'addMonthBtn)').forEach(n => n.remove());
@@ -112,7 +115,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.dataset.month = m;
-        mBtn.textContent = `Month ${m}`;
+        // Tradução dinâmica do botão de Mês
+        mBtn.textContent = `${t.month || 'Month'} ${m}`;
         if (monthNav && addBtn) monthNav.insertBefore(mBtn, addBtn);
 
         const mPanel = document.createElement('div');
@@ -120,11 +124,11 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mPanel.id = `${prefix}mp${m}`;
         mPanel.innerHTML = `
             <div class="mheader">
-                <h2>Month ${m}</h2>
+                <h2>${t.month || 'Month'} ${m}</h2>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
                     ${!isPreview ? `
-                        <button class="edit-m-btn" data-month="${m}">⚙️ Restructure</button>
-                        <button class="del-m-btn" data-month="${m}" style="color:red; border-color:#ffcccc;">🗑️ Delete</button>
+                        <button class="edit-m-btn" data-month="${m}">⚙️ ${lang === 'pt' ? 'Reestruturar' : (lang === 'es' ? 'Reestructurar' : (lang === 'fr' ? 'Restructurer' : 'Restructure'))}</button>
+                        <button class="del-m-btn" data-month="${m}" style="color:red; border-color:#ffcccc;">🗑️ ${lang === 'pt' ? 'Excluir' : (lang === 'es' ? 'Eliminar' : (lang === 'fr' ? 'Supprimer' : 'Delete'))}</button>
                     ` : ''}
                 </div>
             </div>
@@ -150,7 +154,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.dataset.week = weekNum;
-            wBtn.textContent = plannerConfig[wkKey].label;
+            // Tradução dinâmica do texto da Semana
+            wBtn.textContent = plannerConfig[wkKey].label.replace('Week', t.week || 'Week');
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
             wPanel.id = `${prefix}wp${m}-${weekNum}`;
