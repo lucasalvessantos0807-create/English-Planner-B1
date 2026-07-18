@@ -169,7 +169,7 @@ async function applyLanguage(langCode, uid, userData) {
     if (!dict) return;
     userData.state.language = langCode;
     await saveUserData(uid);
-    window.location.reload(); 
+    forceTranslateAll(langCode); // Isso garante que os dados salvos também sejam traduzidos
 }
 
 onAuthStateChanged(auth, async (user) => {
