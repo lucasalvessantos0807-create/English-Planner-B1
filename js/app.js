@@ -86,8 +86,18 @@ window.translations = translations;
 function isNativeText(text) {
     if (!text) return true;
     const flat = [];
-    Object.values(translations).forEach(l => Object.values(l).forEach(v => flat.push(v.toLowerCase())));
-    const extraDefaults = ["personal study planner", "your roadmap", "overview", "daily template", "days completed", "learning progress", "monthly plans", "week", "month", "activity", "study topic", "edit details", "phase", "edit focus..."];
+    Object.values(translations).forEach(l => Object.values(l).forEach(v => {
+        if (typeof v === 'string') flat.push(v.toLowerCase());
+    }));
+    // Lista expandida de termos padrão do sistema em todos os idiomas
+    const extraDefaults = [
+        "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
+        "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
+        "overview", "visão geral", "resumen", "aperçu",
+        "phase x", "fase x", "fase x", "phase x",
+        "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
+        "edit task...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description..."
+    ];
     return flat.includes(text.toLowerCase()) || extraDefaults.includes(text.toLowerCase());
 }
 
@@ -117,7 +127,6 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const data = content || {};
     const t = translations[langCode] || translations.en;
     
-    // Mapeamento de IDs para textos traduzidos (UI fixa)
     const mapping = {
         "global-cover-eye": t.personalPlanner,
         "global-cover-title": t.roadmap,
@@ -139,17 +148,22 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     if (!parent) return;
 
-    // Atualiza textos fixos
     Object.keys(mapping).forEach(id => {
         const el = parent.querySelector(`#${targetPrefix}${id}`);
-        if (el) el.innerHTML = mapping[id];
+        if (el) {
+            const cleanId = id.replace('global-', '');
+            const val = data[cleanId];
+            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('sec-')) {
+                el.innerHTML = mapping[id];
+            }
+        }
     });
 
-    // Atualiza blocos dinâmicos (Overview e Template)
-    renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
-    renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
+    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
+    // Passamos o langCode para as funções de renderização
+    renderDynamicOverviewBlocks(uid, targetPrefix, data, langCode);
+    renderDailyTemplate(uid, targetPrefix, data, langCode);
 }
-
 async function applyLanguage(langCode, uid, userData) {
     const dict = translations[langCode];
     if (!dict) return;
