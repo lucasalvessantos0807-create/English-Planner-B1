@@ -220,13 +220,13 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     
     if (!wk || !container) return;
 
-    // Busca traduções globais
     const currentLang = window.appState?.language || 'en';
     const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
 
+    // Forçamos a tradução do título da semana exibido no corpo da página
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
-            <h3>${wk.label.replace('Week', tGlobal.week || 'Week')}</h3>
+            <h3>${tGlobal.week || 'Week'} ${w}</h3>
             <p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p>
         </div>`;
 
@@ -491,21 +491,24 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             
-            // Lógica para manter o número (1, 2, 3) se for um bloco inicial
-            let defaultTitle = t.phase + " X";
+            // Lógica rigorosa para traduzir títulos iniciais (Phase 1, 2, 3)
+            let currentTitle = content[blockId + '-title'] || '';
+            let displayTitle = currentTitle;
+
             if (blockId.includes('first')) {
-                const num = blockId.split('-').pop(); // Pega o número do ID (1, 2 ou 3)
-                defaultTitle = t.phase + " " + num;
+                const num = blockId.split('-').pop(); 
+                displayTitle = t.phase + " " + num;
+            } else if (window.isNativeText && window.isNativeText(currentTitle)) {
+                displayTitle = t.phase + " X";
             }
 
-            const currentTitle = content[blockId + '-title'];
-            // Se o título atual for nativo (Phase 1, etc), forçamos a tradução mantendo o número
-            const displayTitle = (window.isNativeText && window.isNativeText(currentTitle)) ? defaultTitle : (currentTitle || defaultTitle);
+            const currentBody = content[blockId + '-body'] || '';
+            const displayBody = (window.isNativeText && window.isNativeText(currentBody)) ? t.editFocus : (currentBody || t.editFocus);
 
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
                 <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${displayTitle}</div>
-                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || t.editFocus}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${displayBody}</div>
             `;
             grid.appendChild(newBlock);
         });
