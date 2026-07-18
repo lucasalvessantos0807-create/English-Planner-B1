@@ -98,8 +98,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById(prefix + 'monthPanels');
     const addBtn = document.getElementById(prefix + 'addMonthBtn');
     
-    // Pega as traduções globais
-    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
+    const translations = window.translations || {};
+    const t = translations[lang] || translations.en || {};
 
     if (monthNav) {
         monthNav.querySelectorAll('.mbtn:not(#' + prefix + 'addMonthBtn)').forEach(n => n.remove());
@@ -115,20 +115,23 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.dataset.month = m;
-        // Tradução dinâmica do botão de Mês
         mBtn.textContent = `${t.month || 'Month'} ${m}`;
         if (monthNav && addBtn) monthNav.insertBefore(mBtn, addBtn);
 
         const mPanel = document.createElement('div');
         mPanel.className = `mpanel ${idx === 0 ? 'on' : ''}`;
         mPanel.id = `${prefix}mp${m}`;
+        
+        const restTxt = lang === 'pt' ? 'Reestruturar' : (lang === 'es' ? 'Reestructurar' : (lang === 'fr' ? 'Restructurer' : 'Restructure'));
+        const delTxt = lang === 'pt' ? 'Excluir' : (lang === 'es' ? 'Eliminar' : (lang === 'fr' ? 'Supprimer' : 'Delete'));
+
         mPanel.innerHTML = `
             <div class="mheader">
                 <h2>${t.month || 'Month'} ${m}</h2>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
                     ${!isPreview ? `
-                        <button class="edit-m-btn" data-month="${m}">⚙️ ${lang === 'pt' ? 'Reestruturar' : (lang === 'es' ? 'Reestructurar' : (lang === 'fr' ? 'Restructurer' : 'Restructure'))}</button>
-                        <button class="del-m-btn" data-month="${m}" style="color:red; border-color:#ffcccc;">🗑️ ${lang === 'pt' ? 'Excluir' : (lang === 'es' ? 'Eliminar' : (lang === 'fr' ? 'Supprimer' : 'Delete'))}</button>
+                        <button class="edit-m-btn" data-month="${m}">⚙️ ${restTxt}</button>
+                        <button class="del-m-btn" data-month="${m}" style="color:red; border-color:#ffcccc;">🗑️ ${delTxt}</button>
                     ` : ''}
                 </div>
             </div>
@@ -154,8 +157,9 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.dataset.week = weekNum;
-            // Tradução dinâmica do texto da Semana
-            wBtn.textContent = plannerConfig[wkKey].label.replace('Week', t.week || 'Week');
+            // Tradução do label da semana
+            wBtn.textContent = `${t.week || 'Week'} ${weekNum}`;
+            
             const wPanel = document.createElement('div');
             wPanel.className = `wpanel ${wIdx === 0 ? 'on' : ''}`;
             wPanel.id = `${prefix}wp${m}-${weekNum}`;
@@ -175,10 +179,8 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         mBtn.onclick = () => {
             const allBtn = prefix ? document.querySelectorAll(`#${prefix}sandbox-content .mbtn`) : document.querySelectorAll('.month-nav .mbtn');
             const allPanels = prefix ? document.querySelectorAll(`#${prefix}sandbox-content .mpanel`) : document.querySelectorAll('#monthPanels .mpanel');
-            
             allBtn.forEach(el => el.classList.remove('on'));
             allPanels.forEach(el => el.classList.remove('on'));
-            
             mBtn.classList.add('on');
             mPanel.classList.add('on');
             const firstW = mPanel.querySelector('.wbtn');
