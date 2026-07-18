@@ -98,8 +98,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
     const monthPanels = document.getElementById(prefix + 'monthPanels');
     const addBtn = document.getElementById(prefix + 'addMonthBtn');
     
-    const translations = window.translations || {};
-    const t = translations[lang] || translations.en || {};
+    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
 
     if (monthNav) {
         monthNav.querySelectorAll('.mbtn:not(#' + prefix + 'addMonthBtn)').forEach(n => n.remove());
@@ -115,6 +114,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
         const mBtn = document.createElement('button');
         mBtn.className = `mbtn ${idx === 0 ? 'on' : ''}`;
         mBtn.dataset.month = m;
+        // Forçamos a tradução da palavra Mês + Número
         mBtn.textContent = `${t.month || 'Month'} ${m}`;
         if (monthNav && addBtn) monthNav.insertBefore(mBtn, addBtn);
 
@@ -157,7 +157,7 @@ export function renderStructure(plannerConfig, isEditMode, onWeekChange, isPrevi
             const wBtn = document.createElement('button');
             wBtn.className = `wbtn ${wIdx === 0 ? 'on' : ''}`;
             wBtn.dataset.week = weekNum;
-            // Tradução do label da semana
+            // Forçamos a tradução da palavra Semana + Número
             wBtn.textContent = `${t.week || 'Week'} ${weekNum}`;
             
             const wPanel = document.createElement('div');
