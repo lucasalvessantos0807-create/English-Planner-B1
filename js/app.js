@@ -1057,3 +1057,20 @@ if (googleLoginBtn) {
     googleLoginBtn.onclick = () => signInWithPopup(auth, provider);
 }
 
+export function forceTranslateAll(langCode) {
+    const t = translations[langCode] || translations.en;
+    
+    // 1. Traduzir dias da semana existentes
+    Object.keys(window.plannerConfig).forEach(wkKey => {
+        const days = window.plannerConfig[wkKey].days;
+        const dayNamesDict = { en: ["Monday", ...], pt: ["Segunda", ...], ... };
+        days.forEach((day, i) => {
+            // Só traduz se for um dos dias nativos
+            if (isNativeText(day.name)) {
+                day.name = dayNamesDict[langCode][i % 7];
+            }
+        });
+    });
+    // 2. Salva e recarrega
+    saveUserData(currentUser).then(() => window.location.reload());
+}
