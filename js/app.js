@@ -84,12 +84,14 @@ export const translations = {
 window.translations = translations;
 
 function isNativeText(text) {
-    if (!text) return true;
+    // Se o valor for nulo, indefinido ou NÃO for uma string (como os arrays de IDs), ignoramos.
+    if (!text || typeof text !== 'string') return false; 
+    
     const flat = [];
     Object.values(translations).forEach(l => Object.values(l).forEach(v => {
         if (typeof v === 'string') flat.push(v.toLowerCase());
     }));
-    // Lista expandida de termos padrão do sistema em todos os idiomas
+
     const extraDefaults = [
         "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
         "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
@@ -98,6 +100,7 @@ function isNativeText(text) {
         "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
         "edit task...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description..."
     ];
+    
     return flat.includes(text.toLowerCase()) || extraDefaults.includes(text.toLowerCase());
 }
 
@@ -1100,9 +1103,9 @@ export function forceTranslateAll(langCode) {
     // 2. Atualizar textos dinâmicos do PageContent que ainda são nativos
     Object.keys(window.pageContent).forEach(id => {
         const currentVal = window.pageContent[id];
-        // Se o texto for nativo (placeholder), forçamos a nova tradução
-        if (isNativeText(currentVal)) {
-            // Aqui buscamos a tradução equivalente no mapeamento global
+        
+        // SEGURANÇA: Só tentamos traduzir se o valor for efetivamente uma STRING
+        if (typeof currentVal === 'string' && isNativeText(currentVal)) {
             const mapping = {
                 "global-cover-eye": t.personalPlanner,
                 "global-cover-title": t.roadmap,
