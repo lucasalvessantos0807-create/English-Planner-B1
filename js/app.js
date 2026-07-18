@@ -270,8 +270,11 @@ onAuthStateChanged(auth, async (user) => {
         if (langOptions.length > 0) {
             langOptions.forEach(btn => {
                 btn.onclick = async () => {
-                    const lang = btn.dataset.lang;
-                    if (confirm(translations[langCode ? langCode : lang].confirmMsg)) {
+                    const lang = btn.dataset.lang; // Pega o código do idioma (en, pt, es, fr)
+                    const dict = translations[lang] || translations.en; // Pega o dicionário correspondente
+                    
+                    // Corrigido: Usamos a variável 'lang' que acabamos de definir
+                    if (confirm(dict.confirmMsg)) {
                         await applyLanguage(lang, currentUser, userData);
                     }
                 };
