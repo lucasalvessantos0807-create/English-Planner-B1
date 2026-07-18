@@ -471,8 +471,15 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
-                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || 'Phase X'}</div>
-                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || 'Edit focus...'}</div>
+                // Localize dentro de renderDynamicOverviewBlocks:
+const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
+
+// Substitua a parte do innerHTML por:
+newBlock.innerHTML = `
+    ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
+    <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || t.phase + ' X'}</div>
+    <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || t.editFocus}</div>
+`;
             `;
             grid.appendChild(newBlock);
         });
@@ -518,7 +525,15 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
             <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
-            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || 'Edit task...'}</div>
+            // Localize dentro de renderDailyTemplate:
+const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
+
+// Substitua a parte do innerHTML por:
+row.innerHTML = `
+    ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+    <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
+    <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || t.editTask}</div>
+`;
         `;
         list.appendChild(row);
     });
