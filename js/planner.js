@@ -220,9 +220,13 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     
     if (!wk || !container) return;
 
+    // Busca traduções globais
+    const currentLang = window.appState?.language || 'en';
+    const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
+
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
-            <h3>${wk.label}</h3>
+            <h3>${wk.label.replace('Week', tGlobal.week || 'Week')}</h3>
             <p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p>
         </div>`;
 
@@ -230,18 +234,21 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const dayKey = `d${day.n}`;
         const fullKey = `m${m}-${dayKey}`;
         const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
-        // Tradução dinâmica dos nomes dos dias salvos no banco
+        
+        // Dicionário de tradução para os nomes dos dias
         const dayNamesDict = {
             en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
             pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
             es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
             fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
         };
-        const currentLang = window.appState?.language || 'en';
-        // Se o nome do dia for um nome padrão de sistema, traduzimos na hora de exibir
-        const dayIndex = dIdx % 7;
-        const displayName = isNativeText(day.name) ? dayNamesDict[currentLang][dayIndex] : day.name;
-        
+
+        // Traduz o nome do dia se ele for um nome nativo (padrão do sistema)
+        const dayIndex = (day.n - 1) % 7; 
+        const displayName = (window.isNativeText && window.isNativeText(day.name)) 
+            ? (dayNamesDict[currentLang] ? dayNamesDict[currentLang][dayIndex] : day.name) 
+            : day.name;
+
         const card = document.createElement("div");
         card.className = "daycard";
         const isOpen = openDays.includes(day.n.toString());
@@ -273,9 +280,10 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
                 <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
-                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>Completed</span></label>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>${tGlobal.completed || 'Completed'}</span></label>
             </div>`;
 
+        // Lógica de Edição (Mantida conforme original)
         if (isEditMode && !isPreview) {
             card.querySelectorAll('.aico').forEach(icon => {
                 icon.onclick = (e) => {
