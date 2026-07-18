@@ -98,9 +98,10 @@ function isNativeText(text) {
         "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
         "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
         "overview", "visão geral", "resumen", "aperçu",
-        "phase x", "fase x", "fase x", "phase x",
+        "phase 1", "phase 2", "phase 3", "phase x",
+        "fase 1", "fase 2", "fase 3", "fase x",
         "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
-        "edit task...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description..."
+        "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description..."
     ];
     
     return flat.includes(text.toLowerCase()) || extraDefaults.includes(text.toLowerCase());
