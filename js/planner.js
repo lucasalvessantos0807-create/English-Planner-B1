@@ -490,9 +490,21 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
+            
+            // Lógica para manter o número (1, 2, 3) se for um bloco inicial
+            let defaultTitle = t.phase + " X";
+            if (blockId.includes('first')) {
+                const num = blockId.split('-').pop(); // Pega o número do ID (1, 2 ou 3)
+                defaultTitle = t.phase + " " + num;
+            }
+
+            const currentTitle = content[blockId + '-title'];
+            // Se o título atual for nativo (Phase 1, etc), forçamos a tradução mantendo o número
+            const displayTitle = (window.isNativeText && window.isNativeText(currentTitle)) ? defaultTitle : (currentTitle || defaultTitle);
+
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
-                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || t.phase + ' X'}</div>
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${displayTitle}</div>
                 <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || t.editFocus}</div>
             `;
             grid.appendChild(newBlock);
@@ -537,10 +549,19 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null, lang
         const row = document.createElement('div');
         row.className = 'tpl-row';
         row.id = `${prefix}row-container-${rowId}`;
+        content.templateRows.forEach(rowId => {
+        const row = document.createElement('div');
+        row.className = 'tpl-row';
+        row.id = `${prefix}row-container-${rowId}`;
+
+        const currentAct = content[rowId + '-a'];
+        // Se for o texto padrão "Edit task description...", traduzimos
+        const displayAct = (window.isNativeText && window.isNativeText(currentAct)) ? t.editTask : (currentAct || t.editTask);
+
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
             <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
-            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || t.editTask}</div>
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${displayAct}</div>
         `;
         list.appendChild(row);
     });
