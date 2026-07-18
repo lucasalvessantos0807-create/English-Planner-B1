@@ -117,6 +117,7 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const data = content || {};
     const t = translations[langCode] || translations.en;
     
+    // Mapeamento de IDs para textos traduzidos (UI fixa)
     const mapping = {
         "global-cover-eye": t.personalPlanner,
         "global-cover-title": t.roadmap,
@@ -132,34 +133,23 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "addMonthBtn": t.addMonth,
         "addOverviewBlockBtn": t.addBlock,
         "addTemplateRowBtn": t.addTask,
-        "main-new-btn": t.new,
-        "nav-all-docs": `<span>📁</span> <span class="sidebar-text">${t.documents}</span>`,
-        "nav-favorites": `<span>⭐</span> <span class="sidebar-text">${t.favorites}</span>`,
-        "nav-shared": `<span>👥</span> <span class="sidebar-text">${t.shared}</span>`,
-        "btn-select-items": `<span class="vlist-text">${t.selectItems}</span><span class="vlist-icon">☑️</span>`,
-        "btn-view-grid": `<span class="vlist-check">✓</span><span class="vlist-text">${t.grid}</span>`,
-        "btn-view-list": `<span class="vlist-check" style="visibility: hidden;">✓</span><span class="vlist-text">${t.list}</span><span class="vlist-icon">≡</span>`
+        "main-new-btn": t.new
     };
 
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     if (!parent) return;
 
+    // Atualiza textos fixos
     Object.keys(mapping).forEach(id => {
         const el = parent.querySelector(`#${targetPrefix}${id}`);
-        if (el) {
-            const cleanId = id.replace('global-', '');
-            const val = data[cleanId];
-            // Se for texto nativo ou vazio, aplicamos a tradução. Se for personalizado, mantemos.
-            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-') || id.includes('sec-')) {
-                el.innerHTML = mapping[id];
-            }
-        }
+        if (el) el.innerHTML = mapping[id];
     });
 
-    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
-    renderDynamicOverviewBlocks(uid, targetPrefix, data, langCode);
-    renderDailyTemplate(uid, targetPrefix, data, langCode);
+    // Atualiza blocos dinâmicos (Overview e Template)
+    renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
+    renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
 }
+
 async function applyLanguage(langCode, uid, userData) {
     const dict = translations[langCode];
     if (!dict) return;
