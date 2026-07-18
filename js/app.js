@@ -17,7 +17,13 @@ const translations = {
         goalHint: "Enter your main goal here — describe what you want to achieve.",
         overview: "3-Month Overview", dailyTemplate: "Daily Template (1.5–2 hours)",
         progress: "Your Progress", daysCompleted: "Days completed", learningProg: "Learning Progress",
-        monthlyPlans: "Monthly Plans"
+        monthlyPlans: "Monthly Plans", addMonth: "+ Add Month", addBlock: "+ Add Overview Block",
+        addTask: "+ Add Task", documents: "Documents", favorites: "Favorites", shared: "Shared Documents",
+        new: "+ New", selectItems: "Select Items", grid: "Grid", list: "List",
+        creationDate: "Creation Date", lastModified: "Last Modified", name: "Name", type: "Type",
+        promptDays: "How many days for this new month?", promptMonthDays: "How many days should Month {m} have?",
+        promptRestructure: "Reducing days will delete data on extra days. Proceed?",
+        untitledNB: "Untitled Notebook", notebook: "Notebook", textDoc: "Text Document"
     },
     pt: {
         confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
@@ -29,7 +35,13 @@ const translations = {
         goalHint: "Insira sua meta principal aqui — descreva o que deseja alcançar.",
         overview: "Visão Geral de 3 Meses", dailyTemplate: "Modelo Diário (1.5–2 horas)",
         progress: "Seu Progresso", daysCompleted: "Dias concluídos", learningProg: "Progresso de Aprendizado",
-        monthlyPlans: "Planos Mensais"
+        monthlyPlans: "Planos Mensais", addMonth: "+ Adicionar Mês", addBlock: "+ Adicionar Bloco de Visão Geral",
+        addTask: "+ Adicionar Tarefa", documents: "Documentos", favorites: "Favoritos", shared: "Documentos Compartilhados",
+        new: "+ Novo", selectItems: "Selecionar Itens", grid: "Grade", list: "Lista",
+        creationDate: "Data de Criação", lastModified: "Última Modificação", name: "Nome", type: "Tipo",
+        promptDays: "Quantos dias para este novo mês?", promptMonthDays: "Quantos dias o Mês {m} deve ter?",
+        promptRestructure: "Reduzir dias excluirá dados dos dias extras. Prosseguir?",
+        untitledNB: "Caderno sem Título", notebook: "Caderno", textDoc: "Documento de Texto"
     },
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
@@ -40,20 +52,32 @@ const translations = {
         roadmapSub: "Duración Personalizada · Metas Diarias · Tu Enfoque", yourGoal: "🎯 Tu Meta",
         goalHint: "Ingresa tu meta principal aquí — describe lo que quieres lograr.",
         overview: "Resumen de 3 Meses", dailyTemplate: "Plantilla Diaria (1.5–2 horas)",
-        progress: "Tu Progresso", daysCompleted: "Días completados", learningProg: "Progreso de Aprendizaje",
-        monthlyPlans: "Planes Mensuales"
+        progress: "Tu Progreso", daysCompleted: "Días completados", learningProg: "Progreso de Aprendizaje",
+        monthlyPlans: "Planes Mensuales", addMonth: "+ Añadir Mes", addBlock: "+ Añadir Bloque de Resumen",
+        addTask: "+ Añadir Tarea", documents: "Documentos", favorites: "Favoritos", shared: "Documentos Compartidos",
+        new: "+ Nuevo", selectItems: "Seleccionar Ítems", grid: "Cuadrícula", list: "Lista",
+        creationDate: "Fecha de Creación", lastModified: "Última Modificación", name: "Nombre", type: "Tipo",
+        promptDays: "¿Cuántos días para este nuevo mes?", promptMonthDays: "¿Cuántos días deve tener el Mes {m}?",
+        promptRestructure: "Reducir días eliminará datos de los días extras. ¿Continuar?",
+        untitledNB: "Cuaderno sin Título", notebook: "Cuaderno", textDoc: "Documento de Texto"
     },
     fr: {
         confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
         month: "Mois", week: "Semaine", activity: "Activité", dailyAct: "Activité Quotidienne",
-        studyTopic: "Sujet d'Étude", editDetails: "Modifier detalhes", phase: "Phase", 
+        studyTopic: "Sujet d'Étude", editDetails: "Modifier les détails", phase: "Phase", 
         editFocus: "Modifier le focus...", editTask: "Modifier la description...",
         personalPlanner: "Planificateur d'Études Personnel", roadmap: "Votre Feuille de Route",
         roadmapSub: "Durée Personnalisée · Objectifs Quotidiens · Votre Focus", yourGoal: "🎯 Votre Objectif",
-        goalHint: "Entrez votre objectif principal aqui — décrivez ce que vous voulez accomplir.",
+        goalHint: "Entrez votre objectif principal ici — décrivez ce que vous voulez accomplir.",
         overview: "Aperçu de 3 Mois", dailyTemplate: "Modèle Quotidien (1.5–2 heures)",
         progress: "Votre Progrès", daysCompleted: "Jours complétés", learningProg: "Progrès d'Apprentissage",
-        monthlyPlans: "Plans Mensuels"
+        monthlyPlans: "Plans Mensuels", addMonth: "+ Ajouter Mois", addBlock: "+ Ajouter un bloc d'aperçu",
+        addTask: "+ Ajouter une tâche", documents: "Documents", favorites: "Favoris", shared: "Documents Partagés",
+        new: "+ Nouveau", selectItems: "Sélectionner des éléments", grid: "Grille", list: "Liste",
+        creationDate: "Date de Création", lastModified: "Dernière Modification", name: "Nom", type: "Type",
+        promptDays: "Combien de jours para ce nouveau mois?", promptMonthDays: "Combien de jours le Mois {m} doit-il avoir?",
+        promptRestructure: "Réduire les jours supprimera les données des jours supplémentaires. Continuer?",
+        untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document Texte"
     }
 };
 
@@ -101,28 +125,36 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "global-sec-template": t.dailyTemplate,
         "global-prog-lbl": t.daysCompleted,
         "global-mstat": t.learningProg,
-        "global-sec-monthly": t.monthlyPlans
+        "global-sec-monthly": t.monthlyPlans,
+        "addMonthBtn": t.addMonth,
+        "addOverviewBlockBtn": t.addBlock,
+        "addTemplateRowBtn": t.addTask,
+        "main-new-btn": t.new,
+        "nav-all-docs": `<span>📁</span> <span class="sidebar-text">${t.documents}</span>`,
+        "nav-favorites": `<span>⭐</span> <span class="sidebar-text">${t.favorites}</span>`,
+        "nav-shared": `<span>👥</span> <span class="sidebar-text">${t.shared}</span>`,
+        "btn-select-items": `<span class="vlist-text">${t.selectItems}</span><span class="vlist-icon">☑️</span>`,
+        "btn-view-grid": `<span class="vlist-check">✓</span><span class="vlist-text">${t.grid}</span>`,
+        "btn-view-list": `<span class="vlist-check" style="visibility: hidden;">✓</span><span class="vlist-text">${t.list}</span><span class="vlist-icon">≡</span>`
     };
 
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     if (!parent) return;
 
-    parent.querySelectorAll(".editable-global, .cover-eye, .cover-title, .cover-sub").forEach(el => {
-        const cleanId = el.id.replace(targetPrefix, '');
-        const val = data[cleanId];
-        
-        if (mapping[cleanId] && isNativeText(val)) {
-            el.innerHTML = mapping[cleanId];
-        } else if (val !== undefined && val !== null && val !== "" && val !== "undefined") {
-            el.innerHTML = val;
-        } else if (mapping[cleanId]) {
-            el.innerHTML = mapping[cleanId];
+    Object.keys(mapping).forEach(id => {
+        const el = parent.querySelector(`#${targetPrefix}${id}`);
+        if (el) {
+            const cleanId = id.replace('global-', '');
+            const val = data[cleanId];
+            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-')) {
+                el.innerHTML = mapping[id];
+            }
         }
     });
 
     const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
-    renderDynamicOverviewBlocks(uid, targetPrefix, data);
-    renderDailyTemplate(uid, targetPrefix, data);
+    renderDynamicOverviewBlocks(uid, targetPrefix, data, langCode);
+    renderDailyTemplate(uid, targetPrefix, data, langCode);
 }
 
 async function applyLanguage(langCode, uid, userData) {
