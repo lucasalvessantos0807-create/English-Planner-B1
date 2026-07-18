@@ -86,9 +86,9 @@ window.isNativeText = isNativeText;
 
 
 function isNativeText(text) {
-    // Se o valor for nulo, indefinido ou NÃO for uma string (como os arrays de IDs), ignoramos.
     if (!text || typeof text !== 'string') return false; 
     
+    const lowerText = text.toLowerCase().trim();
     const flat = [];
     Object.values(translations).forEach(l => Object.values(l).forEach(v => {
         if (typeof v === 'string') flat.push(v.toLowerCase());
@@ -101,10 +101,17 @@ function isNativeText(text) {
         "phase 1", "phase 2", "phase 3", "phase x",
         "fase 1", "fase 2", "fase 3", "fase x",
         "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
-        "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description..."
+        "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description...",
+        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+        "segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo",
+        "lunes", "martes", "miércoles", "jueves", "viernes", "sabado", "domingo",
+        "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+        "week 1", "week 2", "week 3", "week 4", "week 5",
+        "semana 1", "semana 2", "semana 3", "semana 4", "semana 5",
+        "semaine 1", "semaine 2", "semaine 3", "semaine 4", "semaine 5"
     ];
     
-    return flat.includes(text.toLowerCase()) || extraDefaults.includes(text.toLowerCase());
+    return flat.includes(lowerText) || extraDefaults.includes(lowerText);
 }
 
 // --- MOBILE MENU SYSTEM ---
