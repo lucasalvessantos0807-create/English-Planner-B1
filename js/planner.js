@@ -456,12 +456,13 @@ export function addOverviewBlock(uid) {
     renderDynamicOverviewBlocks(uid);
 }
 
-export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = null) {
+export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = null, langCode = 'en') {
     const gridId = prefix + 'dynamic-ov-grid';
     const grid = document.getElementById(gridId);
     if (!grid) return;
 
     const content = customContent || window.pageContent || {};
+    const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
     grid.innerHTML = '';
 
     if(content.dynamicBlocks) {
@@ -471,15 +472,8 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.id = `${prefix}container-${blockId}`;
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
-                // Localize dentro de renderDynamicOverviewBlocks:
-const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
-
-// Substitua a parte do innerHTML por:
-newBlock.innerHTML = `
-    ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
-    <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || t.phase + ' X'}</div>
-    <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || t.editFocus}</div>
-`;
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${content[blockId + '-title'] || t.phase + ' X'}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${content[blockId + '-body'] || t.editFocus}</div>
             `;
             grid.appendChild(newBlock);
         });
@@ -490,7 +484,7 @@ newBlock.innerHTML = `
             el.onfocus = () => pushToUndo();
             el.onblur = () => { 
                 window.pageContent[el.id] = el.innerHTML; 
-                saveUserData(uid); // Envia para o Firebase ao terminar de editar
+                saveUserData(uid); 
             };
         });
         grid.querySelectorAll('.del-ov-btn').forEach(btn => {
@@ -509,12 +503,13 @@ newBlock.innerHTML = `
 }
 
 // --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
-export function renderDailyTemplate(uid, prefix = "", customContent = null) {
+export function renderDailyTemplate(uid, prefix = "", customContent = null, langCode = 'en') {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
     if (!list) return;
 
     const content = customContent || window.pageContent || {};
+    const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
     if (!content.templateRows) content.templateRows = [];
     list.innerHTML = '';
 
@@ -525,15 +520,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null) {
         row.innerHTML = `
             ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
             <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
-            // Localize dentro de renderDailyTemplate:
-const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
-
-// Substitua a parte do innerHTML por:
-row.innerHTML = `
-    ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
-    <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
-    <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || t.editTask}</div>
-`;
+            <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${content[rowId + '-a'] || t.editTask}</div>
         `;
         list.appendChild(row);
     });
@@ -544,7 +531,7 @@ row.innerHTML = `
             el.onblur = () => { 
                 if (!window.pageContent) window.pageContent = {}; 
                 window.pageContent[el.id] = el.innerHTML; 
-                saveUserData(uid); // Envia para o Firebase ao terminar de editar
+                saveUserData(uid); 
             };
         });
         
@@ -560,7 +547,6 @@ row.innerHTML = `
         });
     }
 }
-
 // Listener para o botão de adicionar linha no template
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
