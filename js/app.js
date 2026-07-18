@@ -79,8 +79,9 @@ export const translations = {
         promptRestructure: "Réduire les jours supprimera les données des jours supplémentaires. Continuer?",
         untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document Texte"
     }
-    window.translations = translations;
 };
+// Torna o dicionário acessível globalmente para outros arquivos
+window.translations = translations;
 
 function isNativeText(text) {
     if (!text) return true;
@@ -124,6 +125,7 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "global-goal-text": t.goalHint,
         "global-sec-overview": t.overview,
         "global-sec-template": t.dailyTemplate,
+        "global-sec-progress": t.progress,
         "global-prog-lbl": t.daysCompleted,
         "global-mstat": t.learningProg,
         "global-sec-monthly": t.monthlyPlans,
@@ -147,7 +149,8 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         if (el) {
             const cleanId = id.replace('global-', '');
             const val = data[cleanId];
-            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-')) {
+            // Se for texto nativo ou vazio, aplicamos a tradução. Se for personalizado, mantemos.
+            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-') || id.includes('sec-')) {
                 el.innerHTML = mapping[id];
             }
         }
@@ -157,7 +160,6 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     renderDynamicOverviewBlocks(uid, targetPrefix, data, langCode);
     renderDailyTemplate(uid, targetPrefix, data, langCode);
 }
-
 async function applyLanguage(langCode, uid, userData) {
     const dict = translations[langCode];
     if (!dict) return;
