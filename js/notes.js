@@ -189,55 +189,63 @@ export function createFolder() {
 
 export function createDocument(type = 'Document', paper = 'Blank', customName = null) {
     let name = customName;
-    if (!name) {
+    
+    // Importamos as traduções dinamicamente para garantir que pegue o idioma atual
+    import('./app.js').then(appMod => {
         const lang = window.appState?.language || 'en';
-    const t = translations[lang] || translations.en;
-    const typeTranslated = type === 'Notebook' ? t.notebook : (type === 'Text Document' ? t.textDoc : type);
-    
-    const promptMsgs = {
-        en: `Enter ${typeTranslated} name:`,
-        pt: `Digite o nome do ${typeTranslated}:`,
-        es: `Ingrese el nombre del ${typeTranslated}:`,
-        fr: `Entrez le nom du ${typeTranslated}:`
-    };
-    
-    if (!name) {
-        name = prompt(promptMsgs[lang] || promptMsgs.en, t.untitledNB);
-    }
-    if (!name) return;
+        // Acessamos o objeto de traduções que está no app.js
+        const translations = appMod.translations; 
+        const t = translations[lang] || translations.en;
+        
+        const typeTranslated = type === 'Notebook' ? t.notebook : (type === 'Text Document' ? t.textDoc : type);
+        
+        const promptMsgs = {
+            en: `Enter ${typeTranslated} name:`,
+            pt: `Digite o nome do ${typeTranslated}:`,
+            es: `Ingrese el nombre del ${typeTranslated}:`,
+            fr: `Entrez le nom du ${typeTranslated}:`
+        };
 
-    const size = document.getElementById('nb-size-select')?.value || 'goodnotes';
-    const orientation = document.querySelector('.nb-orient-btn.active')?.dataset.orientation || 'portrait';
-    
-    const activeColorOpt = document.querySelector('.nb-color-option.active');
-    let paperColor = 'white';
-    if (activeColorOpt) {
-        if (activeColorOpt.dataset.color === 'custom') {
-            paperColor = document.getElementById('nb-custom-color-input').value;
-        } else {
-            paperColor = activeColorOpt.dataset.color;
+        if (!name) {
+            name = prompt(promptMsgs[lang] || promptMsgs.en, t.untitledNB);
         }
-    }
+        
+        if (!name) return;
 
-    const newDoc = {
-        id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5),
-        name: name,
-        parentId: currentFolderId || null,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        favorite: false,
-        shared: false,
-        paperType: paper,
-        paperSize: size,
-        orientation: orientation,
-        paperColor: paperColor,
-        pages: [null, null], 
-        updatedAt: Date.now()
-    };
-    if (!library.documents) library.documents = [];
-    library.documents.push(newDoc);
-    saveLibrary();
-    openDocument(newDoc);
+        const size = document.getElementById('nb-size-select')?.value || 'goodnotes';
+        const orientation = document.querySelector('.nb-orient-btn.active')?.dataset.orientation || 'portrait';
+        
+        const activeColorOpt = document.querySelector('.nb-color-option.active');
+        let paperColor = 'white';
+        if (activeColorOpt) {
+            if (activeColorOpt.dataset.color === 'custom') {
+                paperColor = document.getElementById('nb-custom-color-input').value;
+            } else {
+                paperColor = activeColorOpt.dataset.color;
+            }
+        }
+
+        const newDoc = {
+            id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 5),
+            name: name,
+            parentId: currentFolderId || null,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            favorite: false,
+            shared: false,
+            paperType: paper,
+            paperSize: size,
+            orientation: orientation,
+            paperColor: paperColor,
+            pages: [null, null], 
+            updatedAt: Date.now()
+        };
+        
+        if (!library.documents) library.documents = [];
+        library.documents.push(newDoc);
+        saveLibrary();
+        openDocument(newDoc);
+    });
 }
 
 async function saveLibrary() {
