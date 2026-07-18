@@ -79,6 +79,7 @@ export const translations = {
         promptRestructure: "Réduire les jours supprimera les données des jours supplémentaires. Continuer?",
         untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document Texte"
     }
+    window.translations = translations;
 };
 
 function isNativeText(text) {
