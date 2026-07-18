@@ -485,7 +485,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
     grid.innerHTML = '';
 
-    if(content.dynamicBlocks) {
+    if (content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
@@ -523,7 +523,7 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             btn.onclick = (e) => {
                 e.stopPropagation();
                 const bId = btn.dataset.id;
-                if(confirm("Delete this block?")) {
+                if (confirm("Delete this block?")) {
                     pushToUndo();
                     const elToRemove = document.getElementById(`container-${bId}`);
                     if (elToRemove) elToRemove.remove();
@@ -549,17 +549,13 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null, lang
         const row = document.createElement('div');
         row.className = 'tpl-row';
         row.id = `${prefix}row-container-${rowId}`;
-        content.templateRows.forEach(rowId => {
-        const row = document.createElement('div');
-        row.className = 'tpl-row';
-        row.id = `${prefix}row-container-${rowId}`;
 
         const currentAct = content[rowId + '-a'];
         // Se for o texto padrão "Edit task description...", traduzimos
         const displayAct = (window.isNativeText && window.isNativeText(currentAct)) ? t.editTask : (currentAct || t.editTask);
 
         row.innerHTML = `
-            ${(isEditMode && !prefix) ? `<button class="del-tpl-btn" data-id="${rowId}">✕</button>` : ''}
+            ${(isEditMode && !prefix) ? '<button class="del-tpl-btn" data-id="' + rowId + '">✕</button>' : ''}
             <div class="tpl-time ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-t" contenteditable="${isEditMode && !prefix}">${content[rowId + '-t'] || '00:00'}</div>
             <div class="tpl-act ${prefix ? '' : 'editable-global'}" id="${prefix}${rowId}-a" contenteditable="${isEditMode && !prefix}">${displayAct}</div>
         `;
@@ -579,7 +575,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null, lang
         list.querySelectorAll('.del-tpl-btn').forEach(btn => {
             btn.onclick = () => {
                 const rId = btn.dataset.id;
-                if(confirm("Delete this task?")) {
+                if (confirm("Delete this task?")) {
                     pushToUndo();
                     window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
                     renderDailyTemplate(uid);
