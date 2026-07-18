@@ -230,6 +230,17 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const dayKey = `d${day.n}`;
         const fullKey = `m${m}-${dayKey}`;
         const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
+        // Tradução dinâmica dos nomes dos dias salvos no banco
+        const dayNamesDict = {
+            en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
+            es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+            fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+        };
+        const currentLang = window.appState?.language || 'en';
+        // Se o nome do dia for um nome padrão de sistema, traduzimos na hora de exibir
+        const dayIndex = dIdx % 7;
+        const displayName = isNativeText(day.name) ? dayNamesDict[currentLang][dayIndex] : day.name;
         
         const card = document.createElement("div");
         card.className = "daycard";
@@ -255,7 +266,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
-                <div class="dayname">${day.name}</div>
+                <div class="dayname">${displayName}</div>
                 <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
