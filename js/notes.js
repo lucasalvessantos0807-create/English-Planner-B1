@@ -58,16 +58,19 @@ export function renderLibrary() {
     
     updateSelectionUI();
 
+    const lang = window.appState?.language || 'en';
+    const t = translations[lang] || translations.en;
+    
     if (breadcrumb) {
         if (currentView === 'favorites') {
-            breadcrumb.innerText = 'Favorites';
+            breadcrumb.innerText = t.favorites;
         } else if (currentView === 'shared') {
-            breadcrumb.innerText = 'Shared Documents';
+            breadcrumb.innerText = t.shared;
         } else if (!currentFolderId) {
-            breadcrumb.innerText = 'Documents';
+            breadcrumb.innerText = t.documents;
         } else {
             const folder = (library.folders || []).find(f => f.id === currentFolderId);
-            breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">Documents</span> / ${folder ? folder.name : 'Unknown'}`;
+            breadcrumb.innerHTML = `<span style="cursor:pointer; color:var(--accent);" id="back-to-root">${t.documents}</span> / ${folder ? folder.name : '...'}`;
             
             const backBtn = document.getElementById('back-to-root');
             if (backBtn) {
@@ -187,7 +190,19 @@ export function createFolder() {
 export function createDocument(type = 'Document', paper = 'Blank', customName = null) {
     let name = customName;
     if (!name) {
-        name = prompt(`Enter ${type} name:`, `Untitled ${type}`);
+        const lang = window.appState?.language || 'en';
+    const t = translations[lang] || translations.en;
+    const typeTranslated = type === 'Notebook' ? t.notebook : (type === 'Text Document' ? t.textDoc : type);
+    
+    const promptMsgs = {
+        en: `Enter ${typeTranslated} name:`,
+        pt: `Digite o nome do ${typeTranslated}:`,
+        es: `Ingrese el nombre del ${typeTranslated}:`,
+        fr: `Entrez le nom du ${typeTranslated}:`
+    };
+    
+    if (!name) {
+        name = prompt(promptMsgs[lang] || promptMsgs.en, t.untitledNB);
     }
     if (!name) return;
 
