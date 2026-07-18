@@ -82,6 +82,8 @@ export const translations = {
 };
 // Torna o dicionário acessível globalmente para outros arquivos
 window.translations = translations;
+window.isNativeText = isNativeText;
+
 
 function isNativeText(text) {
     // Se o valor for nulo, indefinido ou NÃO for uma string (como os arrays de IDs), ignoramos.
