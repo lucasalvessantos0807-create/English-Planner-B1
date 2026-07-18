@@ -348,36 +348,44 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
 // --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
-    const dayCount = parseInt(prompt("How many days for this new month?", "30"));
+    const lang = window.appState?.language || 'en';
+    const t = translations[lang] || translations.en;
+    
+    const dayCount = parseInt(prompt(t.promptDays, "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
     const currentMonths = [...new Set(Object.keys(window.plannerConfig).map(k => k.split('-')[0]))];
     const nextMonth = currentMonths.length > 0 ? Math.max(...currentMonths.map(Number)) + 1 : 1;
     
-    let currentDay = 1;
-    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayNamesDict = {
+        en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
+        es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+        fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    };
+    const dayNames = dayNamesDict[lang] || dayNamesDict.en;
 
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `Week ${w}`, theme: "New Month Plans",
-            days: Array.from({length: daysInW}, (_, i) => {
-                const d = currentDay++;
-                return { 
-                    n: d, 
-                    name: dayNames[i], 
-                    tag: "Activity", 
-                    activities: [{t:"grammar", i:"📐", title:"Task", desc:"Edit", time: "20m"}]
-                };
-            })
+            label: `${t.week} ${w}`, theme: t.monthlyPlans,
+            days: Array.from({length: daysInW}, (_, i) => ({
+                n: ((w-1)*7) + i + 1, 
+                name: dayNames[i % 7], 
+                tag: t.dailyAct, 
+                activities: [{t:"grammar", i:"📝", title: t.studyTopic, desc: t.editDetails, time: "20m"}]
+            }))
         };
     }
     saveUserData(uid).then(() => refreshUI(uid, nextMonth));
 }
 
 export function editMonthStructure(m, uid) {
-    let dayCountInput = prompt(`How many days should Month ${m} have?`, "30");
+    const lang = window.appState?.language || 'en';
+    const t = translations[lang] || translations.en;
+    
+    let dayCountInput = prompt(t.promptMonthDays.replace('{m}', m), "30");
     if (dayCountInput === null) return;
     let dayCount = parseInt(dayCountInput);
     if (isNaN(dayCount) || dayCount <= 0) return;
@@ -394,38 +402,38 @@ export function editMonthStructure(m, uid) {
     });
 
     if (dayCount < existingDays.length) {
-        if (!confirm(`Reducing to ${dayCount} days will delete data on extra days. Proceed?`)) return;
+        if (!confirm(t.promptRestructure)) return;
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
     weeksOfM.forEach(wk => delete window.plannerConfig[wk]);
 
-    let currentDayIdx = 0;
-    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayNamesDict = {
+        en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
+        es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+        fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    };
+    const dayNames = dayNamesDict[lang] || dayNamesDict.en;
 
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         const weekDays = [];
         for (let d = 0; d < daysInW; d++) {
-            const newDayNum = currentDayIdx + 1;
-            if (existingDays[currentDayIdx]) {
-                const preserved = existingDays[currentDayIdx];
-                preserved.n = newDayNum;
-                preserved.name = dayNames[d]; 
+            const currentIdx = ((w-1)*7) + d;
+            if (existingDays[currentIdx]) {
+                const preserved = existingDays[currentIdx];
+                preserved.n = currentIdx + 1;
+                preserved.name = dayNames[d % 7];
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
-                    n: newDayNum, 
-                    name: dayNames[d], 
-                    tag: "Activity", 
-                    activities: [{t:"grammar", i:"📐", title:"Task", desc:"Edit", time: "20m"}]
+                    n: currentIdx + 1, name: dayNames[d % 7], tag: t.dailyAct, 
+                    activities: [{t:"grammar", i:"📝", title: t.studyTopic, desc: t.editDetails, time: "20m"}]
                 });
             }
-            currentDayIdx++;
         }
-        window.plannerConfig[`${m}-${w}`] = {
-            label: `Week ${w}`, theme: "Updated", days: weekDays
-        };
+        window.plannerConfig[`${m}-${w}`] = { label: `${t.week} ${w}`, theme: t.monthlyPlans, days: weekDays };
     }
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
