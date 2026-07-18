@@ -195,9 +195,10 @@ export function toggleEditMode(uid) {
             };
         }
     });
+    const currentLang = window.appState?.language || 'en';
     refreshCurrentWeek(uid);
-    renderDynamicOverviewBlocks(uid);
-    renderDailyTemplate(uid);
+    renderDynamicOverviewBlocks(uid, "", window.pageContent, currentLang);
+    renderDailyTemplate(uid, "", window.pageContent, currentLang);
 }
 
 // --- RENDERIZAÇÃO DE SEMANAS E DIAS ---
