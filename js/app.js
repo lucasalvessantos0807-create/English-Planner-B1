@@ -1074,17 +1074,54 @@ if (googleLoginBtn) {
 export function forceTranslateAll(langCode) {
     const t = translations[langCode] || translations.en;
     
-    // 1. Traduzir dias da semana existentes
+    // Dicionário completo de dias para conversão de dados antigos
+    const dayNamesDict = {
+        en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
+        es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
+        fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    };
+
+    if (!dayNamesDict[langCode]) return;
+
+    // 1. Traduzir dias da semana existentes no plannerConfig
     Object.keys(window.plannerConfig).forEach(wkKey => {
-        const days = window.plannerConfig[wkKey].days;
-        const dayNamesDict = { en: ["Monday", ...], pt: ["Segunda", ...], ... };
-        days.forEach((day, i) => {
-            // Só traduz se for um dos dias nativos
-            if (isNativeText(day.name)) {
-                day.name = dayNamesDict[langCode][i % 7];
-            }
-        });
+        const week = window.plannerConfig[wkKey];
+        if (week && week.days) {
+            week.days.forEach((day, i) => {
+                // Só traduz se o nome atual do dia for um dos nomes padrão (nativos)
+                if (isNativeText(day.name)) {
+                    day.name = dayNamesDict[langCode][i % 7];
+                }
+            });
+        }
     });
-    // 2. Salva e recarrega
-    saveUserData(currentUser).then(() => window.location.reload());
+
+    // 2. Atualizar textos dinâmicos do PageContent que ainda são nativos
+    Object.keys(window.pageContent).forEach(id => {
+        const currentVal = window.pageContent[id];
+        // Se o texto for nativo (placeholder), forçamos a nova tradução
+        if (isNativeText(currentVal)) {
+            // Aqui buscamos a tradução equivalente no mapeamento global
+            const mapping = {
+                "global-cover-eye": t.personalPlanner,
+                "global-cover-title": t.roadmap,
+                "global-cover-sub": t.roadmapSub,
+                "global-goal-strong": t.yourGoal,
+                "global-goal-text": t.goalHint,
+                "global-sec-overview": t.overview,
+                "global-sec-template": t.dailyTemplate,
+                "global-prog-lbl": t.daysCompleted,
+                "global-mstat": t.learningProg,
+                "global-sec-monthly": t.monthlyPlans
+            };
+            if (mapping[id]) window.pageContent[id] = mapping[id];
+        }
+    });
+
+    // 3. Salva no Firebase e recarrega a página para aplicar
+    saveUserData(currentUser).then(() => {
+        console.log("Forced Translation Complete.");
+        window.location.reload();
+    });
 }
