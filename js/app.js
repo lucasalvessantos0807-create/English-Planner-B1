@@ -6,7 +6,7 @@ import { renderLibrary } from './notes.js';
 let currentUser = null;
 
 // --- LANGUAGE DICTIONARY SYSTEM ---
-const translations = {
+export const translations = {
     en: {
         confirmMsg: "Change system language to English? Custom texts will be preserved.",
         month: "Month", week: "Week", activity: "Activity", dailyAct: "Daily Activity",
