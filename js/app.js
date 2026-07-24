@@ -21,9 +21,13 @@ export const translations = {
         addTask: "+ Add Task", documents: "Documents", favorites: "Favorites", shared: "Shared Documents",
         new: "+ New", selectItems: "Select Items", grid: "Grid", list: "List",
         creationDate: "Creation Date", lastModified: "Last Modified", name: "Name", type: "Type",
-        promptDays: "How many days for this new month?", promptMonthDays: "How many days should Month {m} have?",
-        promptRestructure: "Reducing days will delete data on extra days. Proceed?",
-        untitledNB: "Untitled Notebook", notebook: "Notebook", textDoc: "Text Document"
+        untitledNB: "Untitled Notebook", notebook: "Notebook", textDoc: "Text Document",
+        editMode: "Edit Mode", personalize: "Personalize", settings: "Settings", 
+        switchAccount: "Switch Account", logout: "Logout", saveChanges: "Save Changes", 
+        cancelEdit: "Cancel Edit", undo: "Undo", backToPlanner: "Back to Planner",
+        completed: "Completed", notes: "Notes...", whiteboard: "Whiteboard", import: "Import",
+        quickRecord: "Quick Recording", quickNote: "QuickNote", scanDoc: "Scan Documents",
+        studySet: "Study Set", image: "Image", takePhoto: "Take Photo", folder: "Folder"
     },
     pt: {
         confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
@@ -35,31 +39,39 @@ export const translations = {
         goalHint: "Insira sua meta principal aqui — descreva o que deseja alcançar.",
         overview: "Visão Geral de 3 Meses", dailyTemplate: "Modelo Diário (1.5–2 horas)",
         progress: "Seu Progresso", daysCompleted: "Dias concluídos", learningProg: "Progresso de Aprendizado",
-        monthlyPlans: "Planos Mensais", addMonth: "+ Adicionar Mês", addBlock: "+ Adicionar Bloco de Visão Geral",
-        addTask: "+ Adicionar Tarefa", documents: "Documentos", favorites: "Favoritos", shared: "Documentos Compartilhados",
+        monthlyPlans: "Planos Mensais", addMonth: "+ Adicionar Mês", addBlock: "+ Adicionar Bloco",
+        addTask: "+ Adicionar Tarefa", documents: "Documentos", favorites: "Favoritos", shared: "Compartilhados",
         new: "+ Novo", selectItems: "Selecionar Itens", grid: "Grade", list: "Lista",
         creationDate: "Data de Criação", lastModified: "Última Modificação", name: "Nome", type: "Tipo",
-        promptDays: "Quantos dias para este novo mês?", promptMonthDays: "Quantos dias o Mês {m} deve ter?",
-        promptRestructure: "Reduzir dias excluirá dados dos dias extras. Prosseguir?",
-        untitledNB: "Caderno sem Título", notebook: "Caderno", textDoc: "Documento de Texto"
+        untitledNB: "Caderno sem Título", notebook: "Caderno", textDoc: "Documento de Texto",
+        editMode: "Modo Edição", personalize: "Personalizar", settings: "Configurações", 
+        switchAccount: "Trocar Conta", logout: "Sair", saveChanges: "Salvar Alterações", 
+        cancelEdit: "Cancelar Edição", undo: "Desfazer", backToPlanner: "Voltar ao Planner",
+        completed: "Concluído", notes: "Notas...", whiteboard: "Quadro Branco", import: "Importar",
+        quickRecord: "Gravação Rápida", quickNote: "Nota Rápida", scanDoc: "Escanear Documento",
+        studySet: "Conjunto de Estudo", image: "Imagem", takePhoto: "Tirar Foto", folder: "Pasta"
     },
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
         month: "Mes", week: "Semana", activity: "Actividad", dailyAct: "Actividad Diaria",
         studyTopic: "Tema de Estudio", editDetails: "Editar detalles", phase: "Fase", 
-        editFocus: "Editar enfoque...", editTask: "Editar descripción de tarea...",
+        editFocus: "Editar enfoque...", editTask: "Editar descripción...",
         personalPlanner: "Planificador de Estudios Personal", roadmap: "Tu Hoja de Ruta",
         roadmapSub: "Duración Personalizada · Metas Diarias · Tu Enfoque", yourGoal: "🎯 Tu Meta",
         goalHint: "Ingresa tu meta principal aquí — describe lo que quieres lograr.",
         overview: "Resumen de 3 Meses", dailyTemplate: "Plantilla Diaria (1.5–2 horas)",
-        progress: "Tu Progreso", daysCompleted: "Días completados", learningProg: "Progreso de Aprendizaje",
-        monthlyPlans: "Planes Mensuales", addMonth: "+ Añadir Mes", addBlock: "+ Añadir Bloque de Resumen",
-        addTask: "+ Añadir Tarea", documents: "Documentos", favorites: "Favoritos", shared: "Documentos Compartidos",
-        new: "+ Nuevo", selectItems: "Seleccionar Ítems", grid: "Cuadrícula", list: "Lista",
-        creationDate: "Fecha de Creación", lastModified: "Última Modificación", name: "Nombre", type: "Tipo",
-        promptDays: "¿Cuántos días para este nuevo mes?", promptMonthDays: "¿Cuántos días deve tener el Mes {m}?",
-        promptRestructure: "Reducir días eliminará datos de los días extras. ¿Continuar?",
-        untitledNB: "Cuaderno sin Título", notebook: "Cuaderno", textDoc: "Documento de Texto"
+        progress: "Tu Progresso", daysCompleted: "Días completados", learningProg: "Progreso de Aprendizaje",
+        monthlyPlans: "Planes Mensuales", addMonth: "+ Añadir Mes", addBlock: "+ Añadir Bloque",
+        addTask: "+ Añadir Tarea", documents: "Documentos", favorites: "Favoritos", shared: "Compartidos",
+        new: "+ Nuevo", selectItems: "Seleccionar elementos", grid: "Cuadrícula", list: "Lista",
+        creationDate: "Fecha de creación", lastModified: "Última modificación", name: "Nombre", type: "Tipo",
+        untitledNB: "Cuaderno sin título", notebook: "Cuaderno", textDoc: "Documento de texto",
+        editMode: "Modo Edición", personalize: "Personalizar", settings: "Ajustes", 
+        switchAccount: "Cambiar cuenta", logout: "Cerrar sesión", saveChanges: "Guardar cambios", 
+        cancelEdit: "Cancelar edición", undo: "Deshacer", backToPlanner: "Volver al Planner",
+        completed: "Completado", notes: "Notas...", whiteboard: "Pizarra", import: "Importar",
+        quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
+        studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta"
     },
     fr: {
         confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
@@ -71,13 +83,17 @@ export const translations = {
         goalHint: "Entrez votre objectif principal ici — décrivez ce que vous voulez accomplir.",
         overview: "Aperçu de 3 Mois", dailyTemplate: "Modèle Quotidien (1.5–2 heures)",
         progress: "Votre Progrès", daysCompleted: "Jours complétés", learningProg: "Progrès d'Apprentissage",
-        monthlyPlans: "Plans Mensuels", addMonth: "+ Ajouter Mois", addBlock: "+ Ajouter un bloc d'aperçu",
-        addTask: "+ Ajouter une tâche", documents: "Documents", favorites: "Favoris", shared: "Documents Partagés",
+        monthlyPlans: "Plans Mensuels", addMonth: "+ Ajouter Mois", addBlock: "+ Ajouter un bloc",
+        addTask: "+ Ajouter une tâche", documents: "Documents", favorites: "Favoris", shared: "Partagés",
         new: "+ Nouveau", selectItems: "Sélectionner des éléments", grid: "Grille", list: "Liste",
-        creationDate: "Date de Création", lastModified: "Dernière Modification", name: "Nom", type: "Type",
-        promptDays: "Combien de jours para ce nouveau mois?", promptMonthDays: "Combien de jours le Mois {m} doit-il avoir?",
-        promptRestructure: "Réduire les jours supprimera les données des jours supplémentaires. Continuer?",
-        untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document Texte"
+        creationDate: "Date de création", lastModified: "Dernière modification", name: "Nom", type: "Type",
+        untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document texte",
+        editMode: "Mode Édition", personalize: "Personnaliser", settings: "Paramètres", 
+        switchAccount: "Changer de compte", logout: "Déconnexion", saveChanges: "Enregistrer", 
+        cancelEdit: "Annuler", undo: "Annuler l'action", backToPlanner: "Retour au Planner",
+        completed: "Terminé", notes: "Notes...", whiteboard: "Tableau blanc", import: "Importer",
+        quickRecord: "Enregistrement rapide", quickNote: "Note rapide", scanDoc: "Scanner le document",
+        studySet: "Ensemble d'étude", image: "Image", takePhoto: "Prendre une photo", folder: "Dossier"
     }
 };
 // Torna o dicionário acessível globalmente para outros arquivos
@@ -141,41 +157,55 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
     const t = translations[langCode] || translations.en;
     
     const mapping = {
-        "global-cover-eye": t.personalPlanner,
-        "global-cover-title": t.roadmap,
-        "global-cover-sub": t.roadmapSub,
-        "global-goal-strong": t.yourGoal,
-        "global-goal-text": t.goalHint,
-        "global-sec-overview": t.overview,
-        "global-sec-template": t.dailyTemplate,
-        "global-sec-progress": t.progress,
-        "global-prog-lbl": t.daysCompleted,
-        "global-mstat": t.learningProg,
-        "global-sec-monthly": t.monthlyPlans,
-        "addMonthBtn": t.addMonth,
-        "addOverviewBlockBtn": t.addBlock,
-        "addTemplateRowBtn": t.addTask,
-        "main-new-btn": t.new
+        "global-cover-eye": t.personalPlanner, "global-cover-title": t.roadmap,
+        "global-cover-sub": t.roadmapSub, "global-goal-strong": t.yourGoal,
+        "global-goal-text": t.goalHint, "global-sec-overview": t.overview,
+        "global-sec-template": t.dailyTemplate, "global-sec-progress": t.progress,
+        "global-prog-lbl": t.daysCompleted, "global-mstat": t.learningProg,
+        "global-sec-monthly": t.monthlyPlans, "addMonthBtn": t.addMonth,
+        "addOverviewBlockBtn": t.addBlock, "addTemplateRowBtn": t.addTask,
+        "main-new-btn": t.new,
+        "editModeBtn": `<span class="fab-label">${t.editMode}</span><span class="fab-icon">✎</span>`,
+        "saveChangesBtn": `<span class="fab-label">${t.saveChanges}</span><span class="fab-icon">💾</span>`,
+        "cancelEditBtn": `<span class="fab-label">${t.cancelEdit}</span><span class="fab-icon">✖</span>`,
+        "undoBtn": `<span class="fab-label">${t.undo}</span><span class="fab-icon">↩</span>`,
+        "personalizeBtn": `<span class="fab-label">${t.personalize}</span><span class="fab-icon">🎨</span>`,
+        "openNotesBtn": `<span class="fab-label">${t.documents}</span><span class="fab-icon">📓</span>`,
+        "settingsBtn": `<span class="fab-label">${t.settings}</span><span class="fab-icon">⚙️</span>`,
+        "switchAccountBtn": `<span class="fab-label">${t.switchAccount}</span><span class="fab-icon">🔄</span>`,
+        "logoutBtn": `<span class="fab-label" style="color: #cc0000; font-weight: bold;">${t.logout}</span><span class="fab-icon" style="border-color: #ffcccc; color: #cc0000;">🚪</span>`,
+        "nav-all-docs": `<span>📁</span> <span class="sidebar-text">${t.documents}</span>`,
+        "nav-shared": `<span>👥</span> <span class="sidebar-text">${t.shared}</span>`,
+        "nav-favorites": `<span>⭐</span> <span class="sidebar-text">${t.favorites}</span>`,
+        "btn-new-notebook": `<span class="grid-icon">📓</span><span class="grid-text">${t.notebook}</span>`,
+        "btn-new-text-doc": `<span class="grid-icon">📄</span><span class="grid-text">${t.textDoc}</span>`,
+        "btn-new-whiteboard": `<span class="grid-icon">📋</span><span class="grid-text">${t.whiteboard}</span><span class="new-badge">NEW</span>`,
+        "btn-import-doc": `<span class="row-icon">📥</span><span class="row-text">${t.import}</span>`,
+        "btn-quick-record": `<span class="row-icon">🎙️</span><span class="row-text">${t.quickRecord}</span>`,
+        "btn-quick-note": `<span class="list-icon">📝</span><span class="list-text">${t.quickNote}</span>`,
+        "btn-scan-doc": `<span class="list-icon">📷</span><span class="list-text">${t.scanDoc}</span>`,
+        "btn-study-set": `<span class="list-icon">📁</span><span class="list-text">${t.studySet}</span>`,
+        "btn-add-image": `<span class="list-icon">🖼️</span><span class="list-text">${t.image}</span>`,
+        "btn-take-photo": `<span class="list-icon">📸</span><span class="list-text">${t.takePhoto}</span>`,
+        "btn-create-folder": `<span class="list-icon">📂</span><span class="list-text">${t.folder}</span>`
     };
 
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     if (!parent) return;
 
     Object.keys(mapping).forEach(id => {
-        const el = parent.querySelector(`#${targetPrefix}${id}`);
+        const el = parent.querySelector(`#${id}`); // Removido prefixo do mapeamento para botões globais
         if (el) {
             const cleanId = id.replace('global-', '');
             const val = data[cleanId];
-            if (isNativeText(val) || !val || id.includes('Btn') || id.includes('sec-')) {
+            if (window.isNativeText && window.isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-') || id.includes('sec-')) {
                 el.innerHTML = mapping[id];
             }
         }
     });
 
-    const uid = auth.currentUser ? auth.currentUser.uid : "preview-user";
-    // Passamos o langCode para as funções de renderização
-    renderDynamicOverviewBlocks(uid, targetPrefix, data, langCode);
-    renderDailyTemplate(uid, targetPrefix, data, langCode);
+    renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
+    renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
 }
 async function applyLanguage(langCode, uid, userData) {
     const dict = translations[langCode];
