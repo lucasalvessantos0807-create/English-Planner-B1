@@ -314,13 +314,13 @@
     <!-- DRAWERS PRINCIPAIS -->
     <div id="customDrawer" class="custom-drawer">
       <div class="drawer-header">
-        <span>Personalization</span>
+        <span id="personalization-drawer-title">Personalization</span>
         <button id="closeDrawer">✕</button>
       </div>
       <div class="drawer-body">
         <div class="control-group">
           <div id="fontStyleToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
-            Font Style <span id="fontArrow">▼</span>
+            <span id="label-font-style">Font Style</span> <span id="fontArrow">▼</span>
           </div>
           <div id="fontPickerWrapper" style="display:none; margin-top:10px;">
             <div class="font-search-container">
@@ -331,7 +331,7 @@
         </div>
         <div class="control-group" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 20px;">
           <label style="display:flex; justify-content:space-between; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted);">
-            Font Size <span id="fontSizeVal">15px</span>
+            <span id="label-font-size">Font Size</span> <span id="fontSizeVal">15px</span>
           </label>
           <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
         </div>
