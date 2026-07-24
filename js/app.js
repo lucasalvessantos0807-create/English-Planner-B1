@@ -164,7 +164,12 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "global-prog-lbl": t.daysCompleted, "global-mstat": t.learningProg,
         "global-sec-monthly": t.monthlyPlans, "addMonthBtn": t.addMonth,
         "addOverviewBlockBtn": t.addBlock, "addTemplateRowBtn": t.addTask,
-        "main-new-btn": t.new,
+        "main-new-btn": t.new, "personalization-drawer-title": t.personalize,
+        "label-font-style": t.fontStyle, "label-font-size": t.fontSize,
+        "settings-drawer-title": t.settings, "label-lang-settings": t.labelLangSettings || "Language",
+        "label-history": t.historyLabel, "clearHistoryBtn": t.clearAll,
+        "changeNameBtn": t.changeUsername, "manageAccountBtn": t.manageAccount,
+        "exportDataBtn": t.export, "importDataBtn": t.import, "importHistoryBtn": t.importHistory,
         "editModeBtn": `<span class="fab-label">${t.editMode}</span><span class="fab-icon">✎</span>`,
         "saveChangesBtn": `<span class="fab-label">${t.saveChanges}</span><span class="fab-icon">💾</span>`,
         "cancelEditBtn": `<span class="fab-label">${t.cancelEdit}</span><span class="fab-icon">✖</span>`,
@@ -177,32 +182,25 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "nav-all-docs": `<span>📁</span> <span class="sidebar-text">${t.documents}</span>`,
         "nav-shared": `<span>👥</span> <span class="sidebar-text">${t.shared}</span>`,
         "nav-favorites": `<span>⭐</span> <span class="sidebar-text">${t.favorites}</span>`,
-        "btn-new-notebook": `<span class="grid-icon">📓</span><span class="grid-text">${t.notebook}</span>`,
-        "btn-new-text-doc": `<span class="grid-icon">📄</span><span class="grid-text">${t.textDoc}</span>`,
-        "btn-new-whiteboard": `<span class="grid-icon">📋</span><span class="grid-text">${t.whiteboard}</span><span class="new-badge">NEW</span>`,
-        "btn-import-doc": `<span class="row-icon">📥</span><span class="row-text">${t.import}</span>`,
-        "btn-quick-record": `<span class="row-icon">🎙️</span><span class="row-text">${t.quickRecord}</span>`,
-        "btn-quick-note": `<span class="list-icon">📝</span><span class="list-text">${t.quickNote}</span>`,
-        "btn-scan-doc": `<span class="list-icon">📷</span><span class="list-text">${t.scanDoc}</span>`,
-        "btn-study-set": `<span class="list-icon">📁</span><span class="list-text">${t.studySet}</span>`,
-        "btn-add-image": `<span class="list-icon">🖼️</span><span class="list-text">${t.image}</span>`,
-        "btn-take-photo": `<span class="list-icon">📸</span><span class="list-text">${t.takePhoto}</span>`,
-        "btn-create-folder": `<span class="list-icon">📂</span><span class="list-text">${t.folder}</span>`
+        "btn-select-items": `<span class="vlist-text">${t.selectItems}</span><span class="vlist-icon">☑️</span>`,
+        "btn-view-grid": `<span class="vlist-check">✓</span><span class="vlist-text">${t.grid}</span>`,
+        "btn-view-list": `<span class="vlist-check" style="visibility: hidden;">✓</span><span class="vlist-text">${t.list}</span><span class="vlist-icon">≡</span>`
     };
 
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
     if (!parent) return;
 
     Object.keys(mapping).forEach(id => {
-        const el = parent.querySelector(`#${id}`); // Removido prefixo do mapeamento para botões globais
-        if (el) {
-            const cleanId = id.replace('global-', '');
-            const val = data[cleanId];
-            if (window.isNativeText && window.isNativeText(val) || !val || id.includes('Btn') || id.includes('nav-') || id.includes('sec-')) {
-                el.innerHTML = mapping[id];
-            }
-        }
+        const el = parent.querySelector(`#${id}`);
+        if (el) el.innerHTML = mapping[id];
     });
+
+    // Tradução das opções do Select de Ordenação da Library
+    const sortSelect = document.getElementById('sort-docs-select');
+    if (sortSelect) {
+        sortSelect.options[0].text = t.sortName || "Sort by Name";
+        sortSelect.options[1].text = t.lastModified || "Sort by Modified";
+    }
 
     renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
     renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
