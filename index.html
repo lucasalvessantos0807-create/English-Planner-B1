@@ -340,13 +340,13 @@
 
     <div id="settingsDrawer" class="custom-drawer">
       <div class="drawer-header">
-        <span>Settings & History</span>
+        <span id="settings-drawer-title">Settings & History</span>
         <button id="closeSettings">✕</button>
       </div>
       <div class="drawer-body">
         <div class="control-group">
           <div id="langToggle" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem;">
-            Language Settings <span id="langArrow">▼</span>
+            <span id="label-lang-settings">Language Settings</span> <span id="langArrow">▼</span>
           </div>
           <div id="langWrapper" style="display:none; margin-top:10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);">
             <div style="padding: 5px;" id="lang-options-container">
@@ -359,25 +359,23 @@
         </div>
         <div class="control-group" style="margin-top: 20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <label style="margin:0;">Change History (30 days)</label>
+            <label id="label-history">Change History (30 days)</label>
             <button id="clearHistoryBtn" style="font-size:0.65rem; color:#cc0000; background:none; border:none; cursor:pointer; text-decoration:underline;">Clear All</button>
           </div>
           <div id="historyList" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 5px;"></div>
         </div>
         <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; flex-direction: column; gap: 10px;">
-          <button class="topbar-logout" id="changeNameBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Change Username</button>
-            <button class="topbar-logout" id="manageAccountBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Manage Account</button>
+          <button class="topbar-logout" id="changeNameBtn">Change Username</button>
+            <button class="topbar-logout" id="manageAccountBtn">Manage Account</button>
           <div style="display: flex; gap: 8px; width: 100%;">
-            <button class="topbar-logout" id="exportDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Export</button>
-            <button class="topbar-logout" id="importDataBtn" style="flex: 1; border-color: var(--border); color: var(--ink);">Import</button>
+            <button class="topbar-logout" id="exportDataBtn" style="flex: 1;">Export</button>
+            <button class="topbar-logout" id="importDataBtn" style="flex: 1;">Import</button>
           </div>
           <input type="file" id="importFileInput" style="display:none;" accept=".json">
-          <button class="topbar-logout" id="importHistoryBtn" style="width:100%; border-color: var(--border); color: var(--ink);">Import History</button>
+          <button class="topbar-logout" id="importHistoryBtn">Import History</button>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
 <!-- ── PREVIEW SANDBOX ── -->
 <div id="previewSandbox" style="display:none; position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); overflow-y:auto; justify-content:center; align-items:flex-start; padding: 40px 20px;">
