@@ -255,6 +255,12 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
             let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
+            
+            // TRADUÇÃO DAS ATIVIDADES: Se o título/descrição salvos forem nativos, traduzimos agora
+            const displayActTitle = (window.isNativeText && window.isNativeText(act.title)) ? tGlobal.studyTopic : act.title;
+            const displayActDesc = (window.isNativeText && window.isNativeText(act.desc)) ? tGlobal.editDetails : act.desc;
+            const displayTag = (window.isNativeText && window.isNativeText(day.tag)) ? tGlobal.dailyAct : day.tag;
+
             return `
                 <div class="act">
                     <div class="aico-wrapper">
@@ -262,8 +268,8 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                         ${suggestionsHtml}
                     </div>
                     <div class="acont">
-                        <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${act.title}</div>
-                        <div class="adesc" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.desc">${act.desc}</div>
+                        <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${displayActTitle}</div>
+                        <div class="adesc" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.desc">${displayActDesc}</div>
                     </div>
                     <div class="atime" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
                     ${(isEditMode && !isPreview) ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
@@ -274,7 +280,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
                 <div class="dayname">${displayName}</div>
-                <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${day.tag}</div>
+                <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${displayTag}</div>
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
@@ -491,19 +497,19 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             
-            // Lógica rigorosa para traduzir títulos iniciais (Phase 1, 2, 3)
-            let currentTitle = content[blockId + '-title'] || '';
-            let displayTitle = currentTitle;
+            // BUSCA TRADUÇÃO: Se for 'first' (nativo) ou se o conteúdo for um placeholder padrão
+            const savedTitle = content[blockId + '-title'] || '';
+            const savedBody = content[blockId + '-body'] || '';
 
+            let displayTitle = savedTitle;
             if (blockId.includes('first')) {
                 const num = blockId.split('-').pop(); 
                 displayTitle = t.phase + " " + num;
-            } else if (window.isNativeText && window.isNativeText(currentTitle)) {
+            } else if (!savedTitle || (window.isNativeText && window.isNativeText(savedTitle))) {
                 displayTitle = t.phase + " X";
             }
 
-            const currentBody = content[blockId + '-body'] || '';
-            const displayBody = (window.isNativeText && window.isNativeText(currentBody)) ? t.editFocus : (currentBody || t.editFocus);
+            const displayBody = (window.isNativeText && window.isNativeText(savedBody)) ? t.editFocus : (savedBody || t.editFocus);
 
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
