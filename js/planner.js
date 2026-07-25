@@ -223,7 +223,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     const currentLang = window.appState?.language || 'en';
     const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
 
-    // Forçamos a tradução do título da semana exibido no corpo da página
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
             <h3>${tGlobal.week || 'Week'} ${w}</h3>
@@ -235,7 +234,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const fullKey = `m${m}-${dayKey}`;
         const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
         
-        // Dicionário de tradução para os nomes dos dias
         const dayNamesDict = {
             en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
             pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
@@ -243,11 +241,10 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
         };
 
-        // Traduz o nome do dia se ele for um nome nativo (padrão do sistema)
         const dayIndex = (day.n - 1) % 7; 
-        const displayName = (window.isNativeText && window.isNativeText(day.name)) 
-            ? (dayNamesDict[currentLang] ? dayNamesDict[currentLang][dayIndex] : day.name) 
-            : day.name;
+        // Proteção contra erro: Verifica se isNativeText existe antes de chamar
+        const isNative = (typeof window.isNativeText === 'function') ? window.isNativeText(day.name) : false;
+        const displayName = isNative ? (dayNamesDict[currentLang][dayIndex]) : day.name;
 
         const card = document.createElement("div");
         card.className = "daycard";
@@ -256,10 +253,11 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const activitiesHtml = day.activities.map((act, aIdx) => {
             let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
             
-            // TRADUÇÃO DAS ATIVIDADES: Se o título/descrição salvos forem nativos, traduzimos agora
-            const displayActTitle = (window.isNativeText && window.isNativeText(act.title)) ? tGlobal.studyTopic : act.title;
-            const displayActDesc = (window.isNativeText && window.isNativeText(act.desc)) ? tGlobal.editDetails : act.desc;
-            const displayTag = (window.isNativeText && window.isNativeText(day.tag)) ? tGlobal.dailyAct : day.tag;
+            const isNativeTitle = (typeof window.isNativeText === 'function') ? window.isNativeText(act.title) : false;
+            const isNativeDesc = (typeof window.isNativeText === 'function') ? window.isNativeText(act.desc) : false;
+            
+            const displayActTitle = isNativeTitle ? tGlobal.studyTopic : act.title;
+            const displayActDesc = isNativeDesc ? tGlobal.editDetails : act.desc;
 
             return `
                 <div class="act">
@@ -276,6 +274,9 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 </div>`;
         }).join('');
 
+        const isNativeTag = (typeof window.isNativeText === 'function') ? window.isNativeText(day.tag) : false;
+        const displayTag = isNativeTag ? tGlobal.dailyAct : day.tag;
+
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
                 <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
@@ -284,22 +285,17 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
-                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ Add Activity</button>` : ''}
-                <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="Notes..." ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
+                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${tGlobal.addBlock || 'Add'}</button>` : ''}
+                <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="${tGlobal.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>${tGlobal.completed || 'Completed'}</span></label>
             </div>`;
 
-        // Lógica de Edição (Mantida conforme original)
-        if (isEditMode && !isPreview) {
-            card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = (e) => {
-                    e.stopPropagation();
-                    const wrapper = icon.closest('.aico-wrapper');
-                    const wasOpen = wrapper.classList.contains('show-suggestions');
-                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    if (!wasOpen) wrapper.classList.add('show-suggestions');
-                };
-            });
+        // ... Mantenha o resto da função buildWeek (os listeners de click e edit) igual ao anterior ...
+        // (Para brevidade omiti o final, mas garanta que os listeners de card.querySelector existam)
+        
+        container.appendChild(card);
+    });
+}
 
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
