@@ -223,6 +223,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     const currentLang = window.appState?.language || 'en';
     const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
 
+    // Forçamos a tradução do título da semana exibido no corpo da página
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
             <h3>${tGlobal.week || 'Week'} ${w}</h3>
@@ -285,18 +286,92 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             </div>
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
-                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${tGlobal.addBlock || 'Add'}</button>` : ''}
+                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${tGlobal.activity || 'Activity'}</button>` : ''}
                 <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="${tGlobal.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>${tGlobal.completed || 'Completed'}</span></label>
             </div>`;
 
-        // ... Mantenha o resto da função buildWeek (os listeners de click e edit) igual ao anterior ...
-        // (Para brevidade omiti o final, mas garanta que os listeners de card.querySelector existam)
-        
+        if (isEditMode && !isPreview) {
+            card.querySelectorAll('.aico').forEach(icon => {
+                icon.onclick = (e) => {
+                    e.stopPropagation();
+                    const wrapper = icon.closest('.aico-wrapper');
+                    const wasOpen = wrapper.classList.contains('show-suggestions');
+                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
+                    if (!wasOpen) wrapper.classList.add('show-suggestions');
+                };
+            });
+
+            card.querySelectorAll('.suggest-emoji').forEach(sug => {
+                sug.onclick = (e) => {
+                    pushToUndo();
+                    const emoji = e.target.dataset.emoji;
+                    const act = e.target.closest('.act');
+                    const titleEl = act.querySelector('.atitle');
+                    const path = titleEl.dataset.path;
+                    const [wkK, dI, aI] = path.split('.');
+                    act.querySelector('.aico').innerText = emoji;
+                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
+                    if (ICON_MAP[emoji]) {
+                        titleEl.innerText = ICON_MAP[emoji];
+                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
+                    }
+                };
+            });
+
+            card.querySelectorAll('[contenteditable]').forEach(el => {
+                el.onblur = () => {
+                    const path = el.dataset.path;
+                    if (path) {
+                        const [wkK, dI, aI, prop] = path.split('.');
+                        window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText;
+                    } else if (el.dataset.type === 'tag') {
+                        window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText;
+                    } else if (el.dataset.type === 'theme') {
+                        window.plannerConfig[el.dataset.week].theme = el.innerText;
+                    }
+                };
+            });
+
+            const addBtn = card.querySelector('.add-act-btn');
+            if (addBtn) addBtn.onclick = () => {
+                pushToUndo();
+                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: tGlobal.studyTopic || "Study Topic", desc: tGlobal.editDetails || "Edit details", time: "20m"});
+                buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
+            };
+
+            card.querySelectorAll('.del-act').forEach(btn => {
+                btn.onclick = () => {
+                    if(confirm("Delete this activity?")) {
+                        pushToUndo();
+                        window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
+                        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
+                    }
+                };
+            });
+        }
+
+        card.querySelector('.dayhead').onclick = (e) => {
+            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
+                card.querySelector('.daybody').classList.toggle('on');
+            }
+        };
+
+        if (!isPreview) {
+            const textarea = card.querySelector('textarea');
+            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
+            const chk = card.querySelector('input[type="checkbox"]');
+            chk.onchange = (e) => {
+                updateState(m, dayKey, { done: e.target.checked });
+                card.querySelector('.chk').classList.toggle('done', e.target.checked);
+                saveUserData(uid);
+                updateProgressBar();
+            };
+        }
+
         container.appendChild(card);
     });
 }
-
             card.querySelectorAll('.suggest-emoji').forEach(sug => {
                 sug.onclick = (e) => {
                     pushToUndo();
