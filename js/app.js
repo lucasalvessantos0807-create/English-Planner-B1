@@ -27,7 +27,10 @@ export const translations = {
         cancelEdit: "Cancel Edit", undo: "Undo", backToPlanner: "Back to Planner",
         completed: "Completed", notes: "Notes...", whiteboard: "Whiteboard", import: "Import",
         quickRecord: "Quick Recording", quickNote: "QuickNote", scanDoc: "Scan Documents",
-        studySet: "Study Set", image: "Image", takePhoto: "Take Photo", folder: "Folder"
+        studySet: "Study Set", image: "Image", takePhoto: "Take Photo", folder: "Folder",
+        fontStyle: "Font Style", fontSize: "Font Size", labelLangSettings: "Language Settings",
+        historyLabel: "Change History (30 days)", clearAll: "Clear All", changeUsername: "Change Username",
+        manageAccount: "Manage Account", importHistory: "Import History"
     },
     pt: {
         confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
@@ -49,7 +52,10 @@ export const translations = {
         cancelEdit: "Cancelar Edição", undo: "Desfazer", backToPlanner: "Voltar ao Planner",
         completed: "Concluído", notes: "Notas...", whiteboard: "Quadro Branco", import: "Importar",
         quickRecord: "Gravação Rápida", quickNote: "Nota Rápida", scanDoc: "Escanear Documento",
-        studySet: "Conjunto de Estudo", image: "Imagem", takePhoto: "Tirar Foto", folder: "Pasta"
+        studySet: "Conjunto de Estudo", image: "Imagem", takePhoto: "Tirar Foto", folder: "Pasta",
+        fontStyle: "Estilo da Fonte", fontSize: "Tamanho da Fonte", labelLangSettings: "Configurações de Idioma",
+        historyLabel: "Histórico de Alterações (30 dias)", clearAll: "Limpar Tudo", changeUsername: "Mudar Nome de Usuário",
+        manageAccount: "Gerenciar Conta", importHistory: "Histórico de Importação"
     },
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
@@ -71,7 +77,10 @@ export const translations = {
         cancelEdit: "Cancelar edición", undo: "Deshacer", backToPlanner: "Volver al Planner",
         completed: "Completado", notes: "Notas...", whiteboard: "Pizarra", import: "Importar",
         quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
-        studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta"
+        studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta",
+        fontStyle: "Estilo de fuente", fontSize: "Tamaño de fuente", labelLangSettings: "Ajustes de Idioma",
+        historyLabel: "Historial de cambios (30 días)", clearAll: "Limpiar todo", changeUsername: "Cambiar nombre de usuario",
+        manageAccount: "Gestionar cuenta", importHistory: "Historial de importación"
     },
     fr: {
         confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
@@ -93,10 +102,12 @@ export const translations = {
         cancelEdit: "Annuler", undo: "Annuler l'action", backToPlanner: "Retour au Planner",
         completed: "Terminé", notes: "Notes...", whiteboard: "Tableau blanc", import: "Importer",
         quickRecord: "Enregistrement rapide", quickNote: "Note rapide", scanDoc: "Scanner le document",
-        studySet: "Ensemble d'étude", image: "Image", takePhoto: "Prendre une photo", folder: "Dossier"
+        studySet: "Ensemble d'étude", image: "Image", takePhoto: "Prendre une photo", folder: "Dossier",
+        fontStyle: "Style de police", fontSize: "Taille de police", labelLangSettings: "Paramètres de langue",
+        historyLabel: "Historique des changements (30 jours)", clearAll: "Tout effacer", changeUsername: "Changer de nom d'utilisateur",
+        manageAccount: "Gérer le compte", importHistory: "Historique d'importation"
     }
 };
-// Torna o dicionário acessível globalmente para outros arquivos
 window.translations = translations;
 window.isNativeText = isNativeText;
 
@@ -166,7 +177,7 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "addOverviewBlockBtn": t.addBlock, "addTemplateRowBtn": t.addTask,
         "main-new-btn": t.new, "personalization-drawer-title": t.personalize,
         "label-font-style": t.fontStyle, "label-font-size": t.fontSize,
-        "settings-drawer-title": t.settings, "label-lang-settings": t.labelLangSettings || "Language",
+        "settings-drawer-title": t.settings, "label-lang-settings": t.labelLangSettings,
         "label-history": t.historyLabel, "clearHistoryBtn": t.clearAll,
         "changeNameBtn": t.changeUsername, "manageAccountBtn": t.manageAccount,
         "exportDataBtn": t.export, "importDataBtn": t.import, "importHistoryBtn": t.importHistory,
@@ -182,9 +193,17 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "nav-all-docs": `<span>📁</span> <span class="sidebar-text">${t.documents}</span>`,
         "nav-shared": `<span>👥</span> <span class="sidebar-text">${t.shared}</span>`,
         "nav-favorites": `<span>⭐</span> <span class="sidebar-text">${t.favorites}</span>`,
-        "btn-select-items": `<span class="vlist-text">${t.selectItems}</span><span class="vlist-icon">☑️</span>`,
-        "btn-view-grid": `<span class="vlist-check">✓</span><span class="vlist-text">${t.grid}</span>`,
-        "btn-view-list": `<span class="vlist-check" style="visibility: hidden;">✓</span><span class="vlist-text">${t.list}</span><span class="vlist-icon">≡</span>`
+        "btn-new-notebook": `<span class="grid-icon">📓</span><span class="grid-text">${t.notebook}</span>`,
+        "btn-new-text-doc": `<span class="grid-icon">📄</span><span class="grid-text">${t.textDoc}</span>`,
+        "btn-new-whiteboard": `<span class="grid-icon">📋</span><span class="grid-text">${t.whiteboard}</span><span class="new-badge">NEW</span>`,
+        "btn-import-doc": `<span class="row-icon">📥</span><span class="row-text">${t.import}</span>`,
+        "btn-quick-record": `<span class="row-icon">🎙️</span><span class="row-text">${t.quickRecord}</span>`,
+        "btn-quick-note": `<span class="list-icon">📝</span><span class="list-text">${t.quickNote}</span>`,
+        "btn-scan-doc": `<span class="list-icon">📷</span><span class="list-text">${t.scanDoc}</span>`,
+        "btn-study-set": `<span class="list-icon">📁</span><span class="list-text">${t.studySet}</span>`,
+        "btn-add-image": `<span class="list-icon">🖼️</span><span class="list-text">${t.image}</span>`,
+        "btn-take-photo": `<span class="list-icon">📸</span><span class="list-text">${t.takePhoto}</span>`,
+        "btn-create-folder": `<span class="list-icon">📂</span><span class="list-text">${t.folder}</span>`
     };
 
     const parent = targetPrefix ? document.getElementById('previewSandbox') : document;
@@ -195,9 +214,8 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         if (el) el.innerHTML = mapping[id];
     });
 
-    // Tradução das opções do Select de Ordenação da Library
     const sortSelect = document.getElementById('sort-docs-select');
-    if (sortSelect) {
+    if (sortSelect && sortSelect.options.length >= 2) {
         sortSelect.options[0].text = t.sortName || "Sort by Name";
         sortSelect.options[1].text = t.lastModified || "Sort by Modified";
     }
