@@ -90,8 +90,9 @@ export function cancelEdit(uid) {
     });
 
     updateUIEditMode();
-    renderDynamicOverviewBlocks(uid);
-    renderDailyTemplate(uid);
+    const currentLang = window.appState?.language || 'en';
+    renderDynamicOverviewBlocks(uid, "", window.pageContent, currentLang);
+    renderDailyTemplate(uid, "", window.pageContent, currentLang);
     refreshUI(uid);
 }
 
@@ -108,12 +109,10 @@ function updateUIEditMode() {
     const fab = document.getElementById('fabWrapper');
     
     if (isEditMode) {
-        // Show edit controls
         if (saveBtn) saveBtn.style.display = "flex";
         if (cancelBtn) cancelBtn.style.display = "flex";
         if (undoBtn) undoBtn.style.display = (undoStack.length > 0) ? "flex" : "none";
         
-        // Hide regular buttons
         if (editBtn) editBtn.style.display = "none";
         if (personalizeBtn) personalizeBtn.style.display = "none";
         if (openNotesBtn) openNotesBtn.style.display = "none";
@@ -121,17 +120,12 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "none";
         if (logoutBtn) logoutBtn.style.display = "none";
 
-        // Force FAB to stay open
-        if (fab) {
-            fab.classList.add('open');
-        }
+        if (fab) fab.classList.add('open');
     } else {
-        // Hide edit controls
         if (saveBtn) saveBtn.style.display = "none";
         if (cancelBtn) cancelBtn.style.display = "none";
         if (undoBtn) undoBtn.style.display = "none";
         
-        // Restore original buttons
         if (editBtn) editBtn.style.display = "flex";
         if (personalizeBtn) personalizeBtn.style.display = "flex";
         if (openNotesBtn) openNotesBtn.style.display = "flex";
@@ -139,10 +133,7 @@ function updateUIEditMode() {
         if (switchBtn) switchBtn.style.display = "flex";
         if (logoutBtn) logoutBtn.style.display = "flex";
 
-        // Close FAB when exiting edit mode
-        if (fab) {
-            fab.classList.remove('open');
-        }
+        if (fab) fab.classList.remove('open');
     }
 }
 
@@ -223,7 +214,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     const currentLang = window.appState?.language || 'en';
     const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
 
-    // Forçamos a tradução do título da semana exibido no corpo da página
     container.innerHTML = `
         <div class="wkbar ${wk.review ? 'rv' : ''}">
             <h3>${tGlobal.week || 'Week'} ${w}</h3>
@@ -243,13 +233,8 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         };
 
         const dayIndex = (day.n - 1) % 7; 
-        // Proteção contra erro: Verifica se isNativeText existe antes de chamar
         const isNative = (typeof window.isNativeText === 'function') ? window.isNativeText(day.name) : false;
         const displayName = isNative ? (dayNamesDict[currentLang][dayIndex]) : day.name;
-
-        const card = document.createElement("div");
-        card.className = "daycard";
-        const isOpen = openDays.includes(day.n.toString());
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
             let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
@@ -277,6 +262,10 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
         const isNativeTag = (typeof window.isNativeText === 'function') ? window.isNativeText(day.tag) : false;
         const displayTag = isNativeTag ? tGlobal.dailyAct : day.tag;
+
+        const card = document.createElement("div");
+        card.className = "daycard";
+        const isOpen = openDays.includes(day.n.toString());
 
         card.innerHTML = `
             <div class="dayhead ${day.review ? 'rv' : ''}">
@@ -359,86 +348,15 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
         if (!isPreview) {
             const textarea = card.querySelector('textarea');
-            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
+            if (textarea) textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
             const chk = card.querySelector('input[type="checkbox"]');
-            chk.onchange = (e) => {
+            if (chk) chk.onchange = (e) => {
                 updateState(m, dayKey, { done: e.target.checked });
                 card.querySelector('.chk').classList.toggle('done', e.target.checked);
                 saveUserData(uid);
                 updateProgressBar();
             };
         }
-
-        container.appendChild(card);
-    });
-}
-            card.querySelectorAll('.suggest-emoji').forEach(sug => {
-                sug.onclick = (e) => {
-                    pushToUndo();
-                    const emoji = e.target.dataset.emoji;
-                    const act = e.target.closest('.act');
-                    const titleEl = act.querySelector('.atitle');
-                    const path = titleEl.dataset.path;
-                    const [wkK, dI, aI] = path.split('.');
-                    act.querySelector('.aico').innerText = emoji;
-                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                    if (ICON_MAP[emoji]) {
-                        titleEl.innerText = ICON_MAP[emoji];
-                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
-                    }
-                };
-            });
-
-            card.querySelectorAll('[contenteditable]').forEach(el => {
-                el.onblur = () => {
-                    const path = el.dataset.path;
-                    if (path) {
-                        const [wkK, dI, aI, prop] = path.split('.');
-                        window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText;
-                    } else if (el.dataset.type === 'tag') {
-                        window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText;
-                    } else if (el.dataset.type === 'theme') {
-                        window.plannerConfig[el.dataset.week].theme = el.innerText;
-                    }
-                };
-            });
-
-            const addBtn = card.querySelector('.add-act-btn');
-            if (addBtn) addBtn.onclick = () => {
-                pushToUndo();
-                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: "New Activity", desc: "Edit", time: "20m"});
-                buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
-            };
-
-            card.querySelectorAll('.del-act').forEach(btn => {
-                btn.onclick = () => {
-                    if(confirm("Delete this activity?")) {
-                        pushToUndo();
-                        window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
-                    }
-                };
-            });
-        }
-
-        card.querySelector('.dayhead').onclick = (e) => {
-            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
-                card.querySelector('.daybody').classList.toggle('on');
-            }
-        };
-
-        if (!isPreview) {
-            const textarea = card.querySelector('textarea');
-            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
-            const chk = card.querySelector('input[type="checkbox"]');
-            chk.onchange = (e) => {
-                updateState(m, dayKey, { done: e.target.checked });
-                card.querySelector('.chk').classList.toggle('done', e.target.checked);
-                saveUserData(uid);
-                updateProgressBar();
-            };
-        }
-
         container.appendChild(card);
     });
 }
@@ -446,9 +364,9 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 // --- GESTÃO DE MESES ---
 export function addNewMonth(uid) {
     const lang = window.appState?.language || 'en';
-    const t = translations[lang] || translations.en;
+    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
     
-    const dayCount = parseInt(prompt(t.promptDays, "30"));
+    const dayCount = parseInt(prompt(t.promptDays || "Days?", "30"));
     if (isNaN(dayCount) || dayCount <= 0) return;
     
     addHistoryEntry("Before Adding Month", window.plannerConfig, window.pageContent);
@@ -466,12 +384,12 @@ export function addNewMonth(uid) {
     for (let w = 1; w <= Math.ceil(dayCount / 7); w++) {
         const daysInW = Math.min(7, dayCount - ((w - 1) * 7));
         window.plannerConfig[`${nextMonth}-${w}`] = {
-            label: `${t.week} ${w}`, theme: t.monthlyPlans,
+            label: `${t.week || 'Week'} ${w}`, theme: t.monthlyPlans || "Plans",
             days: Array.from({length: daysInW}, (_, i) => ({
                 n: ((w-1)*7) + i + 1, 
                 name: dayNames[i % 7], 
-                tag: t.dailyAct, 
-                activities: [{t:"grammar", i:"📝", title: t.studyTopic, desc: t.editDetails, time: "20m"}]
+                tag: t.dailyAct || "Activity", 
+                activities: [{t:"grammar", i:"📝", title: t.studyTopic || "Topic", desc: t.editDetails || "Edit", time: "20m"}]
             }))
         };
     }
@@ -480,9 +398,9 @@ export function addNewMonth(uid) {
 
 export function editMonthStructure(m, uid) {
     const lang = window.appState?.language || 'en';
-    const t = translations[lang] || translations.en;
+    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
     
-    let dayCountInput = prompt(t.promptMonthDays.replace('{m}', m), "30");
+    let dayCountInput = prompt((t.promptMonthDays || "Days?").replace('{m}', m), "30");
     if (dayCountInput === null) return;
     let dayCount = parseInt(dayCountInput);
     if (isNaN(dayCount) || dayCount <= 0) return;
@@ -499,7 +417,7 @@ export function editMonthStructure(m, uid) {
     });
 
     if (dayCount < existingDays.length) {
-        if (!confirm(t.promptRestructure)) return;
+        if (!confirm(t.promptRestructure || "Confirm?")) return;
     }
 
     addHistoryEntry(`Before Restructuring Month ${m}`, window.plannerConfig, window.pageContent);
@@ -525,12 +443,12 @@ export function editMonthStructure(m, uid) {
                 weekDays.push(preserved);
             } else {
                 weekDays.push({ 
-                    n: currentIdx + 1, name: dayNames[d % 7], tag: t.dailyAct, 
-                    activities: [{t:"grammar", i:"📝", title: t.studyTopic, desc: t.editDetails, time: "20m"}]
+                    n: currentIdx + 1, name: dayNames[d % 7], tag: t.dailyAct || "Activity", 
+                    activities: [{t:"grammar", i:"📝", title: t.studyTopic || "Topic", desc: t.editDetails || "Edit", time: "20m"}]
                 });
             }
         }
-        window.plannerConfig[`${m}-${w}`] = { label: `${t.week} ${w}`, theme: t.monthlyPlans, days: weekDays };
+        window.plannerConfig[`${m}-${w}`] = { label: `${t.week || 'Week'} ${w}`, theme: t.monthlyPlans || "Plans", days: weekDays };
     }
     saveUserData(uid).then(() => refreshUI(uid, m));
 }
@@ -549,8 +467,8 @@ export function addOverviewBlock(uid) {
     const blockId = 'ov-' + Date.now();
     if(!window.pageContent.dynamicBlocks) window.pageContent.dynamicBlocks = [];
     window.pageContent.dynamicBlocks.push(blockId);
-    
-    renderDynamicOverviewBlocks(uid);
+    const lang = window.appState?.language || 'en';
+    renderDynamicOverviewBlocks(uid, "", window.pageContent, lang);
 }
 
 export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = null, langCode = 'en') {
@@ -568,19 +486,18 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
             
-            // BUSCA TRADUÇÃO: Se for 'first' (nativo) ou se o conteúdo for um placeholder padrão
             const savedTitle = content[blockId + '-title'] || '';
             const savedBody = content[blockId + '-body'] || '';
 
             let displayTitle = savedTitle;
             if (blockId.includes('first')) {
                 const num = blockId.split('-').pop(); 
-                displayTitle = t.phase + " " + num;
+                displayTitle = (t.phase || 'Phase') + " " + num;
             } else if (!savedTitle || (window.isNativeText && window.isNativeText(savedTitle))) {
-                displayTitle = t.phase + " X";
+                displayTitle = (t.phase || 'Phase') + " X";
             }
 
-            const displayBody = (window.isNativeText && window.isNativeText(savedBody)) ? t.editFocus : (savedBody || t.editFocus);
+            const displayBody = (window.isNativeText && window.isNativeText(savedBody)) ? (t.editFocus || 'Focus') : (savedBody || (t.editFocus || 'Focus'));
 
             newBlock.innerHTML = `
                 ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
@@ -614,7 +531,6 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     }
 }
 
-// --- RENDERIZAÇÃO DO DAILY TEMPLATE DINÂMICO ---
 export function renderDailyTemplate(uid, prefix = "", customContent = null, langCode = 'en') {
     const listId = prefix + 'dynamic-tpl-list';
     const list = document.getElementById(listId);
@@ -631,8 +547,7 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null, lang
         row.id = `${prefix}row-container-${rowId}`;
 
         const currentAct = content[rowId + '-a'];
-        // Se for o texto padrão "Edit task description...", traduzimos
-        const displayAct = (window.isNativeText && window.isNativeText(currentAct)) ? t.editTask : (currentAct || t.editTask);
+        const displayAct = (window.isNativeText && window.isNativeText(currentAct)) ? (t.editTask || 'Task') : (currentAct || (t.editTask || 'Task'));
 
         row.innerHTML = `
             ${(isEditMode && !prefix) ? '<button class="del-tpl-btn" data-id="' + rowId + '">✕</button>' : ''}
@@ -658,13 +573,13 @@ export function renderDailyTemplate(uid, prefix = "", customContent = null, lang
                 if (confirm("Delete this task?")) {
                     pushToUndo();
                     window.pageContent.templateRows = window.pageContent.templateRows.filter(id => id !== rId);
-                    renderDailyTemplate(uid);
+                    renderDailyTemplate(uid, "", window.pageContent, langCode);
                 }
             };
         });
     }
 }
-// Listener para o botão de adicionar linha no template
+
 document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'addTemplateRowBtn') {
         import('./storage.js').then(store => {
@@ -675,7 +590,8 @@ document.addEventListener('click', (e) => {
             const newId = 'tpl-' + Date.now();
             if(!window.pageContent.templateRows) window.pageContent.templateRows = [];
             window.pageContent.templateRows.push(newId);
-            renderDailyTemplate(uid);
+            const lang = window.appState?.language || 'en';
+            renderDailyTemplate(uid, "", window.pageContent, lang);
         });
     }
 });
