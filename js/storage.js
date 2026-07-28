@@ -139,7 +139,7 @@ export function addHistoryEntry(label, config, content) {
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
     history.unshift(entry);
-    // Reduzido drasticamente de 50 para 10 para não estourar o limite de 1MB do Firestore
+    // Reduzido de 50 para 10 para evitar que o arquivo exceda o limite de 1MB do Firebase
     if (history.length > 10) history.pop();
 }
 
