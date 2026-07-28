@@ -1156,28 +1156,25 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 .act { position: relative !important; }
 
 /* --- Personalization Drawer --- */
-/* --- Personalization Drawer --- */
-/* --- Personalization Drawer --- */
-/* --- Personalization Drawer --- */
 .custom-drawer {
   position: fixed !important;
   top: 0 !important;
-  right: -350px !important; /* Esconde totalmente para fora da tela */
+  right: -350px !important; /* Move para fora da tela */
   width: 320px !important;
   height: 100vh !important;
-  background-color: #ffffff !important; /* Fundo branco sólido */
-  border-left: 1px solid var(--border);
-  box-shadow: -10px 0 30px rgba(0,0,0,0.15);
-  z-index: 10000 !important; /* Valor altíssimo para ficar sobre tudo */
+  background-color: #ffffff !important; /* Fundo branco sólido para não ser transparente */
+  border-left: 2px solid var(--border) !important;
+  box-shadow: -10px 0 30px rgba(0,0,0,0.2) !important;
+  z-index: 10000 !important; /* Acima de todos os outros elementos */
   transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  padding: 1.5rem;
-  display: block !important; /* Deve ser block para o right funcionar */
+  padding: 1.5rem !important;
+  display: block !important;
   visibility: visible !important;
-  overflow-y: auto;
-  box-sizing: border-box;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
 }
 
-/* Quando a classe open for adicionada, a gaveta desliza para dentro */
+/* Estado Aberto */
 .custom-drawer.open {
   right: 0 !important;
 }
@@ -1186,9 +1183,10 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 1rem;
+  margin-bottom: 2rem !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding-bottom: 1rem !important;
+  background: white !important;
 }
 .drawer-header span { font-weight: 600; font-size: 1.1rem; }
 #closeDrawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
