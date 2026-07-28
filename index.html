@@ -312,7 +312,8 @@
   </div>
     
     <!-- DRAWERS PRINCIPAIS -->
-    <div class="drawer-header">
+    <div id="customDrawer" class="custom-drawer">
+      <div class="drawer-header">
         <span id="personalization-drawer-title">Personalization</span>
         <button id="closeDrawer">✕</button>
       </div>
@@ -335,8 +336,10 @@
           <input type="range" id="fontSizeSlider" min="12" max="24" value="15" style="width:100%; accent-color:var(--accent); cursor:pointer; margin-top:10px;">
         </div>
       </div>
+    </div>
 
-    <div class="drawer-header">
+    <div id="settingsDrawer" class="custom-drawer">
+      <div class="drawer-header">
         <span id="settings-drawer-title">Settings & History</span>
         <button id="closeSettings">✕</button>
       </div>
@@ -372,6 +375,7 @@
           <button class="topbar-logout" id="importHistoryBtn">Import History</button>
         </div>
       </div>
+    </div>
     
 <!-- ── PREVIEW SANDBOX ── -->
 <div id="previewSandbox" style="display:none; position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); overflow-y:auto; justify-content:center; align-items:flex-start; padding: 40px 20px;">
