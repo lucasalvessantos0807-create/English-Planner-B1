@@ -83,7 +83,6 @@ export async function loadUserData(uid) {
         if (snap.exists()) {
             const data = snap.data();
             
-            // Sincronizando a biblioteca do banco com o objeto constante
             if (data.library) {
                 library.folders = data.library.folders || [];
                 library.documents = data.library.documents || [];
@@ -127,7 +126,15 @@ export async function saveUserData(uid) {
             importHistory: importHistory,
             library: library
         });
-    } catch (e) { console.error("Error saving data:", e); }
+    } catch (e) { 
+        console.error("Error saving data:", e);
+        if (e.code === 'resource-exhausted') {
+            alert("Error: Storage limit exceeded. History has been cleared to save space.");
+            history = history.slice(0, 5);
+            importHistory = importHistory.slice(0, 1);
+            saveUserData(uid);
+        }
+    }
 }
 
 export function addHistoryEntry(label, config, content) {
@@ -139,7 +146,7 @@ export function addHistoryEntry(label, config, content) {
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
     history.unshift(entry);
-    // Limit to 10 entries to prevent exceeding Firebase 1MB document limit
+    // Limite reduzido de 50 para 10 para não exceder 1MB no Firestore
     if (history.length > 10) history.pop();
 }
 
@@ -205,7 +212,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
         throw new Error("Invalid planner data structure");
     }
 
-   if (!isRestore) {
+    if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
             timestamp: Date.now(),
@@ -215,10 +222,10 @@ export async function importData(fileOrData, uid, isRestore = false) {
             pageContent: JSON.parse(JSON.stringify(pageContent))
         };
         importHistory.unshift(backup);
-        // Mantém apenas os 3 últimos backups de importação para economizar espaço
+        // Mantém apenas os 3 últimos backups para economizar espaço
         if (importHistory.length > 3) importHistory.pop();
     }
-    
+
     const localName = state.customName;
     const localPrompted = state.namePrompted;
     const localColorHistory = state.colorHistory;
@@ -228,7 +235,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
     pageContent = JSON.parse(JSON.stringify(imported.pageContent || {}));
     
     if (imported.history && Array.isArray(imported.history)) {
-        history = JSON.parse(JSON.stringify(imported.history));
+        history = JSON.parse(JSON.stringify(imported.history)).slice(0, 10);
     }
 
     if (localName) state.customName = localName;
