@@ -136,11 +136,11 @@ export function addHistoryEntry(label, config, content) {
         timestamp: Date.now(),
         label: label,
         plannerConfig: JSON.parse(JSON.stringify(config)),
-        plannerConfig: JSON.parse(JSON.stringify(config)),
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
     history.unshift(entry);
-    if (history.length > 50) history.pop();
+    // Reduzido drasticamente de 50 para 10 para não estourar o limite de 1MB do Firestore
+    if (history.length > 10) history.pop();
 }
 
 export async function deleteHistoryEntry(uid, entryId) {
@@ -205,7 +205,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
         throw new Error("Invalid planner data structure");
     }
 
-    if (!isRestore) {
+   if (!isRestore) {
         const backup = {
             id: "imp_" + Date.now(),
             timestamp: Date.now(),
@@ -215,8 +215,10 @@ export async function importData(fileOrData, uid, isRestore = false) {
             pageContent: JSON.parse(JSON.stringify(pageContent))
         };
         importHistory.unshift(backup);
+        // Limita a apenas 3 backups de importação para economizar espaço no documento
+        if (importHistory.length > 3) importHistory.pop();
     }
-
+    
     const localName = state.customName;
     const localPrompted = state.namePrompted;
     const localColorHistory = state.colorHistory;
