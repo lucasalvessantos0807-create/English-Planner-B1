@@ -72,13 +72,13 @@ export const translations = {
         new: "+ Nuevo", selectItems: "Seleccionar elementos", grid: "Cuadrícula", list: "Lista",
         creationDate: "Fecha de creación", lastModified: "Última modificación", name: "Nombre", type: "Tipo",
         untitledNB: "Cuaderno sin título", notebook: "Cuaderno", textDoc: "Documento de texto",
-        editMode: "Modo Edición", personalize: "Personalizar", settings: "Ajustes e Historial", 
-        switchAccount: "Cambiar cuenta", logout: "Cerrar sesión", saveChanges: "Guardar cambios", 
+        editMode: "Modo Edição", personalize: "Personalizar", settings: "Ajustes e Historial", 
+        switchAccount: "Cambiar conta", logout: "Cerrar sesión", saveChanges: "Guardar cambios", 
         cancelEdit: "Cancelar edición", undo: "Deshacer", backToPlanner: "Volver al Planner",
         completed: "Completado", notes: "Notas...", whiteboard: "Pizarra", import: "Importar",
         export: "Exportar", quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
         studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta",
-        fontStyle: "Estilo de fuente", fontSize: "Tamaño de fuente", labelLangSettings: "Ajustes de Idioma",
+        fontStyle: "Estilo de fuente", fontSize: "Tamaño de fonte", labelLangSettings: "Ajustes de Idioma",
         historyLabel: "Historial de cambios (30 dias)", clearAll: "Limpiar todo", changeUsername: "Cambiar usuario",
         manageAccount: "Gestionar cuenta", importHistory: "Historial de importación"
     },
@@ -109,6 +109,34 @@ export const translations = {
     }
 };
 window.translations = translations;
+
+export function isNativeText(text) {
+    if (!text || typeof text !== 'string') return false; 
+    const lowerText = text.toLowerCase().trim();
+    const flat = [];
+    Object.values(translations).forEach(l => Object.values(l).forEach(v => {
+        if (typeof v === 'string') flat.push(v.toLowerCase());
+    }));
+    const extraDefaults = [
+        "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
+        "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
+        "overview", "visão geral", "resumen", "aperçu",
+        "phase 1", "phase 2", "phase 3", "phase x",
+        "fase 1", "fase 2", "fase 3", "fase x",
+        "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
+        "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description...",
+        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+        "segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo",
+        "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
+        "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
+        "week 1", "week 2", "week 3", "week 4", "week 5",
+        "semana 1", "semana 2", "semana 3", "semana 4", "semana 5",
+        "semaine 1", "semaine 2", "semaine 3", "semaine 4", "semaine 5",
+        "study topic", "edit details", "daily activity", "tópico de estudo", "editar detalhes", "atividade diária",
+        "tema de estudio", "editar enfoque", "actividad diaria", "sujet d'étude", "modifier detalhes", "activité quotidienne"
+    ];
+    return flat.includes(lowerText) || extraDefaults.includes(lowerText);
+}
 window.isNativeText = isNativeText;
 
 
@@ -213,12 +241,6 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         const el = parent.querySelector(`#${id}`);
         if (el) el.innerHTML = mapping[id];
     });
-
-    const sortSelect = document.getElementById('sort-docs-select');
-    if (sortSelect && sortSelect.options.length >= 2) {
-        sortSelect.options[0].text = t.sortName || "Sort by Name";
-        sortSelect.options[1].text = t.lastModified || "Sort by Modified";
-    }
 
     renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
     renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
@@ -843,8 +865,7 @@ onAuthStateChanged(auth, async (user) => {
         const closeAllDrawers = () => {
             customDrawer?.classList.remove('open');
             settingsDrawer?.classList.remove('open');
-            const fab = document.getElementById('fabWrapper');
-            if (fab) fab.classList.remove('fab-hidden');
+            if (fabWrapper) fabWrapper.classList.remove('fab-hidden');
         };
 
         if (personalizeBtn) {
@@ -881,7 +902,6 @@ onAuthStateChanged(auth, async (user) => {
         if (closeDrawer) closeDrawer.onclick = closeAllDrawers;
         if (closeSettings) closeSettings.onclick = closeAllDrawers;
 
-        // Clique fora para fechar
         document.addEventListener('mousedown', (e) => {
             if (customDrawer?.classList.contains('open') && !customDrawer.contains(e.target) && e.target !== personalizeBtn) {
                 closeAllDrawers();
@@ -890,6 +910,7 @@ onAuthStateChanged(auth, async (user) => {
                 closeAllDrawers();
             }
         });
+
         const fontStyleToggle = document.getElementById('fontStyleToggle');
         if (fontStyleToggle) {
             fontStyleToggle.onclick = () => {
@@ -899,6 +920,64 @@ onAuthStateChanged(auth, async (user) => {
                 const isHidden = wrapper.style.display === 'none';
                 wrapper.style.display = isHidden ? 'block' : 'none';
                 arrow.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+        }
+
+        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
+        const fontListContainer = document.getElementById('fontList');
+        const fontSearchInput = document.getElementById('fontSearchInput');
+
+        function loadGoogleFont(fontName) {
+            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
+            const id = `font-${fontName.replace(/\s+/g, '-')}`;
+            if (!document.getElementById(id)) {
+                const link = document.createElement('link');
+                link.id = id; link.rel = 'stylesheet';
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+                document.head.appendChild(link);
+            }
+        }
+
+        function renderFonts(filter = "") {
+            if (!fontListContainer) return;
+            fontListContainer.innerHTML = "";
+            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
+                const div = document.createElement('div');
+                div.className = 'font-item';
+                div.textContent = font;
+                loadGoogleFont(font);
+                div.style.fontFamily = `"${font}", sans-serif`;
+                div.onclick = () => {
+                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
+                    if (!userData.state.settings) userData.state.settings = {};
+                    userData.state.settings.font = font;
+                    saveUserData(currentUser);
+                };
+                fontListContainer.appendChild(div);
+            });
+        }
+        if (fontSearchInput) fontSearchInput.oninput = (e) => renderFonts(e.target.value);
+        renderFonts();
+
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        if (userData.state.settings?.font) {
+            loadGoogleFont(userData.state.settings.font);
+            document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
+        }
+        if (fontSizeSlider) {
+            fontSizeSlider.value = userData.state.settings?.fontSize || "15";
+            const fontSizeVal = document.getElementById('fontSizeVal');
+            if (fontSizeVal) fontSizeVal.textContent = fontSizeSlider.value + "px";
+            document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
+
+            fontSizeSlider.oninput = (e) => {
+                if (fontSizeVal) fontSizeVal.textContent = e.target.value + "px";
+                document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
+            };
+            fontSizeSlider.onchange = (e) => {
+                if (!userData.state.settings) userData.state.settings = {};
+                userData.state.settings.fontSize = e.target.value;
+                saveUserData(currentUser);
             };
         }
 
@@ -922,156 +1001,6 @@ onAuthStateChanged(auth, async (user) => {
                     container.appendChild(div);
                 });
             });
-        }
-
-        const addMonthBtn = document.getElementById('addMonthBtn');
-        if (addMonthBtn) {
-            addMonthBtn.onclick = (e) => {
-                e.preventDefault(); addNewMonth(currentUser);
-            };
-        }
-
-        const addOverviewBlockBtn = document.getElementById('addOverviewBlockBtn');
-        if (addOverviewBlockBtn) {
-            addOverviewBlockBtn.onclick = (e) => {
-                e.preventDefault(); addOverviewBlock(currentUser);
-            };
-        }
-
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-        if (clearHistoryBtn) {
-            clearHistoryBtn.onclick = async () => {
-                if(confirm("Permanently delete ALL history?")) {
-                    await clearAllHistory(currentUser);
-                    renderHistory();
-                }
-            };
-        }
-
-        renderLibrary();
-
-        // --- NOTES SELECTION EVENT LISTENERS ---
-        const btnSelectItems = document.getElementById('btn-select-items');
-        if (btnSelectItems) {
-            btnSelectItems.onclick = () => {
-                import('./notes.js').then(mod => mod.toggleSelectionMode(true));
-                const viewMenu = document.getElementById('view-options-menu');
-                if (viewMenu) viewMenu.style.display = 'none';
-            };
-        }
-
-        const btnSelectionDone = document.getElementById('btn-selection-done');
-        if (btnSelectionDone) {
-            btnSelectionDone.onclick = () => {
-                import('./notes.js').then(mod => mod.toggleSelectionMode(false));
-            };
-        }
-
-        const btnSelectAll = document.getElementById('btn-select-all');
-        if (btnSelectAll) {
-            btnSelectAll.onclick = () => {
-                import('./notes.js').then(mod => mod.selectAllItems());
-            };
-        }
-
-        const btnTrashSelected = document.getElementById('st-trash');
-        if (btnTrashSelected) {
-            btnTrashSelected.onclick = () => {
-                import('./notes.js').then(mod => mod.deleteSelectedItems());
-            };
-        }
-
-        // --- VIEW & SORTING LISTENERS ---
-        const btnViewGrid = document.getElementById('btn-view-grid');
-        const btnViewList = document.getElementById('btn-view-list');
-        const sortSelect = document.getElementById('sort-docs-select');
-
-        const updateViewCheckmarks = (mode) => {
-            if (btnViewGrid) {
-                const check = btnViewGrid.querySelector('.vlist-check');
-                if (check) check.style.visibility = mode === 'grid' ? 'visible' : 'hidden';
-            }
-            if (btnViewList) {
-                const check = btnViewList.querySelector('.vlist-check');
-                if (check) check.style.visibility = mode === 'list' ? 'visible' : 'hidden';
-            }
-        };
-
-        if (btnViewGrid) {
-            btnViewGrid.onclick = () => {
-                import('./notes.js').then(mod => mod.setLibraryLayout('grid'));
-                updateViewCheckmarks('grid');
-            };
-        }
-
-        if (btnViewList) {
-            btnViewList.onclick = () => {
-                import('./notes.js').then(mod => mod.setLibraryLayout('list'));
-                updateViewCheckmarks('list');
-            };
-        }
-
-        if (sortSelect) {
-            sortSelect.onchange = (e) => {
-                import('./notes.js').then(mod => mod.setLibrarySort(e.target.value));
-            };
-        }
-
-        document.querySelectorAll('.sort-opt').forEach(opt => {
-            opt.onclick = () => {
-                const sortVal = opt.dataset.sort;
-                import('./notes.js').then(mod => mod.setLibrarySort(sortVal));
-                document.querySelectorAll('.sort-opt .vlist-check').forEach(c => c.style.visibility = 'hidden');
-                const currentCheck = opt.querySelector('.vlist-check');
-                if (currentCheck) currentCheck.style.visibility = 'visible';
-            };
-        });
-
-        // --- IMPORT NOTE LOGIC ---
-        const btnImportNote = document.getElementById('btn-import-doc');
-        if (btnImportNote) {
-            btnImportNote.onclick = () => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                input.onchange = (e) => {
-                    if (e.target.files.length > 0) {
-                        import('./notes.js').then(mod => mod.importNoteData(e.target.files[0]));
-                    }
-                };
-                input.click();
-                const newMenu = document.getElementById('new-options-menu');
-                if (newMenu) newMenu.style.display = 'none';
-            };
-        }
-
-       // --- REAL IMPLEMENTATION OF SELECTION ACTIONS ---
-        const btnExportSelected = document.getElementById('st-export');
-        if (btnExportSelected) {
-            btnExportSelected.onclick = () => {
-                import('./notes.js').then(mod => mod.exportSelectedItems());
-            };
-        }
-
-        const btnMoveSelected = document.getElementById('st-move');
-        if (btnMoveSelected) {
-            btnMoveSelected.onclick = () => {
-                import('./notes.js').then(mod => mod.moveSelectedItems());
-            };
-        }
-
-       const btnDuplicateSelected = document.getElementById('st-duplicate');
-        if (btnDuplicateSelected) {
-            btnDuplicateSelected.onclick = () => {
-                import('./notes.js').then(mod => mod.duplicateSelectedItems());
-            };
-        }
-
-        const btnRenameSelected = document.getElementById('st-rename');
-        if (btnRenameSelected) {
-            btnRenameSelected.onclick = () => {
-                import('./notes.js').then(mod => mod.renameSelectedItems());
-            };
         }
 
         updateProgressBar();
