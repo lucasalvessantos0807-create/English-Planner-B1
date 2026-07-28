@@ -208,38 +208,104 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
     const key = `${m}-${w}`;
     const wk = config[key];
     const container = document.getElementById(`${prefix}wp${m}-${w}`);
+    
     if (!wk || !container) return;
-    const lang = window.appState?.language || 'en';
-    const t = (window.translations || {})[lang] || (window.translations || {}).en || {};
 
-    container.innerHTML = `<div class="wkbar ${wk.review ? 'rv' : ''}"><h3>${t.week || 'Week'} ${w}</h3><p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p></div>`;
+    const currentLang = window.appState?.language || 'en';
+    const tGlobal = (window.translations || {})[currentLang] || (window.translations || {}).en || {};
+
+    container.innerHTML = `
+        <div class="wkbar ${wk.review ? 'rv' : ''}">
+            <h3>${tGlobal.week || 'Week'} ${w}</h3>
+            <p contenteditable="${isEditMode && !isPreview}" data-type="theme" data-week="${key}">${wk.theme}</p>
+        </div>`;
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
         const dayData = activeState[`m${m}-${dayKey}`] || activeState[dayKey] || { done: false, notes: "" };
+        
         const dayNamesDict = {
             en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
             pt: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
             es: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
             fr: ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
         };
+
+        const dayIndex = (day.n - 1) % 7; 
         const isNative = (typeof window.isNativeText === 'function') ? window.isNativeText(day.name) : false;
-        const displayName = isNative ? (dayNamesDict[lang][(day.n - 1) % 7]) : day.name;
+        const displayName = isNative ? (dayNamesDict[currentLang][dayIndex]) : day.name;
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
             const isNativeTitle = (typeof window.isNativeText === 'function') ? window.isNativeText(act.title) : false;
             const isNativeDesc = (typeof window.isNativeText === 'function') ? window.isNativeText(act.desc) : false;
-            const displayTitle = isNativeTitle ? t.studyTopic : act.title;
-            const displayDesc = isNativeDesc ? t.editDetails : act.desc;
-            return `<div class="act"><div class="aico-wrapper"><div class="aico ${act.t}" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div></div><div class="acont"><div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${displayTitle}</div><div class="adesc" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.desc">${displayDesc}</div></div><div class="atime" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>${(isEditMode && !isPreview) ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}</div>`;
+            
+            const displayActTitle = isNativeTitle ? tGlobal.studyTopic : act.title;
+            const displayActDesc = isNativeDesc ? tGlobal.editDetails : act.desc;
+
+            return `
+                <div class="act">
+                    <div class="aico-wrapper">
+                        <div class="aico ${act.t}" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
+                    </div>
+                    <div class="acont">
+                        <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${displayActTitle}</div>
+                        <div class="adesc" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.desc">${displayActDesc}</div>
+                    </div>
+                    <div class="atime" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.time">${act.time}</div>
+                    ${(isEditMode && !isPreview) ? `<div class="del-act" data-week="${key}" data-dayidx="${dIdx}" data-actidx="${aIdx}">✕</div>` : ''}
+                </div>`;
         }).join('');
 
         const isNativeTag = (typeof window.isNativeText === 'function') ? window.isNativeText(day.tag) : false;
-        const displayTag = isNativeTag ? t.dailyAct : day.tag;
+        const displayTag = isNativeTag ? tGlobal.dailyAct : day.tag;
 
         const card = document.createElement("div");
         card.className = "daycard";
-        card.innerHTML = `<div class="dayhead ${day.review ? 'rv' : ''}"><div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div><div class="dayname">${displayName}</div><div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${displayTag}</div></div><div class="daybody ${openDays.includes(day.n.toString()) ? 'on' : ''}" id="${prefix}db${day.n}"><div class="activities-container">${activitiesHtml}</div>${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${t.activity || 'Add'}</button>` : ''}<textarea class="ntxt" placeholder="${t.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea><label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''}><span>${t.completed || 'Completed'}</span></label></div>`;
+        const isOpen = openDays.includes(day.n.toString());
+
+        card.innerHTML = `
+            <div class="dayhead ${day.review ? 'rv' : ''}">
+                <div class="daynum ${day.review ? 'rv' : ''}">${day.n}</div>
+                <div class="dayname">${displayName}</div>
+                <div class="daytag" contenteditable="${isEditMode && !isPreview}" data-type="tag" data-week="${key}" data-dayidx="${dIdx}">${displayTag}</div>
+            </div>
+            <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
+                <div class="activities-container">${activitiesHtml}</div>
+                ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${tGlobal.activity || 'Activity'}</button>` : ''}
+                <textarea class="ntxt" placeholder="${tGlobal.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
+                <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>${tGlobal.completed || 'Completed'}</span></label>
+            </div>`;
+
+        if (isEditMode && !isPreview) {
+            const delBtns = card.querySelectorAll('.del-act');
+            delBtns.forEach(btn => {
+                btn.onclick = () => {
+                   if(confirm("Delete activity?")) {
+                       pushToUndo();
+                       window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
+                       buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+                   }
+                };
+            });
+        }
+
+        card.querySelector('.dayhead').onclick = (e) => {
+            if (!e.target.hasAttribute('contenteditable')) {
+                card.querySelector('.daybody').classList.toggle('on');
+            }
+        };
+
+        if (!isPreview) {
+            const textarea = card.querySelector('textarea');
+            if (textarea) textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
+            const chk = card.querySelector('input[type="checkbox"]');
+            if (chk) chk.onchange = (e) => {
+                updateState(m, dayKey, { done: e.target.checked });
+                card.querySelector('.chk').classList.toggle('done', e.target.checked);
+                saveUserData(uid);
+                updateProgressBar();
+            };
+        }
         container.appendChild(card);
     });
 }
