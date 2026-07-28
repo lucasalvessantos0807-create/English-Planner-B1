@@ -137,37 +137,6 @@ export function isNativeText(text) {
     ];
     return flat.includes(lowerText) || extraDefaults.includes(lowerText);
 }
-// Atribuição global correta após a declaração da função
-window.isNativeText = isNativeText;
-
-
-export function isNativeText(text) {
-    if (!text || typeof text !== 'string') return false; 
-    const lowerText = text.toLowerCase().trim();
-    const flat = [];
-    Object.values(translations).forEach(l => Object.values(l).forEach(v => {
-        if (typeof v === 'string') flat.push(v.toLowerCase());
-    }));
-    const extraDefaults = [
-        "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
-        "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
-        "overview", "visão geral", "resumen", "aperçu",
-        "phase 1", "phase 2", "phase 3", "phase x",
-        "fase 1", "fase 2", "fase 3", "fase x",
-        "edit focus...", "editar foco...", "editar enfoque...", "modifier le focus...",
-        "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description...",
-        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
-        "segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo",
-        "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
-        "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
-        "week 1", "week 2", "week 3", "week 4", "week 5",
-        "semana 1", "semana 2", "semana 3", "semana 4", "semana 5",
-        "semaine 1", "semaine 2", "semaine 3", "semaine 4", "semaine 5",
-        "study topic", "edit details", "daily activity", "tópico de estudo", "editar detalhes", "atividade diária",
-        "tema de estudio", "editar enfoque", "actividad diaria", "sujet d'étude", "modifier detalhes", "activité quotidienne"
-    ];
-    return flat.includes(lowerText) || extraDefaults.includes(lowerText);
-}
 window.isNativeText = isNativeText;
 
 // --- MOBILE MENU SYSTEM ---
