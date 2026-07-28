@@ -22,15 +22,15 @@ export const translations = {
         new: "+ New", selectItems: "Select Items", grid: "Grid", list: "List",
         creationDate: "Creation Date", lastModified: "Last Modified", name: "Name", type: "Type",
         untitledNB: "Untitled Notebook", notebook: "Notebook", textDoc: "Text Document",
-        editMode: "Edit Mode", personalize: "Personalize", settings: "Settings", 
+        editMode: "Edit Mode", personalize: "Personalize", settings: "Settings & History", 
         switchAccount: "Switch Account", logout: "Logout", saveChanges: "Save Changes", 
         cancelEdit: "Cancel Edit", undo: "Undo", backToPlanner: "Back to Planner",
         completed: "Completed", notes: "Notes...", whiteboard: "Whiteboard", import: "Import",
-        quickRecord: "Quick Recording", quickNote: "QuickNote", scanDoc: "Scan Documents",
+        export: "Export", quickRecord: "Quick Recording", quickNote: "QuickNote", scanDoc: "Scan Documents",
         studySet: "Study Set", image: "Image", takePhoto: "Take Photo", folder: "Folder",
         fontStyle: "Font Style", fontSize: "Font Size", labelLangSettings: "Language Settings",
         historyLabel: "Change History (30 days)", clearAll: "Clear All", changeUsername: "Change Username",
-        manageAccount: "Manage Account", importHistory: "Import History", export: "Export"
+        manageAccount: "Manage Account", importHistory: "Import History"
     },
     pt: {
         confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
@@ -47,20 +47,20 @@ export const translations = {
         new: "+ Novo", selectItems: "Selecionar Itens", grid: "Grade", list: "Lista",
         creationDate: "Data de Criação", lastModified: "Última Modificação", name: "Nome", type: "Tipo",
         untitledNB: "Caderno sem Título", notebook: "Caderno", textDoc: "Documento de Texto",
-        editMode: "Modo Edição", personalize: "Personalizar", settings: "Configurações", 
+        editMode: "Modo Edição", personalize: "Personalizar", settings: "Configurações e Histórico", 
         switchAccount: "Trocar Conta", logout: "Sair", saveChanges: "Salvar Alterações", 
         cancelEdit: "Cancelar Edição", undo: "Desfazer", backToPlanner: "Voltar ao Planner",
         completed: "Concluído", notes: "Notas...", whiteboard: "Quadro Branco", import: "Importar",
-        quickRecord: "Gravação Rápida", quickNote: "Nota Rápida", scanDoc: "Escanear Documento",
+        export: "Exportar", quickRecord: "Gravação Rápida", quickNote: "Nota Rápida", scanDoc: "Escanear Documento",
         studySet: "Conjunto de Estudo", image: "Imagem", takePhoto: "Tirar Foto", folder: "Pasta",
         fontStyle: "Estilo da Fonte", fontSize: "Tamanho da Fonte", labelLangSettings: "Configurações de Idioma",
-        historyLabel: "Histórico (30 dias)", clearAll: "Limpar Tudo", changeUsername: "Mudar Usuário",
-        manageAccount: "Gerenciar Conta", importHistory: "Histórico de Importação", export: "Exportar"
+        historyLabel: "Histórico de Alterações (30 dias)", clearAll: "Limpar Tudo", changeUsername: "Mudar Usuário",
+        manageAccount: "Gerenciar Conta", importHistory: "Histórico de Importação"
     },
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
         month: "Mes", week: "Semana", activity: "Actividad", dailyAct: "Actividad Diaria",
-        studyTopic: "Tema de Estudio", editDetails: "Editar detalles", phase: "Fase", 
+        studyTopic: "Tema de Estudio", editDetails: "Editar detalhes", phase: "Fase", 
         editFocus: "Editar enfoque...", editTask: "Editar descripción...",
         personalPlanner: "Planificador de Estudios Personal", roadmap: "Tu Hoja de Ruta",
         roadmapSub: "Duración Personalizada · Metas Diarias · Tu Enfoque", yourGoal: "🎯 Tu Meta",
@@ -72,15 +72,15 @@ export const translations = {
         new: "+ Nuevo", selectItems: "Seleccionar elementos", grid: "Cuadrícula", list: "Lista",
         creationDate: "Fecha de creación", lastModified: "Última modificación", name: "Nombre", type: "Tipo",
         untitledNB: "Cuaderno sin título", notebook: "Cuaderno", textDoc: "Documento de texto",
-        editMode: "Modo Edição", personalize: "Personalizar", settings: "Ajustes", 
+        editMode: "Modo Edición", personalize: "Personalizar", settings: "Ajustes e Historial", 
         switchAccount: "Cambiar cuenta", logout: "Cerrar sesión", saveChanges: "Guardar cambios", 
         cancelEdit: "Cancelar edición", undo: "Deshacer", backToPlanner: "Volver al Planner",
         completed: "Completado", notes: "Notas...", whiteboard: "Pizarra", import: "Importar",
-        quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
+        export: "Exportar", quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
         studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta",
         fontStyle: "Estilo de fuente", fontSize: "Tamaño de fuente", labelLangSettings: "Ajustes de Idioma",
         historyLabel: "Historial de cambios (30 días)", clearAll: "Limpiar todo", changeUsername: "Cambiar usuario",
-        manageAccount: "Gestionar cuenta", importHistory: "Historial de importación", export: "Exportar"
+        manageAccount: "Gestionar cuenta", importHistory: "Historial de importación"
     },
     fr: {
         confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
@@ -97,15 +97,15 @@ export const translations = {
         new: "+ Nouveau", selectItems: "Sélectionner des éléments", grid: "Grille", list: "Liste",
         creationDate: "Date de création", lastModified: "Dernière modification", name: "Nom", type: "Type",
         untitledNB: "Carnet sans titre", notebook: "Carnet", textDoc: "Document texte",
-        editMode: "Mode Édition", personalize: "Personnaliser", settings: "Paramètres", 
+        editMode: "Mode Édition", personalize: "Personnaliser", settings: "Paramètres e Histoire", 
         switchAccount: "Changer de compte", logout: "Déconnexion", saveChanges: "Enregistrer", 
         cancelEdit: "Annuler", undo: "Annuler l'action", backToPlanner: "Retour au Planner",
         completed: "Terminé", notes: "Notes...", whiteboard: "Tableau blanc", import: "Importer",
-        quickRecord: "Enregistrement rapide", quickNote: "Note rápida", scanDoc: "Scanner le document",
+        export: "Exporter", quickRecord: "Enregistrement rapide", quickNote: "Note rápida", scanDoc: "Scanner le document",
         studySet: "Ensemble d'étude", image: "Image", takePhoto: "Prendre une photo", folder: "Dossier",
         fontStyle: "Style de police", fontSize: "Taille de police", labelLangSettings: "Paramètres de langue",
         historyLabel: "Historique des changements (30 jours)", clearAll: "Tout effacer", changeUsername: "Changer de nom",
-        manageAccount: "Gérer le compte", importHistory: "Historique d'importation", export: "Exporter"
+        manageAccount: "Gérer le compte", importHistory: "Historique d'importation"
     }
 };
 window.translations = translations;
@@ -175,7 +175,12 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         "global-prog-lbl": t.daysCompleted, "global-mstat": t.learningProg,
         "global-sec-monthly": t.monthlyPlans, "addMonthBtn": t.addMonth,
         "addOverviewBlockBtn": t.addBlock, "addTemplateRowBtn": t.addTask,
-        "main-new-btn": t.new,
+        "main-new-btn": t.new, "personalization-drawer-title": t.personalize,
+        "label-font-style": t.fontStyle, "label-font-size": t.fontSize,
+        "settings-drawer-title": t.settings, "label-lang-settings": t.labelLangSettings,
+        "label-history": t.historyLabel, "clearHistoryBtn": t.clearAll,
+        "changeNameBtn": t.changeUsername, "manageAccountBtn": t.manageAccount,
+        "exportDataBtn": t.export, "importDataBtn": t.import, "importHistoryBtn": t.importHistory,
         "editModeBtn": `<span class="fab-label">${t.editMode}</span><span class="fab-icon">✎</span>`,
         "saveChangesBtn": `<span class="fab-label">${t.saveChanges}</span><span class="fab-icon">💾</span>`,
         "cancelEditBtn": `<span class="fab-label">${t.cancelEdit}</span><span class="fab-icon">✖</span>`,
