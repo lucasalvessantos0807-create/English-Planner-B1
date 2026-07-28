@@ -30,7 +30,10 @@ export const translations = {
         studySet: "Study Set", image: "Image", takePhoto: "Take Photo", folder: "Folder",
         fontStyle: "Font Style", fontSize: "Font Size", labelLangSettings: "Language Settings",
         historyLabel: "Change History (30 days)", clearAll: "Clear All", changeUsername: "Change Username",
-        manageAccount: "Manage Account", importHistory: "Import History"
+        manageAccount: "Manage Account", importHistory: "Import History",
+        promptDays: "How many days for this new month?",
+        promptMonthDays: "How many days should Month {m} have?",
+        promptRestructure: "Reducing days will delete data on extra days. Proceed?"
     },
     pt: {
         confirmMsg: "Alterar o idioma para Português? Textos personalizados serão mantidos.",
@@ -54,8 +57,11 @@ export const translations = {
         quickRecord: "Gravação Rápida", quickNote: "Nota Rápida", scanDoc: "Escanear Documento",
         studySet: "Conjunto de Estudo", image: "Imagem", takePhoto: "Tirar Foto", folder: "Pasta",
         fontStyle: "Estilo da Fonte", fontSize: "Tamanho da Fonte", labelLangSettings: "Configurações de Idioma",
-        historyLabel: "Histórico de Alterações (30 dias)", clearAll: "Limpar Tudo", changeUsername: "Mudar Nome de Usuário",
-        manageAccount: "Gerenciar Conta", importHistory: "Histórico de Importação"
+        historyLabel: "Histórico (30 dias)", clearAll: "Limpar Tudo", changeUsername: "Mudar Usuário",
+        manageAccount: "Gerenciar Conta", importHistory: "Histórico de Importação",
+        promptDays: "Quantos dias para este novo mês?",
+        promptMonthDays: "Quantos dias o Mês {m} deve ter?",
+        promptRestructure: "Reduzir dias excluirá dados dos dias extras. Prosseguir?"
     },
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
@@ -79,20 +85,23 @@ export const translations = {
         quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
         studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta",
         fontStyle: "Estilo de fuente", fontSize: "Tamaño de fuente", labelLangSettings: "Ajustes de Idioma",
-        historyLabel: "Historial de cambios (30 días)", clearAll: "Limpiar todo", changeUsername: "Cambiar nombre de usuario",
-        manageAccount: "Gestionar cuenta", importHistory: "Historial de importación"
+        historyLabel: "Historial de cambios (30 días)", clearAll: "Limpiar todo", changeUsername: "Cambiar usuario",
+        manageAccount: "Gestionar cuenta", importHistory: "Historial de importación",
+        promptDays: "¿Cuántos dias para este nuevo mes?",
+        promptMonthDays: "¿Cuántos dias debe tener el Mes {m}?",
+        promptRestructure: "Reducir días eliminará datos de los días extras. ¿Continuar?"
     },
     fr: {
         confirmMsg: "Changer la langue en Français ? Les textes personnalisés seront conservés.",
         month: "Mois", week: "Semaine", activity: "Activité", dailyAct: "Activité Quotidienne",
         studyTopic: "Sujet d'Étude", editDetails: "Modifier les détails", phase: "Phase", 
-        editFocus: "Modifier le focus...", editTask: "Modifier la description...",
+        editFocus: "Modifier le focus...", editTask: "Modifier la descrição...",
         personalPlanner: "Planificateur d'Études Personnel", roadmap: "Votre Feuille de Route",
         roadmapSub: "Durée Personnalisée · Objectifs Quotidiens · Votre Focus", yourGoal: "🎯 Votre Objectif",
-        goalHint: "Entrez votre objectif principal ici — décrivez ce que vous voulez accomplir.",
+        goalHint: "Entrez votre objectif principal aqui — décrivez ce que vous voulez accomplir.",
         overview: "Aperçu de 3 Mois", dailyTemplate: "Modèle Quotidien (1.5–2 heures)",
         progress: "Votre Progrès", daysCompleted: "Jours complétés", learningProg: "Progrès d'Apprentissage",
-        monthlyPlans: "Plans Mensuels", addMonth: "+ Ajouter Mois", addBlock: "+ Ajouter un bloc",
+        monthlyPlans: "Plans Mensuels", addMonth: "+ Ajouter Mois", addBlock: "+ Ajouter um bloco",
         addTask: "+ Ajouter une tâche", documents: "Documents", favorites: "Favoris", shared: "Partagés",
         new: "+ Nouveau", selectItems: "Sélectionner des éléments", grid: "Grille", list: "Liste",
         creationDate: "Date de création", lastModified: "Dernière modification", name: "Nom", type: "Type",
@@ -104,23 +113,24 @@ export const translations = {
         quickRecord: "Enregistrement rapide", quickNote: "Note rapide", scanDoc: "Scanner le document",
         studySet: "Ensemble d'étude", image: "Image", takePhoto: "Prendre une photo", folder: "Dossier",
         fontStyle: "Style de police", fontSize: "Taille de police", labelLangSettings: "Paramètres de langue",
-        historyLabel: "Historique des changements (30 jours)", clearAll: "Tout effacer", changeUsername: "Changer de nom d'utilisateur",
-        manageAccount: "Gérer le compte", importHistory: "Historique d'importation"
+        historyLabel: "Historique des changements (30 jours)", clearAll: "Tout effacer", changeUsername: "Changer de nom",
+        manageAccount: "Gérer le compte", importHistory: "Historique d'importation",
+        promptDays: "Combien de jours pour ce nouveau mois?",
+        promptMonthDays: "Combien de jours le Mois {m} doit-il avoir?",
+        promptRestructure: "Réduire les jours supprimera les données des jours supplémentaires. Continuer?"
     }
 };
 window.translations = translations;
 window.isNativeText = isNativeText;
 
 
-function isNativeText(text) {
+export function isNativeText(text) {
     if (!text || typeof text !== 'string') return false; 
-    
     const lowerText = text.toLowerCase().trim();
     const flat = [];
     Object.values(translations).forEach(l => Object.values(l).forEach(v => {
         if (typeof v === 'string') flat.push(v.toLowerCase());
     }));
-
     const extraDefaults = [
         "personal study planner", "planejador de estudos pessoal", "planificador de estudios personal", "planificateur d'études personnel",
         "your roadmap", "seu roteiro", "tu hoja de ruta", "votre feuille de route",
@@ -131,15 +141,17 @@ function isNativeText(text) {
         "edit task description...", "editar descrição da tarefa...", "editar descripción de tarea...", "modifier la description...",
         "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
         "segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo",
-        "lunes", "martes", "miércoles", "jueves", "viernes", "sabado", "domingo",
+        "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
         "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche",
         "week 1", "week 2", "week 3", "week 4", "week 5",
         "semana 1", "semana 2", "semana 3", "semana 4", "semana 5",
-        "semaine 1", "semaine 2", "semaine 3", "semaine 4", "semaine 5"
+        "semaine 1", "semaine 2", "semaine 3", "semaine 4", "semaine 5",
+        "study topic", "edit details", "daily activity", "tópico de estudo", "editar detalhes", "atividade diária",
+        "tema de estudio", "editar enfoque", "actividad diaria", "sujet d'étude", "modifier detalhes", "activité quotidienne"
     ];
-    
     return flat.includes(lowerText) || extraDefaults.includes(lowerText);
 }
+window.isNativeText = isNativeText;
 
 // --- MOBILE MENU SYSTEM ---
 function toggleMobileMenu() {
