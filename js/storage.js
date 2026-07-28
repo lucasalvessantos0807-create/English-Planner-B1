@@ -139,7 +139,7 @@ export function addHistoryEntry(label, config, content) {
         pageContent: JSON.parse(JSON.stringify(content || {}))
     };
     history.unshift(entry);
-    // Reduzido de 50 para 10 para evitar que o arquivo exceda o limite de 1MB do Firebase
+    // Reduzido drasticamente para 10 itens para não estourar o limite de 1MB do documento no Firebase
     if (history.length > 10) history.pop();
 }
 
@@ -215,7 +215,7 @@ export async function importData(fileOrData, uid, isRestore = false) {
             pageContent: JSON.parse(JSON.stringify(pageContent))
         };
         importHistory.unshift(backup);
-        // Limita a apenas 3 backups de importação para economizar espaço no documento
+        // Mantém apenas os 3 últimos backups de importação para economizar espaço
         if (importHistory.length > 3) importHistory.pop();
     }
     
