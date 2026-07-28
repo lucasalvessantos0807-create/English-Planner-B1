@@ -893,7 +893,7 @@ onAuthStateChanged(auth, async (user) => {
 
         const fontSearchInput = document.getElementById('fontSearchInput');
         const fontListContainer = document.getElementById('fontList');
-
+        
         function loadGoogleFont(fontName) {
             if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
             const id = `font-${fontName.replace(/\s+/g, '-')}`;
