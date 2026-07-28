@@ -238,7 +238,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const activitiesHtml = day.activities.map((act, aIdx) => {
             const isNativeTitle = (typeof window.isNativeText === 'function') ? window.isNativeText(act.title) : false;
             const isNativeDesc = (typeof window.isNativeText === 'function') ? window.isNativeText(act.desc) : false;
-            
             const displayActTitle = isNativeTitle ? tGlobal.studyTopic : act.title;
             const displayActDesc = isNativeDesc ? tGlobal.editDetails : act.desc;
 
@@ -424,25 +423,58 @@ export function renderDynamicOverviewBlocks(uid, prefix = "", customContent = nu
     const gridId = prefix + 'dynamic-ov-grid';
     const grid = document.getElementById(gridId);
     if (!grid) return;
+
     const content = customContent || window.pageContent || {};
     const t = (window.translations || {})[langCode] || (window.translations || {}).en || {};
     grid.innerHTML = '';
+
     if (content.dynamicBlocks) {
         content.dynamicBlocks.forEach(blockId => {
             const newBlock = document.createElement('div');
             newBlock.className = 'ov-card cg';
             newBlock.id = `${prefix}container-${blockId}`;
-            let currentTitle = content[blockId + '-title'] || '';
-            let displayTitle = currentTitle;
+            
+            const savedTitle = content[blockId + '-title'] || '';
+            const savedBody = content[blockId + '-body'] || '';
+
+            let displayTitle = savedTitle;
             if (blockId.includes('first')) {
-                displayTitle = (t.phase || 'Phase') + " " + blockId.split('-').pop();
-            } else if (!currentTitle || (window.isNativeText && window.isNativeText(currentTitle))) {
+                const num = blockId.split('-').pop(); 
+                displayTitle = (t.phase || 'Phase') + " " + num;
+            } else if (!savedTitle || (window.isNativeText && window.isNativeText(savedTitle))) {
                 displayTitle = (t.phase || 'Phase') + " X";
             }
-            const currentBody = content[blockId + '-body'] || '';
-            const displayBody = (window.isNativeText && window.isNativeText(currentBody)) ? (t.editFocus || 'Focus') : (currentBody || (t.editFocus || 'Focus'));
-            newBlock.innerHTML = `${(isEditMode && !prefix) ? `<button class="del-ov-btn" data-id="${blockId}" style="display:flex;">✕</button>` : ''}<div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${displayTitle}</div><div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${displayBody}</div>`;
+
+            const displayBody = (window.isNativeText && window.isNativeText(savedBody)) ? (t.editFocus || 'Focus') : (savedBody || (t.editFocus || 'Focus'));
+
+            newBlock.innerHTML = `
+                ${(isEditMode && !prefix) ? '<button class="del-ov-btn" data-type="dynamic" data-id="' + blockId + '" style="display:flex;">✕</button>' : ''}
+                <div class="ov-label ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-title" contenteditable="${isEditMode && !prefix}">${displayTitle}</div>
+                <div class="ov-body ${prefix ? '' : 'editable-global'}" id="${prefix}${blockId}-body" contenteditable="${isEditMode && !prefix}">${displayBody}</div>
+            `;
             grid.appendChild(newBlock);
+        });
+    }
+
+    if (!prefix && isEditMode) {
+        grid.querySelectorAll('[contenteditable="true"]').forEach(el => {
+            el.onfocus = () => pushToUndo();
+            el.onblur = () => { 
+                window.pageContent[el.id] = el.innerHTML; 
+                saveUserData(uid); 
+            };
+        });
+        grid.querySelectorAll('.del-ov-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const bId = btn.dataset.id;
+                if (confirm("Delete this block?")) {
+                    pushToUndo();
+                    const elToRemove = document.getElementById(`container-${bId}`);
+                    if (elToRemove) elToRemove.remove();
+                    window.pageContent.dynamicBlocks = window.pageContent.dynamicBlocks.filter(id => id !== bId);
+                }
+            };
         });
     }
 }
