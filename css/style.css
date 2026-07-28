@@ -1158,34 +1158,36 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 /* --- Personalization Drawer --- */
 /* --- Personalization Drawer --- */
 /* --- Personalization Drawer --- */
+/* --- Personalization Drawer --- */
 .custom-drawer {
-  position: fixed !important; 
-  top: 0 !important; 
-  right: -320px; 
-  width: 300px; 
-  height: 100%;
-  background: var(--white) !important; 
+  position: fixed !important;
+  top: 0 !important;
+  right: -350px !important; /* Esconde totalmente para fora da tela */
+  width: 320px !important;
+  height: 100vh !important;
+  background-color: #ffffff !important; /* Fundo branco sólido */
   border-left: 1px solid var(--border);
-  box-shadow: -10px 0 30px rgba(0,0,0,0.1); 
-  z-index: 9999 !important; /* Garante que fique acima de tudo */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+  z-index: 10000 !important; /* Valor altíssimo para ficar sobre tudo */
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   padding: 1.5rem;
-  font-family: system-ui, -apple-system, sans-serif !important;
-  visibility: hidden;
+  display: block !important; /* Deve ser block para o right funcionar */
+  visibility: visible !important;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
-.custom-drawer.open { 
-  right: 0 !important; 
-  visibility: visible !important; 
+/* Quando a classe open for adicionada, a gaveta desliza para dentro */
+.custom-drawer.open {
+  right: 0 !important;
 }
 
 .drawer-header {
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
-  margin-bottom: 2rem; 
-  border-bottom: 1px solid var(--border); 
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1rem;
 }
 .drawer-header span { font-weight: 600; font-size: 1.1rem; }
