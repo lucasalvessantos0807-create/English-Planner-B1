@@ -137,6 +137,7 @@ export function isNativeText(text) {
     ];
     return flat.includes(lowerText) || extraDefaults.includes(lowerText);
 }
+// Atribuição global correta após a declaração da função
 window.isNativeText = isNativeText;
 
 
@@ -873,11 +874,10 @@ onAuthStateChanged(auth, async (user) => {
                 e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = customDrawer.classList.contains('open');
-                    closeAllDrawers(); // Fecha a outra se estiver aberta
+                    closeAllDrawers();
                     if (!isOpen) {
                         customDrawer.classList.add('open');
-                        const fab = document.getElementById('fabWrapper');
-                        if (fab) fab.classList.add('fab-hidden');
+                        if (fabWrapper) fabWrapper.classList.add('fab-hidden');
                     }
                 }
             };
@@ -888,11 +888,10 @@ onAuthStateChanged(auth, async (user) => {
                 e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = settingsDrawer.classList.contains('open');
-                    closeAllDrawers(); // Fecha a outra se estiver aberta
+                    closeAllDrawers();
                     if (!isOpen) {
                         settingsDrawer.classList.add('open');
-                        const fab = document.getElementById('fabWrapper');
-                        if (fab) fab.classList.add('fab-hidden');
+                        if (fabWrapper) fabWrapper.classList.add('fab-hidden');
                         renderHistory();
                     }
                 }
@@ -923,9 +922,8 @@ onAuthStateChanged(auth, async (user) => {
             };
         }
 
-        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
-        const fontListContainer = document.getElementById('fontList');
         const fontSearchInput = document.getElementById('fontSearchInput');
+        const fontListContainer = document.getElementById('fontList');
 
         function loadGoogleFont(fontName) {
             if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
