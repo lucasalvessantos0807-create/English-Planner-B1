@@ -79,7 +79,7 @@ export const translations = {
         export: "Exportar", quickRecord: "Grabación rápida", quickNote: "Nota rápida", scanDoc: "Escanear documento",
         studySet: "Conjunto de estudio", image: "Imagen", takePhoto: "Tomar foto", folder: "Carpeta",
         fontStyle: "Estilo de fuente", fontSize: "Tamaño de fuente", labelLangSettings: "Ajustes de Idioma",
-        historyLabel: "Historial de cambios (30 días)", clearAll: "Limpiar todo", changeUsername: "Cambiar usuario",
+        historyLabel: "Historial de cambios (30 dias)", clearAll: "Limpiar todo", changeUsername: "Cambiar usuario",
         manageAccount: "Gestionar cuenta", importHistory: "Historial de importación"
     },
     fr: {
@@ -108,7 +108,6 @@ export const translations = {
         manageAccount: "Gérer le compte", importHistory: "Historique d'importation"
     }
 };
-
 window.translations = translations;
 window.isNativeText = isNativeText;
 
@@ -214,6 +213,12 @@ function refreshGlobalDOM(content, targetPrefix = "", langCode = 'en') {
         const el = parent.querySelector(`#${id}`);
         if (el) el.innerHTML = mapping[id];
     });
+
+    const sortSelect = document.getElementById('sort-docs-select');
+    if (sortSelect && sortSelect.options.length >= 2) {
+        sortSelect.options[0].text = t.sortName || "Sort by Name";
+        sortSelect.options[1].text = t.lastModified || "Sort by Modified";
+    }
 
     renderDynamicOverviewBlocks(auth.currentUser?.uid, targetPrefix, data, langCode);
     renderDailyTemplate(auth.currentUser?.uid, targetPrefix, data, langCode);
