@@ -847,10 +847,11 @@ onAuthStateChanged(auth, async (user) => {
                 e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = customDrawer.classList.contains('open');
-                    closeAllDrawers();
+                    closeAllDrawers(); // Fecha a outra se estiver aberta
                     if (!isOpen) {
                         customDrawer.classList.add('open');
-                        document.getElementById('fabWrapper')?.classList.add('fab-hidden');
+                        const fab = document.getElementById('fabWrapper');
+                        if (fab) fab.classList.add('fab-hidden');
                     }
                 }
             };
@@ -861,10 +862,11 @@ onAuthStateChanged(auth, async (user) => {
                 e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = settingsDrawer.classList.contains('open');
-                    closeAllDrawers();
+                    closeAllDrawers(); // Fecha a outra se estiver aberta
                     if (!isOpen) {
                         settingsDrawer.classList.add('open');
-                        document.getElementById('fabWrapper')?.classList.add('fab-hidden');
+                        const fab = document.getElementById('fabWrapper');
+                        if (fab) fab.classList.add('fab-hidden');
                         renderHistory();
                     }
                 }
@@ -874,6 +876,7 @@ onAuthStateChanged(auth, async (user) => {
         if (closeDrawer) closeDrawer.onclick = closeAllDrawers;
         if (closeSettings) closeSettings.onclick = closeAllDrawers;
 
+        // Clique fora para fechar
         document.addEventListener('mousedown', (e) => {
             if (customDrawer?.classList.contains('open') && !customDrawer.contains(e.target) && e.target !== personalizeBtn) {
                 closeAllDrawers();
@@ -882,7 +885,6 @@ onAuthStateChanged(auth, async (user) => {
                 closeAllDrawers();
             }
         });
-
         const fontStyleToggle = document.getElementById('fontStyleToggle');
         if (fontStyleToggle) {
             fontStyleToggle.onclick = () => {
