@@ -834,37 +834,60 @@ onAuthStateChanged(auth, async (user) => {
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
 
+        // Função auxiliar para fechar tudo antes de abrir uma nova
+        const closeAllDrawers = () => {
+            customDrawer?.classList.remove('open');
+            settingsDrawer?.classList.remove('open');
+            const fab = document.getElementById('fabWrapper');
+            if (fab) fab.classList.remove('fab-hidden');
+        };
+
         if (personalizeBtn) {
             personalizeBtn.onclick = () => {
                 if (!document.body.classList.contains('preview-mode')) {
-                    if (settingsDrawer) settingsDrawer.classList.remove('open');
-                    if (customDrawer) customDrawer.classList.add('open');
-                    if (fabWrapper) fabWrapper.classList.add('fab-hidden');
+                    const isOpen = customDrawer.classList.contains('open');
+                    closeAllDrawers(); // Limpa estados anteriores
+                    if (!isOpen) {
+                        customDrawer.classList.add('open');
+                        const fab = document.getElementById('fabWrapper');
+                        if (fab) fab.classList.add('fab-hidden');
+                    }
                 }
             };
         }
+
         if (settingsBtn) {
             settingsBtn.onclick = () => {
                 if (!document.body.classList.contains('preview-mode')) {
-                    if (customDrawer) customDrawer.classList.remove('open');
-                    if (settingsDrawer) settingsDrawer.classList.add('open');
-                    if (fabWrapper) fabWrapper.classList.add('fab-hidden');
-                    renderHistory();
+                    const isOpen = settingsDrawer.classList.contains('open');
+                    closeAllDrawers(); // Limpa estados anteriores
+                    if (!isOpen) {
+                        settingsDrawer.classList.add('open');
+                        const fab = document.getElementById('fabWrapper');
+                        if (fab) fab.classList.add('fab-hidden');
+                        renderHistory();
+                    }
                 }
             };
         }
+
         if (closeDrawer) {
-            closeDrawer.onclick = () => {
-                if (customDrawer) customDrawer.classList.remove('open');
-                if (fabWrapper) fabWrapper.classList.remove('fab-hidden');
-            };
+            closeDrawer.onclick = closeAllDrawers;
         }
+
         if (closeSettings) {
-            closeSettings.onclick = () => {
-                if (settingsDrawer) settingsDrawer.classList.remove('open');
-                if (fabWrapper) fabWrapper.classList.remove('fab-hidden');
-            };
+            closeSettings.onclick = closeAllDrawers;
         }
+
+        // Fechamento ao clicar fora das gavetas
+        document.addEventListener('mousedown', (e) => {
+            if (customDrawer?.classList.contains('open') && !customDrawer.contains(e.target) && e.target !== personalizeBtn) {
+                closeAllDrawers();
+            }
+            if (settingsDrawer?.classList.contains('open') && !settingsDrawer.contains(e.target) && e.target !== settingsBtn) {
+                closeAllDrawers();
+            }
+        });
 
         const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
         const fontListContainer = document.getElementById('fontList');
