@@ -1159,13 +1159,13 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 .custom-drawer {
   position: fixed !important; 
   top: 0 !important; 
-  right: -350px !important; /* Start completely off-screen */
+  right: -350px !important; /* Começa fora da tela */
   width: 320px !important; 
   height: 100vh !important;
   background-color: #ffffff !important; 
   border-left: 1px solid var(--border) !important;
   box-shadow: -10px 0 30px rgba(0,0,0,0.2) !important; 
-  z-index: 9999 !important; /* Above everything else */
+  z-index: 10000 !important; /* Valor muito alto para sobrepor tudo */
   transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; 
   padding: 1.5rem !important;
   visibility: visible !important;
@@ -1175,7 +1175,7 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 }
 
 .custom-drawer.open { 
-  right: 0 !important; /* Slide in */
+  right: 0 !important; /* Desliza para dentro */
 }
 
 .drawer-header {
@@ -1185,6 +1185,7 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
   margin-bottom: 2rem !important; 
   border-bottom: 1px solid var(--border) !important; 
   padding-bottom: 1rem !important;
+  background: white !important;
 }
 .drawer-header span { font-weight: 600; font-size: 1.1rem; }
 #closeDrawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
