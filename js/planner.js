@@ -222,8 +222,7 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
 
     wk.days.forEach((day, dIdx) => {
         const dayKey = `d${day.n}`;
-        const fullKey = `m${m}-${dayKey}`;
-        const dayData = activeState[fullKey] || activeState[dayKey] || { done: false, notes: "" };
+        const dayData = activeState[`m${m}-${dayKey}`] || activeState[dayKey] || { done: false, notes: "" };
         
         const dayNamesDict = {
             en: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -237,11 +236,8 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
         const displayName = isNative ? (dayNamesDict[currentLang][dayIndex]) : day.name;
 
         const activitiesHtml = day.activities.map((act, aIdx) => {
-            let suggestionsHtml = (isEditMode && !isPreview) ? `<div class="icon-suggestions">${EMOJI_LIST.map(emoji => `<span class="suggest-emoji" data-emoji="${emoji}">${emoji}</span>`).join('')}</div>` : '';
-            
             const isNativeTitle = (typeof window.isNativeText === 'function') ? window.isNativeText(act.title) : false;
             const isNativeDesc = (typeof window.isNativeText === 'function') ? window.isNativeText(act.desc) : false;
-            
             const displayActTitle = isNativeTitle ? tGlobal.studyTopic : act.title;
             const displayActDesc = isNativeDesc ? tGlobal.editDetails : act.desc;
 
@@ -249,7 +245,6 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
                 <div class="act">
                     <div class="aico-wrapper">
                         <div class="aico ${act.t}" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.i">${act.i}</div>
-                        ${suggestionsHtml}
                     </div>
                     <div class="acont">
                         <div class="atitle" contenteditable="${isEditMode && !isPreview}" data-path="${key}.${dIdx}.${aIdx}.title">${displayActTitle}</div>
@@ -276,81 +271,35 @@ export function buildWeek(m, w, uid, openDays = [], isPreview = false, prefix = 
             <div class="daybody ${isOpen ? 'on' : ''}" id="${prefix}db${day.n}">
                 <div class="activities-container">${activitiesHtml}</div>
                 ${(isEditMode && !isPreview) ? `<button class="add-act-btn" data-week="${key}" data-dayidx="${dIdx}">+ ${tGlobal.activity || 'Activity'}</button>` : ''}
-                <textarea class="ntxt" id="${prefix}nt${day.n}" placeholder="${tGlobal.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
+                <textarea class="ntxt" placeholder="${tGlobal.notes || 'Notes...'}" ${isPreview ? 'readonly' : ''}>${dayData.notes || ""}</textarea>
                 <label class="chk ${dayData.done ? 'done' : ''}"><input type="checkbox" ${dayData.done ? 'checked' : ''} ${isPreview ? 'disabled' : ''}><span>${tGlobal.completed || 'Completed'}</span></label>
             </div>`;
 
         if (isEditMode && !isPreview) {
-            card.querySelectorAll('.aico').forEach(icon => {
-                icon.onclick = (e) => {
-                    e.stopPropagation();
-                    const wrapper = icon.closest('.aico-wrapper');
-                    const wasOpen = wrapper.classList.contains('show-suggestions');
-                    document.querySelectorAll('.aico-wrapper').forEach(w => w.classList.remove('show-suggestions'));
-                    if (!wasOpen) wrapper.classList.add('show-suggestions');
-                };
-            });
-
-            card.querySelectorAll('.suggest-emoji').forEach(sug => {
-                sug.onclick = (e) => {
-                    pushToUndo();
-                    const emoji = e.target.dataset.emoji;
-                    const act = e.target.closest('.act');
-                    const titleEl = act.querySelector('.atitle');
-                    const path = titleEl.dataset.path;
-                    const [wkK, dI, aI] = path.split('.');
-                    act.querySelector('.aico').innerText = emoji;
-                    window.plannerConfig[wkK].days[dI].activities[aI].i = emoji;
-                    if (ICON_MAP[emoji]) {
-                        titleEl.innerText = ICON_MAP[emoji];
-                        window.plannerConfig[wkK].days[dI].activities[aI].title = ICON_MAP[emoji];
-                    }
-                };
-            });
-
-            card.querySelectorAll('[contenteditable]').forEach(el => {
-                el.onblur = () => {
-                    const path = el.dataset.path;
-                    if (path) {
-                        const [wkK, dI, aI, prop] = path.split('.');
-                        window.plannerConfig[wkK].days[dI].activities[aI][prop] = el.innerText;
-                    } else if (el.dataset.type === 'tag') {
-                        window.plannerConfig[el.dataset.week].days[el.dataset.dayidx].tag = el.innerText;
-                    } else if (el.dataset.type === 'theme') {
-                        window.plannerConfig[el.dataset.week].theme = el.innerText;
-                    }
-                };
-            });
-
-            const addBtn = card.querySelector('.add-act-btn');
-            if (addBtn) addBtn.onclick = () => {
-                pushToUndo();
-                window.plannerConfig[addBtn.dataset.week].days[addBtn.dataset.dayidx].activities.push({t: "grammar", i: "📝", title: tGlobal.studyTopic || "Study Topic", desc: tGlobal.editDetails || "Edit details", time: "20m"});
-                buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
-            };
-
-            card.querySelectorAll('.del-act').forEach(btn => {
+            // Re-render logic para garantir que os botões de edição funcionem
+            const delBtns = card.querySelectorAll('.del-act');
+            delBtns.forEach(btn => {
                 btn.onclick = () => {
-                    if(confirm("Delete this activity?")) {
-                        pushToUndo();
-                        window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
-                        buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')), isPreview, prefix, config, activeState);
-                    }
+                   if(confirm("Delete activity?")) {
+                       pushToUndo();
+                       window.plannerConfig[btn.dataset.week].days[btn.dataset.dayidx].activities.splice(btn.dataset.actidx, 1);
+                       buildWeek(m, w, uid, Array.from(document.querySelectorAll('.daybody.on')).map(d => d.id.replace('db', '')));
+                   }
                 };
             });
         }
 
         card.querySelector('.dayhead').onclick = (e) => {
-            if (!e.target.hasAttribute('contenteditable') && !e.target.closest('.aico-wrapper')) {
+            if (!e.target.hasAttribute('contenteditable')) {
                 card.querySelector('.daybody').classList.toggle('on');
             }
         };
 
         if (!isPreview) {
             const textarea = card.querySelector('textarea');
-            if (textarea) textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
+            textarea.oninput = (e) => { updateState(m, dayKey, { notes: e.target.value }); saveUserData(uid); };
             const chk = card.querySelector('input[type="checkbox"]');
-            if (chk) chk.onchange = (e) => {
+            chk.onchange = (e) => {
                 updateState(m, dayKey, { done: e.target.checked });
                 card.querySelector('.chk').classList.toggle('done', e.target.checked);
                 saveUserData(uid);
