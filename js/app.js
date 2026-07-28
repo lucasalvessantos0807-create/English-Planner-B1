@@ -60,7 +60,7 @@ export const translations = {
     es: {
         confirmMsg: "¿Cambiar el idioma a Español? Los textos personalizados se mantendrán.",
         month: "Mes", week: "Semana", activity: "Actividad", dailyAct: "Actividad Diaria",
-        studyTopic: "Tema de Estudio", editDetails: "Editar detalhes", phase: "Fase", 
+        studyTopic: "Tema de Estudio", editDetails: "Editar detalles", phase: "Fase", 
         editFocus: "Editar enfoque...", editTask: "Editar descripción...",
         personalPlanner: "Planificador de Estudios Personal", roadmap: "Tu Hoja de Ruta",
         roadmapSub: "Duración Personalizada · Metas Diarias · Tu Enfoque", yourGoal: "🎯 Tu Meta",
@@ -108,6 +108,7 @@ export const translations = {
         manageAccount: "Gérer le compte", importHistory: "Historique d'importation"
     }
 };
+
 window.translations = translations;
 window.isNativeText = isNativeText;
 
@@ -834,7 +835,6 @@ onAuthStateChanged(auth, async (user) => {
         const settingsDrawer = document.getElementById('settingsDrawer');
         const closeSettings = document.getElementById('closeSettings');
 
-        // Função auxiliar para fechar tudo antes de abrir uma nova
         const closeAllDrawers = () => {
             customDrawer?.classList.remove('open');
             settingsDrawer?.classList.remove('open');
@@ -843,43 +843,37 @@ onAuthStateChanged(auth, async (user) => {
         };
 
         if (personalizeBtn) {
-            personalizeBtn.onclick = () => {
+            personalizeBtn.onclick = (e) => {
+                e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = customDrawer.classList.contains('open');
-                    closeAllDrawers(); // Limpa estados anteriores
+                    closeAllDrawers();
                     if (!isOpen) {
                         customDrawer.classList.add('open');
-                        const fab = document.getElementById('fabWrapper');
-                        if (fab) fab.classList.add('fab-hidden');
+                        document.getElementById('fabWrapper')?.classList.add('fab-hidden');
                     }
                 }
             };
         }
 
         if (settingsBtn) {
-            settingsBtn.onclick = () => {
+            settingsBtn.onclick = (e) => {
+                e.stopPropagation();
                 if (!document.body.classList.contains('preview-mode')) {
                     const isOpen = settingsDrawer.classList.contains('open');
-                    closeAllDrawers(); // Limpa estados anteriores
+                    closeAllDrawers();
                     if (!isOpen) {
                         settingsDrawer.classList.add('open');
-                        const fab = document.getElementById('fabWrapper');
-                        if (fab) fab.classList.add('fab-hidden');
+                        document.getElementById('fabWrapper')?.classList.add('fab-hidden');
                         renderHistory();
                     }
                 }
             };
         }
 
-        if (closeDrawer) {
-            closeDrawer.onclick = closeAllDrawers;
-        }
+        if (closeDrawer) closeDrawer.onclick = closeAllDrawers;
+        if (closeSettings) closeSettings.onclick = closeAllDrawers;
 
-        if (closeSettings) {
-            closeSettings.onclick = closeAllDrawers;
-        }
-
-        // Fechamento ao clicar fora das gavetas
         document.addEventListener('mousedown', (e) => {
             if (customDrawer?.classList.contains('open') && !customDrawer.contains(e.target) && e.target !== personalizeBtn) {
                 closeAllDrawers();
@@ -888,64 +882,6 @@ onAuthStateChanged(auth, async (user) => {
                 closeAllDrawers();
             }
         });
-
-        const googleFonts = ["Arial", "Verdana", "Georgia", "Bebas Neue", "Montserrat", "Open Sans", "Roboto", "Jost", "Playfair Display", "Dancing Script", "Pacifico"];
-        const fontListContainer = document.getElementById('fontList');
-        const fontSearchInput = document.getElementById('fontSearchInput');
-
-        function loadGoogleFont(fontName) {
-            if (["Arial", "Verdana", "Georgia"].includes(fontName)) return;
-            const id = `font-${fontName.replace(/\s+/g, '-')}`;
-            if (!document.getElementById(id)) {
-                const link = document.createElement('link');
-                link.id = id; link.rel = 'stylesheet';
-                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
-                document.head.appendChild(link);
-            }
-        }
-
-        function renderFonts(filter = "") {
-            if (!fontListContainer) return;
-            fontListContainer.innerHTML = "";
-            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
-                const div = document.createElement('div');
-                div.className = 'font-item';
-                div.textContent = font;
-                loadGoogleFont(font);
-                div.style.fontFamily = `"${font}", sans-serif`;
-                div.onclick = () => {
-                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    if (!userData.state.settings) userData.state.settings = {};
-                    userData.state.settings.font = font;
-                    saveUserData(currentUser);
-                };
-                fontListContainer.appendChild(div);
-            });
-        }
-        if (fontSearchInput) fontSearchInput.oninput = (e) => renderFonts(e.target.value);
-        renderFonts();
-
-        const fontSizeSlider = document.getElementById('fontSizeSlider');
-        if (userData.state.settings?.font) {
-            loadGoogleFont(userData.state.settings.font);
-            document.documentElement.style.setProperty('--main-font', `"${userData.state.settings.font}", sans-serif`);
-        }
-        if (fontSizeSlider) {
-            fontSizeSlider.value = userData.state.settings?.fontSize || "15";
-            const fontSizeVal = document.getElementById('fontSizeVal');
-            if (fontSizeVal) fontSizeVal.textContent = fontSizeSlider.value + "px";
-            document.documentElement.style.setProperty('--main-font-size', fontSizeSlider.value + "px");
-
-            fontSizeSlider.oninput = (e) => {
-                if (fontSizeVal) fontSizeVal.textContent = e.target.value + "px";
-                document.documentElement.style.setProperty('--main-font-size', e.target.value + "px");
-            };
-            fontSizeSlider.onchange = (e) => {
-                if (!userData.state.settings) userData.state.settings = {};
-                userData.state.settings.fontSize = e.target.value;
-                saveUserData(currentUser);
-            };
-        }
 
         const fontStyleToggle = document.getElementById('fontStyleToggle');
         if (fontStyleToggle) {
