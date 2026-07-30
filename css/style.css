@@ -890,12 +890,15 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 }
 
 /* ── PLANNER ── */
-#page-cover-container:hover #editCoverBtn { opacity: 1 !important; }
+#page-cover-container { position: relative; z-index: 10; }
+#page-cover-container:hover #editCoverBtn, #editCoverBtn:hover { opacity: 1 !important; visibility: visible !important; }
 .page { 
   margin: 0 auto !important; 
   width: 100%; 
   max-width: 900px; 
   padding: 0 20px 40px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 768px) {
