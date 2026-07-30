@@ -215,7 +215,8 @@
 
     <div id="page-cover-container" style="position: relative;">
       <div id="page-cover" class="editable-global" style="width: 100%; height: 180px; background: #f4f1ea; border-bottom: 1px solid var(--border); transition: background 0.3s;"></div>
-      <button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.8); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s;">Change Color</button>
+      <!-- Procure por esta linha e adicione o z-index: 100; -->
+<button id="editCoverBtn" style="position: absolute; bottom: 10px; right: 20px; padding: 5px 12px; font-size: 11px; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 100;">Change Color</button>
         <div id="colorChoiceMenu" style="display:none; position: absolute; bottom: 45px; right: 20px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); flex-direction: column; z-index: 2001;">
         <button id="choiceSolid" style="padding: 10px 15px; border: none; background: none; cursor: pointer; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); font-family: inherit;">Solid Color</button>
         <button id="choiceGradient" style="padding: 10px 15px; border: none; background: none; cursor: pointer; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); font-family: inherit;">Gradient</button>
