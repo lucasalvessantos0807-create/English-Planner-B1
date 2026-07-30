@@ -122,7 +122,10 @@ function updateUIEditMode() {
 
         if (fab) fab.classList.add('open');
         const btnColor = document.getElementById('editCoverBtn');
-        if (btnColor) { btnColor.style.display = "block"; btnColor.style.opacity = "1"; }
+        if (btnColor) { 
+            btnColor.style.display = "block"; 
+            btnColor.style.pointerEvents = "auto"; /* Garante que o clique funcione no Modo Edição */
+        }
         if (document.getElementById('editCoverBtn')) document.getElementById('editCoverBtn').style.opacity = "1";
     } else {
         if (saveBtn) saveBtn.style.display = "none";
