@@ -905,39 +905,38 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
-        // Adicione esta constante no topo do seu arquivo app.js ou antes da função renderFonts
+      // 1. A lista de fontes (Coloque exatamente assim)
 const googleFonts = [
     "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", 
     "Source Sans Pro", "Raleway", "PT Sans", "Merriweather", 
     "Playfair Display", "Lora", "Noto Sans", "Poppins", 
-    "Arvo", "Ubuntu", "Muli", "Nunito"
+    "Arvo", "Ubuntu", "Nunito"
 ];
 
+// 2. A função de renderizar (Substitua a existente por esta)
 function renderFonts(filter = "") {
+    const fontListContainer = document.getElementById('fontList');
     if (!fontListContainer) return;
     fontListContainer.innerHTML = "";
-    // Agora o googleFonts.filter vai funcionar
+    
     googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
-        // ... resto do seu código
-
-        function renderFonts(filter = "") {
-            if (!fontListContainer) return;
-            fontListContainer.innerHTML = "";
-            googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
-                const div = document.createElement('div');
-                div.className = 'font-item';
-                div.textContent = font;
-                loadGoogleFont(font);
-                div.style.fontFamily = `"${font}", sans-serif`;
-                div.onclick = () => {
-                    document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
-                    if (!userData.state.settings) userData.state.settings = {};
-                    userData.state.settings.font = font;
-                    saveUserData(currentUser);
-                };
-                fontListContainer.appendChild(div);
-            });
-        }
+        const div = document.createElement('div');
+        div.className = 'font-item';
+        div.textContent = font;
+        loadGoogleFont(font);
+        div.style.fontFamily = `"${font}", sans-serif`;
+        div.onclick = () => {
+            document.documentElement.style.setProperty('--main-font', `"${font}", sans-serif`);
+            // Verifica se currentUser existe antes de salvar
+            if (currentUser) {
+                if (!window.appState.settings) window.appState.settings = {};
+                window.appState.settings.font = font;
+                import('./storage.js').then(mod => mod.saveUserData(currentUser));
+            }
+        };
+        fontListContainer.appendChild(div);
+    });
+}
         if (fontSearchInput) fontSearchInput.oninput = (e) => renderFonts(e.target.value);
         renderFonts();
 
