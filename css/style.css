@@ -890,15 +890,25 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 }
 
 /* ── PLANNER ── */
-#page-cover-container { position: relative; z-index: 10; }
-#page-cover-container:hover #editCoverBtn, #editCoverBtn:hover { opacity: 1 !important; visibility: visible !important; }
+#page-cover-container { 
+  position: relative; 
+  z-index: 1000 !important; 
+}
+
+#editCoverBtn { 
+  opacity: 1 !important; 
+  visibility: visible !important; 
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
 .page { 
   margin: 0 auto !important; 
   width: 100%; 
   max-width: 900px; 
   padding: 0 20px 40px;
   position: relative;
-  z-index: 1;
+  z-index: 1 !important;
 }
 
 @media (max-width: 768px) {
