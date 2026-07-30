@@ -892,13 +892,21 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
 /* ── PLANNER ── */
 #page-cover-container { 
   position: relative; 
-  z-index: 1000 !important; 
+  z-index: 50; /* Aumentado para garantir que o container esteja acima da estrutura principal */
 }
 
 #editCoverBtn { 
+  display: block !important;
   opacity: 1 !important; 
   visibility: visible !important; 
-  z-index: 9999 !important;
+  z-index: 1000 !important; /* Valor altíssimo para ficar à frente de tudo */
+  pointer-events: auto !important; /* Força o navegador a permitir o clique */
+  cursor: pointer !important;
+}
+
+/* Garante que o menu de cores também seja clicável quando abrir */
+#colorChoiceMenu {
+  z-index: 1001 !important;
   pointer-events: auto !important;
 }
 
@@ -908,14 +916,8 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
   max-width: 900px; 
   padding: 0 20px 40px;
   position: relative;
-  z-index: 1 !important;
-}
-
-@media (max-width: 768px) {
-  .page {
-    padding: 0 10px 20px;
-  }
-}
+  z-index: 10 !important; /* Mantém o corpo da página abaixo da capa */
+}}
 #planner {
   display: none;
   flex-direction: row;
