@@ -905,6 +905,21 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
+        // Adicione esta constante no topo do seu arquivo app.js ou antes da função renderFonts
+const googleFonts = [
+    "Roboto", "Open Sans", "Lato", "Montserrat", "Oswald", 
+    "Source Sans Pro", "Raleway", "PT Sans", "Merriweather", 
+    "Playfair Display", "Lora", "Noto Sans", "Poppins", 
+    "Arvo", "Ubuntu", "Muli", "Nunito"
+];
+
+function renderFonts(filter = "") {
+    if (!fontListContainer) return;
+    fontListContainer.innerHTML = "";
+    // Agora o googleFonts.filter vai funcionar
+    googleFonts.filter(f => f.toLowerCase().includes(filter.toLowerCase())).forEach(font => {
+        // ... resto do seu código
+
         function renderFonts(filter = "") {
             if (!fontListContainer) return;
             fontListContainer.innerHTML = "";
