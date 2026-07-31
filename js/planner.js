@@ -121,6 +121,7 @@ function updateUIEditMode() {
         if (logoutBtn) logoutBtn.style.display = "none";
 
         if (fab) fab.classList.add('open');
+        if (document.getElementById('editCoverBtn')) document.getElementById('editCoverBtn').style.display = "block";
         const btnColor = document.getElementById('editCoverBtn');
         if (btnColor) { 
             btnColor.style.display = "block"; 
@@ -140,6 +141,7 @@ function updateUIEditMode() {
         if (logoutBtn) logoutBtn.style.display = "flex";
 
         if (fab) fab.classList.remove('open');
+        if (document.getElementById('editCoverBtn')) document.getElementById('editCoverBtn').style.display = "none";
         const btnColorOff = document.getElementById('editCoverBtn');
         if (btnColorOff) { btnColorOff.style.display = "none"; }
         if (document.getElementById('editCoverBtn')) document.getElementById('editCoverBtn').style.opacity = "";
