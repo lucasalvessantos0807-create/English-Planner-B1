@@ -895,6 +895,11 @@ input:checked + .nb-slider:before { transform: translateX(20px); }
   z-index: 10;
 }
 
+/* Quando o mouse entra na capa, o botão aparece */
+#page-cover-container:hover #editCoverBtn {
+  opacity: 1 !important;
+}
+
 #editCoverBtn {
   pointer-events: auto !important;
 }
